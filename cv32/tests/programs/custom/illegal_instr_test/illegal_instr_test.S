@@ -81,7 +81,7 @@ main:
 .word(0xaeabed23)
 .word(0xaed5b7a3)
 .word(0xaebf4677)
-.word(0x2aa4800f)
+.word(0x2aa4800f) # this is a FENCE, not illegal
 .word(0x3bc6f92f)
 .word(0x5dd26da7)
 .word(0xe5607a57)
