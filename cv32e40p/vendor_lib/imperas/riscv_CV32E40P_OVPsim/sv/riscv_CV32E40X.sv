@@ -16,32 +16,5 @@
  *
  */
 
-typedef struct {
-    Uns64 retPC;
-    Uns64 excPC;
-    Uns64 nextPC;
-
-    //Uns64 x[32];
-    //Uns64 f[32];
-    //Uns64 csr[4096];
-
-    Uns64 order;
-    Uns64 trap;
-
-    // Signals to SV
-    Uns64 irq_ack_o;
-    Uns64 irq_id_o;
-    Uns64 DM;
-} RMDataT;
-
-typedef struct {
-    // Signals from SV
-    Uns64 reset;
-    Uns64 deferint;
-    Uns64 irq_i;
-    Uns64 haltreq;
-    Uns64 resethaltreq;
-    Uns64 terminate;
-
-    Uns64 cycles;
-} SVDataT;
+`define VARIANT "CV32E40X"
+`include "riscv_CV32.sv"
