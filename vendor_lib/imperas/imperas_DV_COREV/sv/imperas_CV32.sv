@@ -21,7 +21,7 @@
 
 `include "typedefs.sv"
 
-`include "riscv_CV32E40P.h"
+`include "imperas_CV32.h"
 
 interface RVVI_state #(
     parameter int ILEN = 32,
@@ -128,11 +128,11 @@ interface RVVI_bus;
     bit     [3:0]  Ibe;     // Instruction Bus Lane enables (byte format)
     bit     [2:0]  ISize;   // Instruction Bus Size of transfer 1-4 bytes
     bit            Ird;     // Instruction Bus read
-    
+
     bit            LoadBusFaultNMI;     // Artifact to signal memory interface error (E40X)
     bit            StoreBusFaultNMI;    // Artifact to signal memory interface error (E40X)
     bit            InstructionBusFault; // Artifact to signal memory interface error (E40X)
-    
+
     //
     // Bus direct transactors
     //
@@ -146,7 +146,8 @@ interface RVVI_bus;
 endinterface
 
 module CPU #(
-    parameter int ID = 0
+    parameter int ID = 0,
+    parameter string VARIANT = "UNSET"
 )(
     RVVI_bus bus,
     RVVI_io  io
@@ -189,18 +190,18 @@ module CPU #(
     function automatic void msginfo (input string msg);
     `ifdef DEBUG
         `ifdef UVM
-            `uvm_info("riscv_CV32E40P", msg, UVM_DEBUG);
+            `uvm_info(VARIANT, msg, UVM_DEBUG);
         `else
-            $display("riscv_CV32E40P: %s", msg);
+            $display("%s: %s", msg, VARIANT);
         `endif
     `endif
     endfunction
     
     function automatic void msgfatal (input string msg);
     `ifdef UVM
-        `uvm_fatal("riscv_CV32E40P", msg);
+        `uvm_fatal(VARIANT, msg);
     `else
-        $display("riscv_CV32E40P: %s", msg);
+        $display("%s: %s", msg, VARIANT);
         $fatal;
     `endif
     endfunction
@@ -264,6 +265,10 @@ module CPU #(
         SVData.irq_i         = io.irq_i;
         SVData.haltreq       = io.haltreq;
         SVData.resethaltreq  = io.resethaltreq;
+        
+        SVData.LoadBusFaultNMI     = bus.LoadBusFaultNMI;
+        SVData.StoreBusFaultNMI    = bus.StoreBusFaultNMI;
+        SVData.InstructionBusFault = bus.InstructionBusFault;
         
         SVData.terminate     = io.Shutdown;
         SVData.cycles        = cycles;
@@ -531,6 +536,13 @@ module CPU #(
             fault = 0; // TODO
             bus.Ird   <= 0;
             
+            // TODO manual fault injection
+            if (!artifact) begin
+                fault = 0; // TODO
+                // Info 144: 'root/cpu', 0x0000000000000132(main+6a): 7d6000ef jal     ra,908
+                //if (address == 'h00000132) fault = 1; // TODO
+                bus.InstructionBusFault = fault; // TODO Generate externally
+            end
             msginfo($sformatf("[%x]=>(%0d)%x Fetch", address, size, data));
         end
     endtask
@@ -585,8 +597,7 @@ module CPU #(
     initial begin
         ovpcfg_load();
         elf_load();
-        opEntry(ovpcfg, elf_file, "CV32E40P");
-        //opEntry(ovpcfg, elf_file, "CV32E40X");
+        opEntry(ovpcfg, elf_file, VARIANT);
     `ifndef UVM
         $finish;
     `endif
