@@ -19,13 +19,9 @@
 //`define DEBUG
 //`define UVM
 
-`ifndef VARIANT
-`error VARIANT is undefined
-`endif
-
 `include "typedefs.sv"
 
-`include "riscv_CV32.h"
+`include "imperas_CV32.h"
 
 interface RVVI_state #(
     parameter int ILEN = 32,
@@ -150,7 +146,8 @@ interface RVVI_bus;
 endinterface
 
 module CPU #(
-    parameter int ID = 0
+    parameter int ID = 0,
+    parameter string VARIANT = "UNSET"
 )(
     RVVI_bus bus,
     RVVI_io  io
@@ -193,18 +190,18 @@ module CPU #(
     function automatic void msginfo (input string msg);
     `ifdef DEBUG
         `ifdef UVM
-            `uvm_info(`VARIANT, msg, UVM_DEBUG);
+            `uvm_info(VARIANT, msg, UVM_DEBUG);
         `else
-            $display("%s: %s", msg, `VARIANT);
+            $display("%s: %s", msg, VARIANT);
         `endif
     `endif
     endfunction
     
     function automatic void msgfatal (input string msg);
     `ifdef UVM
-        `uvm_fatal(`VARIANT, msg);
+        `uvm_fatal(VARIANT, msg);
     `else
-        $display("%s: %s", msg, `VARIANT);
+        $display("%s: %s", msg, VARIANT);
         $fatal;
     `endif
     endfunction
@@ -599,7 +596,7 @@ module CPU #(
     initial begin
         ovpcfg_load();
         elf_load();
-        opEntry(ovpcfg, elf_file, `VARIANT);
+        opEntry(ovpcfg, elf_file, VARIANT);
     `ifndef UVM
         $finish;
     `endif
