@@ -44,19 +44,21 @@ if [ -z "$RISCV_OBJCOPY" ]; then
 fi
 
 # Set verilator and spike related variables
+# Set verilator and spike related variables
 if [ -z "$VERILATOR_INSTALL_DIR" ]; then
-    export VERILATOR_INSTALL_DIR="$ROOT_PROJECT"/tools/verilator
+    export VERILATOR_INSTALL_DIR="/home/alessandra.dolmeta/cva6/cva6/tools/verilator"
 fi
 
-if [ -z "$SPIKE_SRC_DIR" -o "$SPIKE_INSTALL_DIR" = "__local__" ]; then
-  export SPIKE_SRC_DIR="$ROOT_PROJECT"/verif/core-v-verif/vendor/riscv/riscv-isa-sim
+if [ -z "$SPIKE_SRC_DIR" ] || [ "$SPIKE_INSTALL_DIR" = "__local__" ]; then
+    export SPIKE_SRC_DIR="/home/alessandra.dolmeta/cva6/cva6/verif/core-v-verif/vendor/riscv/riscv-isa-sim"
 fi
 
-if [ -z "$SPIKE_INSTALL_DIR" -o "$SPIKE_INSTALL_DIR" = "__local__" ]; then
-    export SPIKE_INSTALL_DIR="$ROOT_PROJECT"/tools/spike
+if [ -z "$SPIKE_INSTALL_DIR" ] || [ "$SPIKE_INSTALL_DIR" = "__local__" ]; then
+    export SPIKE_INSTALL_DIR="/home/alessandra.dolmeta/cva6/cva6/tools/spike"
 fi
 
-export SPIKE_PATH="$SPIKE_INSTALL_DIR"/bin
+export SPIKE_PATH="$SPIKE_INSTALL_DIR/bin"
 
 # Update the PATH to add all the tools
 export PATH="$VERILATOR_INSTALL_DIR/bin:$RISCV/bin:$PATH"
+
