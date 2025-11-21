@@ -44,19 +44,27 @@ if [ -z "$RISCV_OBJCOPY" ]; then
 fi
 
 # Set verilator and spike related variables
-if [ -z "$VERILATOR_INSTALL_DIR" ]; then
-    export VERILATOR_INSTALL_DIR="$ROOT_PROJECT"/tools/verilator
-fi
+#if [ -z "$VERILATOR_INSTALL_DIR" ]; then
+#    export VERILATOR_INSTALL_DIR="$ROOT_PROJECT"/tools/verilator
+#fi
+#if [ -z "$SPIKE_SRC_DIR" -o "$SPIKE_INSTALL_DIR" = "__local__" ]; then
+#  export SPIKE_SRC_DIR="$ROOT_PROJECT"/verif/core-v-verif/vendor/riscv/riscv-isa-sim
+#fi
+#if [ -z "$SPIKE_INSTALL_DIR" -o "$SPIKE_INSTALL_DIR" = "__local__" ]; then
+#    export SPIKE_INSTALL_DIR="$ROOT_PROJECT"/tools/spike
+#fi
+#export SPIKE_PATH="$SPIKE_INSTALL_DIR"/bin
 
-if [ -z "$SPIKE_SRC_DIR" -o "$SPIKE_INSTALL_DIR" = "__local__" ]; then
-  export SPIKE_SRC_DIR="$ROOT_PROJECT"/verif/core-v-verif/vendor/riscv/riscv-isa-sim
-fi
+# Set verilator and spike related variables
+# export VERILATOR_INSTALL_DIR="$ROOT_PROJECT"/tools/verilator-v5.008
+# export SPIKE_SRC_DIR="$ROOT_PROJECT"/verif/core-v-verif/vendor/riscv/riscv-isa-sim
+# export SPIKE_INSTALL_DIR="$ROOT_PROJECT"/tools/spike
+# export SPIKE_PATH="$SPIKE_INSTALL_DIR"/bin
 
-if [ -z "$SPIKE_INSTALL_DIR" -o "$SPIKE_INSTALL_DIR" = "__local__" ]; then
-    export SPIKE_INSTALL_DIR="$ROOT_PROJECT"/tools/spike
-fi
-
-export SPIKE_PATH="$SPIKE_INSTALL_DIR"/bin
+export VERILATOR_INSTALL_DIR="/software/cva6/verilator-v5.008"        ##@VLSI-Lab Server
+export SPIKE_SRC_DIR="/software/cva6/riscv-isa-sim"                   ##@VLSI-Lab Server
+export SPIKE_INSTALL_DIR="/software/spike/spike"                      ##@VLSI-Lab Server
+export SPIKE_PATH="$SPIKE_INSTALL_DIR/bin"            
 
 # Update the PATH to add all the tools
 export PATH="$VERILATOR_INSTALL_DIR/bin:$RISCV/bin:$PATH"
