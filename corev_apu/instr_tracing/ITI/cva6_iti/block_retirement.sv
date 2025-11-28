@@ -9,7 +9,7 @@
 //Systolic module used to determines the iaddr, ilastsize, iretire for Encoder Module
 
 
-module instr_to_trace #(
+module block_retirement #(
     parameter config_pkg::cva6_cfg_t CVA6Cfg = config_pkg::cva6_cfg_empty,
     parameter type uop_entry_t = logic,
     parameter type itt_out_t = logic,
@@ -44,7 +44,6 @@ module instr_to_trace #(
     itt_out_o = '0;
 
     if (uop_entry_i.valid) begin
-      counter_o = uop_entry_i.compressed ? counter_i + 1 : counter_i + 2;
 
       if (was_special_i) begin
         counter_o = 0;
@@ -52,9 +51,11 @@ module instr_to_trace #(
         is_special_o = 1'b0;
       end
 
+      counter_o = uop_entry_i.compressed ? counter_o + 1 : counter_o + 2;
+
       if (special_inst) begin
         itt_out_o.valid = 1'b1;
-        itt_out_o.iretire = uop_entry_i.compressed ? counter_o + 1 : counter_o + 2;
+        itt_out_o.iretire = counter_o;
         itt_out_o.itype = uop_entry_i.itype;
         itt_out_o.ilastsize = ~uop_entry_i.compressed;
         itt_out_o.iaddr = iaddr_o;
