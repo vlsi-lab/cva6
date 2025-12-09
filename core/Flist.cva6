@@ -102,12 +102,14 @@ ${CVA6_REPO_DIR}/core/include/triggers_pkg.sv
 //CVXIF
 ${CVA6_REPO_DIR}/core/cvxif_compressed_if_driver.sv
 ${CVA6_REPO_DIR}/core/cvxif_issue_register_commit_if_driver.sv
-${CVA6_REPO_DIR}/core/cvxif_example/include/cvxif_instr_pkg.sv
 ${CVA6_REPO_DIR}/core/cvxif_fu.sv
-${CVA6_REPO_DIR}/core/cvxif_example/cvxif_example_coprocessor.sv
-${CVA6_REPO_DIR}/core/cvxif_example/instr_decoder.sv
-${CVA6_REPO_DIR}/core/cvxif_example/compressed_instr_decoder.sv
-${CVA6_REPO_DIR}/core/cvxif_example/copro_alu.sv
+
+// KECCAK IP
+${CVA6_REPO_DIR}/keccak_ip/hw/include/keccak_xif_instr_pkg.sv
+${CVA6_REPO_DIR}/keccak_ip/hw/keccak_xif_cid.sv
+${CVA6_REPO_DIR}/keccak_ip/hw/keccak_xif_id.sv
+${CVA6_REPO_DIR}/keccak_ip/hw/keccak_xif_ex.sv
+${CVA6_REPO_DIR}/keccak_ip/hw/keccak_xif.sv
 
 // Common Cells
 ${CVA6_REPO_DIR}/vendor/pulp-platform/common_cells/src/cf_math_pkg.sv

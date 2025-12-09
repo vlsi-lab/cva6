@@ -34,7 +34,6 @@ corev_apu/tb/axi_intf.sv
 core/include/cvxif_pkg.sv
 vendor/pulp-platform/common_cells/src/cf_math_pkg.sv
 core/include/instr_tracer_pkg.sv
-core/cvxif_example/include/cvxif_instr_pkg.sv
 core/acc_dispatcher.sv
 corev_apu/rv_plic/rtl/rv_plic_reg_pkg.sv
 common/local/util/sram.sv
@@ -165,8 +164,10 @@ core/pmp/src/pmp.sv
 core/pmp/src/pmp_entry.sv
 core/pmp/src/pmp_data_if.sv
 common/local/util/instr_tracer.sv
-core/cvxif_example/cvxif_example_coprocessor.sv
-core/cvxif_example/instr_decoder.sv
 vendor/pulp-platform/common_cells/src/counter.sv
 vendor/pulp-platform/common_cells/src/delta_counter.sv
 core/cvxif_fu.sv
+keccak_ip/hw/keccak_xif_cid.sv
+keccak_ip/hw/keccak_xif_id.sv
+keccak_ip/hw/keccak_xif_ex.sv
+keccak_ip/hw/keccak_xif.sv
