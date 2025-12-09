@@ -95,12 +95,17 @@ sources:
       - core/include/aes_pkg.sv
 
       # Extension Interface
-      - core/cvxif_example/include/cvxif_instr_pkg.sv
       - core/cvxif_fu.sv
       - core/cvxif_issue_register_commit_if_driver.sv
       - core/cvxif_compressed_if_driver.sv
-      - core/cvxif_example/cvxif_example_coprocessor.sv
-      - core/cvxif_example/instr_decoder.sv
+
+      # Keccak IP
+      - keccak_ip/hw/include/keccak_xif_instr_pkg.sv
+      - keccak_ip/hw/keccak_xif_cid.sv
+      - keccak_ip/hw/keccak_xif_id.sv
+      - keccak_ip/hw/keccak_xif_ex.sv
+      - keccak_ip/hw/keccak_xif.sv
+
 
       # Tracing
       - core/cva6_rvfi_probes.sv

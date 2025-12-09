@@ -37,11 +37,11 @@ The shared toolchain is built from the official CVA6 scripts (util/toolchain-bui
 
 
 ### Tests
-To run a test using the core and the Verilator simulator, execute:
+To run tests for the Keccak Coprocessor, run:
 ```bash
-source tests/hello-world/hello_world.sh
+source tests/keccak/run.sh
 ```
-
+A list of available tests will be printed on screen.
 
 # Acknowledgements
 
