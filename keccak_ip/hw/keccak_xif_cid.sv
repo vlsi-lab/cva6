@@ -7,7 +7,9 @@
 //
 // Original Author: Guillaume Chauvon
 
-module compressed_instr_decoder #(
+// TODO: remove this file
+
+module keccak_xif_cid #(
     parameter type                    copro_compressed_resp_t          = logic,
     parameter int                     NbInstr                          = 1,
     parameter copro_compressed_resp_t CoproInstr             [NbInstr] = {0},
