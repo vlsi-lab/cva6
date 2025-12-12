@@ -1,18 +1,21 @@
-# CVA6 RISC-V CPU 
+# CVA6 RISC-V CPU + Keccak Accellerator
+CVA6 is a 6-stage, single-issue, in-order CPU which implements the 64-bit RISC-V instruction set. It fully implements I, M, A and C extensions as specified in Volume I: User-Level ISA V 2.3 as well as the draft privilege extension 1.10. It implements three privilege levels M, S, U to fully support a Unix-like operating system. Furthermore, it is compliant to the draft external debug spec 0.13. 
 
-CVA6 is a 6-stage, single-issue, in-order CPU which implements the 64-bit RISC-V instruction set. It fully implements I, M, A and C extensions as specified in Volume I: User-Level ISA V 2.3 as well as the draft privilege extension 1.10. It implements three privilege levels M, S, U to fully support a Unix-like operating system. Furthermore, it is compliant to the draft external debug spec 0.13. [Official Repository](https://github.com/openhwgroup/cva6)
+This branch implements a CV-X-IF Coprocessor for Keccak accelleration. The implemented instructions are the following:
+- XOR3: three operand XOR
+- XANDN: XOR-AND-Negate: implements rd = rs1 ^ (~rs2 & rs3)
+- DXROLS: Dual-XOR-ROL-Single: implements rd = rs1 ^ (rs2 ^ ROL(rs3, 1))
 
-
-# 🚀 Getting Started
-
+# Getting Started
 Clone the repository
 ```bash
 git clone https://github.com/vlsi-lab/cva6
 cd cva6
+git checkout keccak-tightly
 git submodule update --init --recursive
 ```
 
-## Pyhton Enviroment
+## Python Environment
 Each user should create their own Conda environment from the provided lock file:
 ```bash
 conda env create -f environment_lock.yml
@@ -21,8 +24,7 @@ conda activate cva6
 That’s clean, self-contained, and clearly tied to your existing `environment_lock.yml`.
 
 
-## 🧰 RISC-V Toolchain and Verilator Setup 
-
+## RISC-V Toolchain and Verilator Setup 
 Usually, it is strongly recommended to use the toolchain built with the provided scripts. However, to avoid redundant downloads and builds, you can use the shared prebuilt toolchain provided, modifying `cva6/verif/sim/setup-env.sh` file:
 
 ```bash
@@ -43,8 +45,19 @@ source tests/keccak/run.sh
 ```
 A list of available tests will be printed on screen.
 
-# Acknowledgements
+# Results
+Tests for different implementations of the coprocessor were runned. The reference C code is taken from the [benchmarks of SHA3 for the RISC-V Cryptography Extension](https://github.com/riscv/riscv-crypto/blob/main/benchmarks/sha3/zscrypto_rv64/Keccak.c). All tests are runned with -O1 flag.
 
+| Implementation | Cycles for permutation | Instructions | # of ld/sd | % speedup on reference |
+| --- | --- | --- |  --- |  --- |
+| Reference | 19491 | | | 0 % | 
+| XOR3 | 18431 | | | 5.4 % | 
+| DXROLS | 16545 | | | 15.1 % | 
+| XANDN | 16204 | | | 16.9 % | 
+| XOR3+DXROLS+XANDN, register keyword | 8534 | | | 56.2 % | 
+
+
+# Acknowledgements
 Check out the [acknowledgements](ACKNOWLEDGEMENTS.md).
 
 

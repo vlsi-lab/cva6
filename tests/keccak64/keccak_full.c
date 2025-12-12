@@ -1,5 +1,10 @@
+// Keccak Accellerator IP - Tightly
+// C Benchmark for the State Permutation Function - Full coprocessor Implementation 
+// Author: Federico Runco
+
 #include "inc/uart.h"
 #include "encoding.h"
+#include "inc/keccak_copro.h"
 
 #define ROL64(a, offset) (((a) << (offset)) | ((a) >> (64 - (offset))))
 #define ANDN(a, b) (~(a) & (b))
@@ -36,11 +41,11 @@ static void KeccakF1600_StatePermute(uint64_t *s)
 {
     int round, y;
 
-    uint64_t s00, s01, s02, s03, s04;
-    uint64_t s05, s06, s07, s08, s09;
-    uint64_t s10, s11, s12, s13, s14;
-    uint64_t s15, s16, s17, s18, s19;
-    uint64_t s20, s21, s22, s23, s24;
+    register uint64_t s00, s01, s02, s03, s04;
+    register uint64_t s05, s06, s07, s08, s09;
+    register uint64_t s10, s11, s12, s13, s14;
+    register uint64_t s15, s16, s17, s18, s19;
+    register uint64_t s20, s21, s22, s23, s24;
 
     s00 = s[0];
     s01 = s[1];
@@ -69,114 +74,75 @@ static void KeccakF1600_StatePermute(uint64_t *s)
     s24 = s[24];
 
     for(round=0; round<24; round++) {
-        uint64_t C0, C1, C2, C3;
+        uint64_t C0, C1, C2, C3, C4, C5;
 
-        C0 = s00 ^ s05 ^ s10 ^ s15 ^ s20;
-        C1 = s01 ^ s06 ^ s11 ^ s16 ^ s21;
-        C3 = s04 ^ s09 ^ s14 ^ s19 ^ s24;
-        
-        C2 = ROL64(C1, 1) ^ C3;
+        XOR5(C0, s00, s05, s10, s15, s20);
+        XOR5(C1, s01, s06, s11, s16, s21);
+        XOR5(C2, s02, s07, s12, s17, s22);
+        XOR5(C3, s04, s09, s14, s19, s24);
+        XOR5(C4, s03, s08, s13, s18, s23);
 
-        s00 = s00 ^ C2;
-        s05 = s05 ^ C2;
-        s10 = s10 ^ C2;
-        s15 = s15 ^ C2;
-        s20 = s20 ^ C2;
-        
-        C2 = s02 ^ s07 ^ s12 ^ s17 ^ s22 ;
+        C5 = s05;
+        DXROL3(s05, s03, C2, C3, 28);
+        DXROL3(s03, s18, C2, C3, 21);
+        DXROL3(s18, s17, C1, C4, 15);
+        DXROL3(s17, s11, C0, C2, 10);
+        DXROL3(s11, s07, C1, C4, 6);
+        DXROL3(s07, s10, C3, C1, 3);
+        DXROL3(s10, s01, C0, C2, 1);
+        DXROL3(s01, s06, C0, C2, 44);
+        DXROL3(s06, s09, C4, C0, 20);
+        DXROL3(s09, s22, C1, C4, 61);
+        DXROL3(s22, s14, C4, C0, 39);
+        DXROL3(s14, s20, C3, C1, 18);
+        DXROL3(s20, s02, C1, C4, 62);
+        DXROL3(s02, s12, C1, C4, 43);
+        DXROL3(s12, s13, C2, C3, 25);
+        DXROL3(s13, s19, C4, C0, 8);
+        DXROL3(s19, s23, C2, C3, 56);
+        DXROL3(s23, s15, C3, C1, 41);
+        DXROL3(s15, s04, C4, C0, 27);
+        DXROL3(s04, s24, C4, C0, 14);
+        DXROL3(s24, s21, C0, C2, 2);
+        DXROL3(s21, s08, C2, C3, 55);
+        DXROL3(s08, s16, C0, C2, 45);
+        DXROL3(s16, C5, C3, C1, 36);
+        DXROL3(s00, s00, C3, C1, 0);
 
-        C3 = ROL64(C3, 1) ^ C2;
-        C2 = ROL64(C2, 1) ^ C0;
-             
-        s01 = s01 ^ C2;
-        s06 = s06 ^ C2;
-        s11 = s11 ^ C2;
-        s16 = s16 ^ C2;
-        s21 = s21 ^ C2;
-        
-        C2 = s03 ^ s08 ^ s13 ^ s18 ^ s23;
-        
-        C0 = ROL64(C0, 1) ^ C2;
-        C2 = ROL64(C2, 1) ^ C1;
-             
-        s04 = s04 ^ C0;
-        s09 = s09 ^ C0;
-        s14 = s14 ^ C0;
-        s19 = s19 ^ C0;
-        s24 = s24 ^ C0;
-             
-        s03 = s03 ^ C3;
-        s08 = s08 ^ C3;
-        s13 = s13 ^ C3;
-        s18 = s18 ^ C3;
-        s23 = s23 ^ C3;
-        
-        s02 = s02 ^ C2;
-        s07 = s07 ^ C2;
-        s12 = s12 ^ C2;
-        s17 = s17 ^ C2;
-        s22 = s22 ^ C2;
-        
-        C1    = s05;
-        s05 = ROL64(s03,28);
-        s03 = ROL64(s18,21);
-        s18 = ROL64(s17,15);
-        s17 = ROL64(s11,10);
-        s11 = ROL64(s07, 6);
-        s07 = ROL64(s10, 3);
-        s10 = ROL64(s01, 1);
-        s01 = ROL64(s06,44);
-        s06 = ROL64(s09,20);
-        s09 = ROL64(s22,61);
-        s22 = ROL64(s14,39);
-        s14 = ROL64(s20,18);
-        s20 = ROL64(s02,62);
-        s02 = ROL64(s12,43);
-        s12 = ROL64(s13,25);
-        s13 = ROL64(s19, 8);
-        s19 = ROL64(s23,56);
-        s23 = ROL64(s15,41);
-        s15 = ROL64(s04,27);
-        s04 = ROL64(s24,14);
-        s24 = ROL64(s21, 2);
-        s21 = ROL64(s08,55);
-        s08 = ROL64(s16,45);
-        s16 = ROL64(C1,36);
+        C0 = s04;
+        XANDN(s04, s04, s00, s01);
+        XANDN(s01, s01, s02, s03);
+        XANDN(s03, s03, s04, s00);
+        XANDN(s00, s00, s01, s02);
+        XANDN(s02, s02, s03, C0);
 
-        C0    = (~s03) & s04;
-        s04 = s04 ^ ANDN(s00, s01);
-        s01 = s01 ^ ANDN(s02, s03);
-        s03 = s03 ^ ANDN(s04, s00);
-        s00 = s00 ^ ANDN(s01, s02);
-        s02 = s02 ^ (C0              );
+        C0 = s09;
+        XANDN(s09, s09, s05, s06);
+        XANDN(s06, s06, s07, s08);
+        XANDN(s08, s08, s09, s05);
+        XANDN(s05, s05, s06, s07);
+        XANDN(s07, s07, s08, C0);
 
-        C0    = (~s08) & s09;
-        s09 = s09 ^ ANDN(s05, s06);
-        s06 = s06 ^ ANDN(s07, s08);
-        s08 = s08 ^ ANDN(s09, s05);
-        s05 = s05 ^ ANDN(s06, s07);
-        s07 = s07 ^ (C0              );
+        C0 = s14;
+        XANDN(s14, s14, s10, s11);
+        XANDN(s11, s11, s12, s13);
+        XANDN(s13, s13, s14, s10);
+        XANDN(s10, s10, s11, s12);
+        XANDN(s12, s12, s13, C0);
 
-        C0    = (~s13) & s14;
-        s14 = s14 ^ ANDN(s10, s11);
-        s11 = s11 ^ ANDN(s12, s13);
-        s13 = s13 ^ ANDN(s14, s10);
-        s10 = s10 ^ ANDN(s11, s12);
-        s12 = s12 ^ (C0                );
-                     
-        C0    = (~s18) & s19;
-        s19 = s19 ^ ANDN(s15, s16);
-        s16 = s16 ^ ANDN(s17, s18);
-        s18 = s18 ^ ANDN(s19, s15);
-        s15 = s15 ^ ANDN(s16, s17);
-        s17 = s17 ^ (C0                );
+        C0 = s19;
+        XANDN(s19, s19, s15, s16);
+        XANDN(s16, s16, s17, s18);
+        XANDN(s18, s18, s19, s15);
+        XANDN(s15, s15, s16, s17);
+        XANDN(s17, s17, s18, C0);
 
-        C0    = (~s23) & s24;
-        s24 = s24 ^ ANDN(s20, s21);
-        s21 = s21 ^ ANDN(s22, s23);
-        s23 = s23 ^ ANDN(s24, s20);
-        s20 = s20 ^ ANDN(s21, s22);
-        s22 = s22 ^ (C0                );
+        C0 = s24;
+        XANDN(s24, s24, s20, s21);
+        XANDN(s21, s21, s22, s23);
+        XANDN(s23, s23, s24, s20);
+        XANDN(s20, s20, s21, s22);
+        XANDN(s22, s22, s23, C0);
         s00 ^= KeccakP1600RoundConstants[round];
     }
 
@@ -246,7 +212,7 @@ int main(){
     D_expected[23] = 0xC3EE4E27532483D8ULL;
     D_expected[24] = 0x0271BFE284B1B424ULL;
 
-    print_uart("KeccakF1600_StatePermute Benchmark - No Optimizations\n");
+    print_uart("KeccakF1600_StatePermute Benchmark - Coprocessor\n");
 
     clear_csr(mcountinhibit, 1);
     write_csr(mcycle, 0);

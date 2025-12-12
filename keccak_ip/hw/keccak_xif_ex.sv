@@ -62,15 +62,7 @@ module keccak_xif_ex
 				valid_n		= 1'b1;
 				we_n		= 1'b1;
 			end
-			keccak_xif_instr_pkg::KTOP: begin
-				result_n	= registers_i[0] ^ {registers_i[1][XLEN-2:0], registers_i[1][XLEN-1]};
-				hartid_n	= hartid_i;
-				id_n		= id_i;
-				rd_n		= rd_i;
-				valid_n		= 1'b1;
-				we_n		= 1'b1;
-			end
-			keccak_xif_instr_pkg::KCOP: begin
+			keccak_xif_instr_pkg::XANDN: begin
 				result_n	= registers_i[0] ^ (~registers_i[1] & registers_i[2]);
 				hartid_n	= hartid_i;
 				id_n		= id_i;
