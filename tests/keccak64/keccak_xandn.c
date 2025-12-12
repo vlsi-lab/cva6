@@ -1,4 +1,9 @@
+// Keccak Accellerator IP - Tightly
+// C Benchmark for the State Permutation Function - XANDN Implementation 
+// Author: Federico Runco
+
 #include "inc/uart.h"
+#include "inc/keccak_copro.h"
 #include "encoding.h"
 
 #define ROL64(a, offset) (((a) << (offset)) | ((a) >> (64 - (offset))))
@@ -143,40 +148,40 @@ static void KeccakF1600_StatePermute(uint64_t *s)
         s08 = ROL64(s16,45);
         s16 = ROL64(C1,36);
 
-        C0    = (~s03) & s04;
-        s04 = s04 ^ ANDN(s00, s01);
-        s01 = s01 ^ ANDN(s02, s03);
-        s03 = s03 ^ ANDN(s04, s00);
-        s00 = s00 ^ ANDN(s01, s02);
-        s02 = s02 ^ (C0              );
+        C0 = s04;
+        XANDN(s04, s04, s00, s01);
+        XANDN(s01, s01, s02, s03);
+        XANDN(s03, s03, s04, s00);
+        XANDN(s00, s00, s01, s02);
+        XANDN(s02, s02, s03, C0);
 
-        C0    = (~s08) & s09;
-        s09 = s09 ^ ANDN(s05, s06);
-        s06 = s06 ^ ANDN(s07, s08);
-        s08 = s08 ^ ANDN(s09, s05);
-        s05 = s05 ^ ANDN(s06, s07);
-        s07 = s07 ^ (C0              );
+        C0 = s09;
+        XANDN(s09, s09, s05, s06);
+        XANDN(s06, s06, s07, s08);
+        XANDN(s08, s08, s09, s05);
+        XANDN(s05, s05, s06, s07);
+        XANDN(s07, s07, s08, C0);
 
-        C0    = (~s13) & s14;
-        s14 = s14 ^ ANDN(s10, s11);
-        s11 = s11 ^ ANDN(s12, s13);
-        s13 = s13 ^ ANDN(s14, s10);
-        s10 = s10 ^ ANDN(s11, s12);
-        s12 = s12 ^ (C0                );
-                     
-        C0    = (~s18) & s19;
-        s19 = s19 ^ ANDN(s15, s16);
-        s16 = s16 ^ ANDN(s17, s18);
-        s18 = s18 ^ ANDN(s19, s15);
-        s15 = s15 ^ ANDN(s16, s17);
-        s17 = s17 ^ (C0                );
+        C0 = s14;
+        XANDN(s14, s14, s10, s11);
+        XANDN(s11, s11, s12, s13);
+        XANDN(s13, s13, s14, s10);
+        XANDN(s10, s10, s11, s12);
+        XANDN(s12, s12, s13, C0);
 
-        C0    = (~s23) & s24;
-        s24 = s24 ^ ANDN(s20, s21);
-        s21 = s21 ^ ANDN(s22, s23);
-        s23 = s23 ^ ANDN(s24, s20);
-        s20 = s20 ^ ANDN(s21, s22);
-        s22 = s22 ^ (C0                );
+        C0 = s19;
+        XANDN(s19, s19, s15, s16);
+        XANDN(s16, s16, s17, s18);
+        XANDN(s18, s18, s19, s15);
+        XANDN(s15, s15, s16, s17);
+        XANDN(s17, s17, s18, C0);
+
+        C0 = s24;
+        XANDN(s24, s24, s20, s21);
+        XANDN(s21, s21, s22, s23);
+        XANDN(s23, s23, s24, s20);
+        XANDN(s20, s20, s21, s22);
+        XANDN(s22, s22, s23, C0);
         s00 ^= KeccakP1600RoundConstants[round];
     }
 
@@ -246,7 +251,7 @@ int main(){
     D_expected[23] = 0xC3EE4E27532483D8ULL;
     D_expected[24] = 0x0271BFE284B1B424ULL;
 
-    print_uart("KeccakF1600_StatePermute Benchmark - No Optimizations\n");
+    print_uart("KeccakF1600_StatePermute Benchmark - XANDN Implementation\n");
 
     clear_csr(mcountinhibit, 1);
     write_csr(mcycle, 0);

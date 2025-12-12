@@ -1,4 +1,9 @@
+// Keccak Accellerator IP - Tightly
+// C Benchmark for the State Permutation Function - XOR3 Implementation 
+// Author: Federico Runco
+
 #include "inc/uart.h"
+#include "inc/keccak_copro.h"
 #include "encoding.h"
 
 #define ROL64(a, offset) (((a) << (offset)) | ((a) >> (64 - (offset))))
@@ -71,9 +76,9 @@ static void KeccakF1600_StatePermute(uint64_t *s)
     for(round=0; round<24; round++) {
         uint64_t C0, C1, C2, C3;
 
-        C0 = s00 ^ s05 ^ s10 ^ s15 ^ s20;
-        C1 = s01 ^ s06 ^ s11 ^ s16 ^ s21;
-        C3 = s04 ^ s09 ^ s14 ^ s19 ^ s24;
+        XOR5(C0, s00, s05, s10, s15, s20);
+        XOR5(C1, s01, s06, s11, s16, s21);
+        XOR5(C3, s04, s09, s14, s19, s24);
         
         C2 = ROL64(C1, 1) ^ C3;
 
@@ -83,7 +88,7 @@ static void KeccakF1600_StatePermute(uint64_t *s)
         s15 = s15 ^ C2;
         s20 = s20 ^ C2;
         
-        C2 = s02 ^ s07 ^ s12 ^ s17 ^ s22 ;
+        XOR5(C2, s02, s07, s12, s17, s22);
 
         C3 = ROL64(C3, 1) ^ C2;
         C2 = ROL64(C2, 1) ^ C0;
@@ -94,7 +99,7 @@ static void KeccakF1600_StatePermute(uint64_t *s)
         s16 = s16 ^ C2;
         s21 = s21 ^ C2;
         
-        C2 = s03 ^ s08 ^ s13 ^ s18 ^ s23;
+        XOR5(C2, s03, s08, s13, s18, s23);
         
         C0 = ROL64(C0, 1) ^ C2;
         C2 = ROL64(C2, 1) ^ C1;
@@ -246,7 +251,7 @@ int main(){
     D_expected[23] = 0xC3EE4E27532483D8ULL;
     D_expected[24] = 0x0271BFE284B1B424ULL;
 
-    print_uart("KeccakF1600_StatePermute Benchmark - No Optimizations\n");
+    print_uart("KeccakF1600_StatePermute Benchmark - XOR3 Implementation\n");
 
     clear_csr(mcountinhibit, 1);
     write_csr(mcycle, 0);

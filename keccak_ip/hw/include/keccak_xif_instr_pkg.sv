@@ -8,9 +8,8 @@ package keccak_xif_instr_pkg;
 	typedef enum logic [3:0] {
 		ILLEGAL	= 4'b0000,
 		XOR3 	= 4'b0001,
-		KTOP 	= 4'b0010,
-		KCOP	= 4'b0011,
-		DXROLS 	= 4'b0100
+		XANDN 	= 4'b0010,
+		DXROLS 	= 4'b0011
 	} opcode_t;
 
 	// CV-X-IF issue response typedefs
@@ -31,7 +30,7 @@ package keccak_xif_instr_pkg;
 	// REF on custom opcodes: https://docs.riscv.org/reference/isa/_attachments/riscv-unprivileged.pdf chapter 35
 	// R-type: funct7_rs2_rs1_funct3_rd_opcode
 	// R4-type: rs3_funct2_rs2_rs1_funct3_rd_opcode
-	parameter int unsigned NbInstr = 4;
+	parameter int unsigned NbInstr = 3;
 	parameter copro_issue_resp_t CoproInstr[NbInstr] = '{
 		'{
 			instr: 	32'b00000_10_00000_00000_000_00000_1000011, // MADD opcode, R4 type
@@ -40,16 +39,10 @@ package keccak_xif_instr_pkg;
 			opcode:	XOR3
 		},
 		'{
-			instr: 	32'b0000000_00000_00000_000_00000_0001011, // CUSTOM-0 opcode, R-type
-			mask: 	32'b1111111_00000_00000_111_00000_1111111,
-			resp: 	'{accept: 1'b1, writeback: 1'b1, register_read: 3'b011},
-			opcode: KTOP
-		},
-		'{
 			instr: 	32'b00000_10_00000_00000_001_00000_1000011, // MADD opcode, R4 type
 			mask: 	32'b00000_11_00000_00000_111_00000_1111111,
 			resp: 	'{accept: 1'b1, writeback: 1'b1, register_read: 3'b111},
-			opcode:	KCOP
+			opcode:	XANDN
 		},
 		'{
 			instr: 	32'b00000_10_00000_00000_010_00000_1000011, // MADD opcode, R4 type
