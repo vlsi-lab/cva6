@@ -94,6 +94,19 @@ static void bin_to_hex(uint8_t inp, uint8_t res[2])
     return;
 }
 
+static void print_uart_hex4(uint8_t v)
+{
+    v &= 0xF;
+    write_serial((v < 10) ? ('0' + v) : ('A' + (v - 10)));
+}
+
+static void print_uart_hex8(uint8_t v)
+{
+    print_uart_hex4(v >> 4);
+    print_uart_hex4(v);
+}
+
+
 static void print_uart_int(uint32_t addr)
 {
     int i;
