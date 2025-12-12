@@ -15,10 +15,14 @@ export DV_SIMULATORS=veri-testharness
 
 cd ./verif/sim
 
+
+
 python3 cva6.py --target=$DV_TARGET --iss=$DV_SIMULATORS --iss_yaml=cva6.yaml \
     --c_tests ../../tests/ml-kem-512/main.c \
+    --iss_timeout 1000000 --issrun_opts="+time_out=100000000000" \
     --linker=../tests/custom/common/test.ld \
-    --gcc_opts="-static -mcmodel=medany -fvisibility=hidden \
+    --gcc_opts="-static -mcmodel=medany -fvisibility=hidden -02 \
+    -funroll-loops -finline-functions \
     -nostartfiles -g ../tests/custom/common/syscalls.c \
     ../tests/custom/common/crt.S \
     ../../tests/ml-kem-512/cbd.c \
