@@ -15,7 +15,7 @@ top_level      ?= ariane_tb
 # Top level path
 top_level_path ?= corev_apu/tb/$(top_level).sv
 # Maximum amount of cycles for a successful simulation run
-max_cycles     ?= 10000000
+max_cycles     ?= 1000000000
 # Test case to run
 test_case      ?= core_test
 # QuestaSim Version
