@@ -1,7 +1,7 @@
 # CVA6 RISC-V CPU + Keccak Accellerator
 CVA6 is a 6-stage, single-issue, in-order CPU which implements the 64-bit RISC-V instruction set. It fully implements I, M, A and C extensions as specified in Volume I: User-Level ISA V 2.3 as well as the draft privilege extension 1.10. It implements three privilege levels M, S, U to fully support a Unix-like operating system. Furthermore, it is compliant to the draft external debug spec 0.13. 
 
-This branch implements a CV-X-IF Coprocessor for Keccak accelleration. The implemented instructions are the following:
+This branch implements a CV-X-IF Coprocessor for Keccak accelleration, adding the following custom instructions:
 - XOR3: three operand XOR
 - XANDN: XOR-AND-Negate: implements rd = rs1 ^ (~rs2 & rs3)
 - DXROLS: Dual-XOR-ROL-Single: implements rd = rs1 ^ (rs2 ^ ROL(rs3, 1))
@@ -50,11 +50,12 @@ Tests for different implementations of the coprocessor were runned. The referenc
 
 | Implementation | Cycles for permutation | Instructions | # of ld/sd | % speedup on reference |
 | --- | --- | --- |  --- |  --- |
-| Reference | 19491 | | | 0 % | 
-| XOR3 | 18431 | | | 5.4 % | 
-| DXROLS | 16545 | | | 15.1 % | 
-| XANDN | 16204 | | | 16.9 % | 
-| XOR3+DXROLS+XANDN, register keyword | 8534 | | | 56.2 % | 
+| Reference - No ISA Extensions | 7018 | | | 0 % | 
+| Z* extensions | 5299 | | | 0 % | 
+| XOR3 | 5212 | | | 1.9 % | 
+| DXROLS | 5077 | | | 4.2 % | 
+| XANDN | 5105 | | | 4.0 % | 
+| XOR3+DXROLS+XANDN, register keyword | 3785 | | | 28.7 % | 
 
 
 # Acknowledgements
