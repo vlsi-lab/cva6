@@ -179,3 +179,10 @@ static uint32_t read_uint32_from_uart() {
     return value;
 }
 
+// printf emulation
+#define printf(...) do { \
+        char text[1024]; \
+        sprintf(text, __VA_ARGS__); \
+        print_uart(text); \
+} while (0)
+

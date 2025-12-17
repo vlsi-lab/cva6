@@ -9,6 +9,7 @@ DV_TARGET=cv64a6_imafdc_sv39
 # export NUM_JOBS=
 
 export DV_SIMULATORS=veri-testharness
+
 # export DV_SIMULATORS=spike
 #export TRACE_FAST=1
 

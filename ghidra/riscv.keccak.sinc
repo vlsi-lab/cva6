@@ -8,21 +8,15 @@
     rd = rs1 ^ rs2 ^ rs3;
 }
 
-# KCOP: R4-type instruction using MADD opcode space (0x43)
+# XANDN: R4-type instruction using MADD opcode space (0x43)
 # Encoding: rs3[31:27] | funct2[26:25]=0x2 | rs2[24:20] | rs1[19:15] | funct3[14:12] | rd[11:7] | opcode[6:0]=0x43
-:kcop rd, rs1, rs2, rs3 is op0006=0x43 & op2526=0x2 & funct3=0x1 & rs1 & rs2 & rs3 & rd {
+:xandn rd, rs1, rs2, rs3 is op0006=0x43 & op2526=0x2 & funct3=0x1 & rs1 & rs2 & rs3 & rd {
     rd = rs1 ^ (~rs2 & rs3);
 }
 
 # DXROLS: R4-type instruction using MADD opcode space (0x43)
 # Encoding: rs3[31:27] | funct2[26:25]=0x2 | rs2[24:20] | rs1[19:15] | funct3[14:12] | rd[11:7] | opcode[6:0]=0x43
 :dxrols rd, rs1, rs2, rs3 is op0006=0x43 & op2526=0x2 & funct3=0x2 & rs1 & rs2 & rs3 & rd {
-    rd = rs1 ^ rs2 ^ rs3;
+    local rotated:8 = (rs3 << 1) | (rs3 >> 63);
+    rd = rs1 ^ (rs2 ^ rotated);
 }
-
-# KTOP: R-type instruction using MADD opcode space (0x43)
-# Encoding: funct7[31:25]=0x0 | rs2[24:20] | rs1[19:15] | funct3[14:12] | rd[11:7] | opcode[6:0]=0x0B
-:dxrols rd, rs1, rs2 is op0006=0x0B & funct7=0x0 & funct3=0x0 & rs1 & rs2 & rd {
-    rd = rs1 ^ rs2;
-}
-
