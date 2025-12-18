@@ -51,11 +51,11 @@ Tests for different implementations of the coprocessor were runned. The referenc
 | Implementation | Cycles for permutation | Instructions | # of ld/sd | % speedup on reference |
 | --- | --- | --- |  --- |  --- |
 | Reference - No ISA Extensions | 7018 | | | 0 % | 
-| Z* extensions | 5299 | | | 0 % | 
-| XOR3 | 5212 | | | 1.9 % | 
-| DXROLS | 5077 | | | 4.2 % | 
-| XANDN | 5105 | | | 4.0 % | 
-| XOR3+DXROLS+XANDN, register keyword | 3785 | | | 28.7 % | 
+| Z* extensions | 5299 | | | 24.49 % | 
+| XOR3 | 5212 | | | 25.73 % | 
+| DXROLS | 5077 | | | 27.65 % | 
+| XANDN | 5105 | | | 27.25 % | 
+| XOR3+DXROLS+XANDN, register keyword | 3785 | | | 46.07 % | 
 
 
 # Acknowledgements
