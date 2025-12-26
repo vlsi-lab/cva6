@@ -15,7 +15,7 @@ export TRACE_FAST=1
 cd ./verif/sim
 
 python3 cva6.py --target cv64a6_imafdc_sv39 --iss=$DV_SIMULATORS --iss_yaml=cva6.yaml \
---asm_tests ../../tests/keccak_xif/keccak_xif.S \
+--asm_tests ../../tests/xif_tests/xif_tests.S \
 --linker=../tests/custom/common/test.ld \
 --gcc_opts="-static -mcmodel=medany -fvisibility=hidden -O0 \
 -nostartfiles -g ../tests/custom/common/syscalls.c \

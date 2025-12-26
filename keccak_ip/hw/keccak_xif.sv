@@ -1,4 +1,4 @@
-// Keccak Accellerator IP - Tightly
+// Keccak Accelerator IP - Tightly
 // Top module description for XIF execution unit 
 // Author: Federico Runco
 
@@ -87,7 +87,8 @@ module keccak_xif
 		.XLEN			(XLEN),
 		.hartid_t		(hartid_t),
 		.id_t			(id_t),
-		.registers_t	(registers_t)
+		.registers_t	(registers_t),
+		.x_issue_req_t	(x_issue_req_t)
 	) i_ex (
 		.clk_i			(clk_i),
       	.rst_ni			(rst_ni),
@@ -96,6 +97,7 @@ module keccak_xif
     	.hartid_i		(issue_hartid),
     	.id_i			(issue_id),
     	.rd_i			(issue_rd),
+		.issue_req_i	(issue_req),
     	.hartid_o		(hartid),
     	.id_o			(id),
     	.result_o		(result),

@@ -1,4 +1,4 @@
-// Keccak Accellerator IP - Tightly
+// Keccak Accelerator IP - Tightly
 // Module description for XIF instruction decoder 
 // Author: Federico Runco
 

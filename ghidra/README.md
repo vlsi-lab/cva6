@@ -7,6 +7,11 @@
 ```bash
 @include "riscv.keccak.sinc"
 ```
+- Edit GHIDRA_DIR/Ghidra/Processors/RISCV/data/languages/riscv.instr.sinc and comment out 
+```bash
+@include "riscv.custom.sinc"
+```
+
 - Recompile language definition:
 ```bash
 ./support/sleigh Ghidra/Processors/RISCV/data/languages/riscv.lp64d.slaspec

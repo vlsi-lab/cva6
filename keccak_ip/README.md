@@ -1,4 +1,4 @@
-# Keccak Accellerator IP
+# Keccak Accelerator IP
 WIP...
 
 ## Directory tree

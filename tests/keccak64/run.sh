@@ -11,7 +11,8 @@ DV_TARGET=cv64a6_imafdc_sv39
 export DV_SIMULATORS=veri-testharness
 
 # export DV_SIMULATORS=spike
-#export TRACE_FAST=1
+# export TRACE_FAST=1
+unset TRACE_FAST
 
 TEST_DIR="./tests/keccak64"
 mapfile -t CFILES < <(find "$TEST_DIR" -maxdepth 1 -name "*.c" | sort)
@@ -34,6 +35,13 @@ SELECTED_TEST="${CFILES[$INDEX]}"
 echo "Running $SELECTED_TEST"
 echo ""
 
+# Check if filename contains "asm" to include assembly file
+ASM_FILE=""
+if [[ "$SELECTED_TEST" == *"asm"* ]]; then
+    ASM_FILE="../../tests/keccak64/keccak_permute.s"
+    echo "Including assembly file: keccak_permute.s"
+fi
+
 cd ./verif/sim
 
 python3 cva6.py --target cv64a6_imafdc_sv39 --iss=$DV_SIMULATORS --iss_yaml=cva6.yaml \
@@ -41,7 +49,7 @@ python3 cva6.py --target cv64a6_imafdc_sv39 --iss=$DV_SIMULATORS --iss_yaml=cva6
 --linker=../tests/custom/common/test.ld \
 --gcc_opts="-static -mcmodel=medany -fvisibility=hidden -O1 \
 -nostartfiles -g ../tests/custom/common/syscalls.c \
-../tests/custom/common/crt.S -lgcc \
+../tests/custom/common/crt.S $ASM_FILE -lgcc \
 -I../tests/custom/env -I../tests/custom/common -I../../tests/keccak64/include"
 
 cd ..

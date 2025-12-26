@@ -1,4 +1,4 @@
-// Keccak Accellerator IP - Tightly
+// Keccak Accelerator IP - Tightly
 // C Benchmark for the State Permutation Function - Full coprocessor Implementation 
 // Author: Federico Runco
 
@@ -83,31 +83,31 @@ static void KeccakF1600_StatePermute(uint64_t *s)
         XOR5(C4, s03, s08, s13, s18, s23);
 
         C5 = s05;
-        DXROL3(s05, s03, C2, C3, 28);
-        DXROL3(s03, s18, C2, C3, 21);
-        DXROL3(s18, s17, C1, C4, 15);
-        DXROL3(s17, s11, C0, C2, 10);
-        DXROL3(s11, s07, C1, C4, 6);
-        DXROL3(s07, s10, C3, C1, 3);
-        DXROL3(s10, s01, C0, C2, 1);
-        DXROL3(s01, s06, C0, C2, 44);
-        DXROL3(s06, s09, C4, C0, 20);
-        DXROL3(s09, s22, C1, C4, 61);
-        DXROL3(s22, s14, C4, C0, 39);
-        DXROL3(s14, s20, C3, C1, 18);
-        DXROL3(s20, s02, C1, C4, 62);
-        DXROL3(s02, s12, C1, C4, 43);
-        DXROL3(s12, s13, C2, C3, 25);
-        DXROL3(s13, s19, C4, C0, 8);
-        DXROL3(s19, s23, C2, C3, 56);
-        DXROL3(s23, s15, C3, C1, 41);
-        DXROL3(s15, s04, C4, C0, 27);
-        DXROL3(s04, s24, C4, C0, 14);
-        DXROL3(s24, s21, C0, C2, 2);
-        DXROL3(s21, s08, C2, C3, 55);
-        DXROL3(s08, s16, C0, C2, 45);
-        DXROL3(s16, C5, C3, C1, 36);
-        DXROL3(s00, s00, C3, C1, 0);
+        RXRI(s05, s03, C2, C3, 28);
+        RXRI(s03, s18, C2, C3, 21);
+        RXRI(s18, s17, C1, C4, 15);
+        RXRI(s17, s11, C0, C2, 10);
+        RXRI(s11, s07, C1, C4, 6);
+        RXRI(s07, s10, C3, C1, 3);
+        RXRI(s10, s01, C0, C2, 1);
+        RXRI(s01, s06, C0, C2, 44);
+        RXRI(s06, s09, C4, C0, 20);
+        RXRI(s09, s22, C1, C4, 61);
+        RXRI(s22, s14, C4, C0, 39);
+        RXRI(s14, s20, C3, C1, 18);
+        RXRI(s20, s02, C1, C4, 62);
+        RXRI(s02, s12, C1, C4, 43);
+        RXRI(s12, s13, C2, C3, 25);
+        RXRI(s13, s19, C4, C0, 8);
+        RXRI(s19, s23, C2, C3, 56);
+        RXRI(s23, s15, C3, C1, 41);
+        RXRI(s15, s04, C4, C0, 27);
+        RXRI(s04, s24, C4, C0, 14);
+        RXRI(s24, s21, C0, C2, 2);
+        RXRI(s21, s08, C2, C3, 55);
+        RXRI(s08, s16, C0, C2, 45);
+        RXRI(s16, C5, C3, C1, 36);
+        RXRI(s00, s00, C3, C1, 0);
 
         C0 = s04;
         XANDN(s04, s04, s00, s01);
