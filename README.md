@@ -1,10 +1,20 @@
-# CVA6 RISC-V CPU + Keccak Accellerator
+# CVA6 RISC-V CPU + Keccak Accelerator
 CVA6 is a 6-stage, single-issue, in-order CPU which implements the 64-bit RISC-V instruction set. It fully implements I, M, A and C extensions as specified in Volume I: User-Level ISA V 2.3 as well as the draft privilege extension 1.10. It implements three privilege levels M, S, U to fully support a Unix-like operating system. Furthermore, it is compliant to the draft external debug spec 0.13. 
 
-This branch implements a CV-X-IF Coprocessor for Keccak accelleration, adding the following custom instructions:
-- XOR3: three operand XOR
-- XANDN: XOR-AND-Negate: implements rd = rs1 ^ (~rs2 & rs3)
-- DXROLS: Dual-XOR-ROL-Single: implements rd = rs1 ^ (rs2 ^ ROL(rs3, 1))
+This branch implements a CV-X-IF Coprocessor for Keccak acceleration, adding the following custom instructions:
+
+- `xor3`: Three operand XOR
+	- Operation: rd = rs1 ^ rs2 ^ rs3
+	- Accelerates Theta (parity) step
+- `xandn`: XOR-AND-Negate
+	- Operation: rd = rs1 ^ (~rs2 & rs3)
+	- Accelerates Chi step
+- `rxri.h`/`rxri.l`: Rotate-XOR-Rotate-Immediate (High/Low): 
+	- Operation: rd = ROL(rs1 ^ (rs2 ^ ROL(rs3, 1)), imm)
+	- Accelerates Pi (implicit to rd), Theta and Rho steps
+	- Immediate value is derived from funct2, funct3 concatenation. Since funct fields provide only 5 bit (32 possible values), the instruction is split in low and high opcodes to cover the full 64-bit rotation range
+
+The CVA6 ID stage has been modified to support R4-type instruction formats for `CUSTOM_1`, `CUSTOM_2` and `CUSTOM_3` opcodes when offloading via CV-X-IF. This change allows the core to select directly `rs3` from the instruction rather than passing `rd` value.
 
 # Getting Started
 Clone the repository
@@ -46,19 +56,18 @@ source tests/keccak/run.sh
 A list of available tests will be printed on screen.
 
 # Results
+## KeccakF1600_StatePermute
 Tests for different implementations of the coprocessor were runned. The reference C code is taken from the [benchmarks of SHA3 for the RISC-V Cryptography Extension](https://github.com/riscv/riscv-crypto/blob/main/benchmarks/sha3/zscrypto_rv64/Keccak.c). All tests are runned with -O1 flag.
 
-| Implementation | Cycles for permutation | Instructions | # of ld/sd | % speedup on reference |
-| --- | --- | --- |  --- |  --- |
-| Reference - No ISA Extensions | 7018 | | | 0 % | 
-| Z* extensions | 5299 | | | 24.49 % | 
-| XOR3 | 5212 | | | 25.73 % | 
-| DXROLS | 5077 | | | 27.65 % | 
-| XANDN | 5105 | | | 27.25 % | 
-| XOR3+DXROLS+XANDN, register keyword | 3785 | | | 46.07 % | 
-
+| Implementation | Cycles per permutation | Speedup vs baseline |
+| --- | --- | --- |  
+| Baseline - No ISA Extensions | 7018 | 1x | 
+| Z* extensions | 5299 | 1.32x | 
+| XOR3 | 5218 | 1.34x | 
+| RXRI | 4483  | 1.56x | 
+| XANDN | 5097 | 1.37x | 
+| XOR3+RXRI+XANDN, register keyword | 3182 | 2.21x | 
+| XOR3+RXRI+XANDN, asm implementation | 2469 | 2.85x |
 
 # Acknowledgements
 Check out the [acknowledgements](ACKNOWLEDGEMENTS.md).
-
-

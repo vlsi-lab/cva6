@@ -1,4 +1,4 @@
-// Keccak Accellerator IP - Tightly
+// Keccak Accelerator IP - Tightly
 // C Benchmark for the State Permutation Function - XOR3 Implementation 
 // Author: Federico Runco
 
@@ -251,36 +251,24 @@ int main(){
     D_expected[23] = 0xC3EE4E27532483D8ULL;
     D_expected[24] = 0x0271BFE284B1B424ULL;
 
-    print_uart("KeccakF1600_StatePermute Benchmark - XOR3 Implementation\n");
+    printf("KeccakF1600_StatePermute Benchmark - XOR3 Implementation\n");
 
     clear_csr(mcountinhibit, 1);
     write_csr(mcycle, 0);
     KeccakF1600_StatePermute(Din);
     cycles = read_csr(mcycle);
 
-    print_uart("Number of clock cycles for KeccakF1600_StatePermute: ");
-    print_uart_dec(cycles);
-    print_uart("\n");
+    printf("Number of clock cycles for KeccakF1600_StatePermute: %d\n", cycles);
 
     for (int i = 0; i < 25; i++) {
         if (Din[i] != D_expected[i]) {
-            print_uart("!!! Mismatch at index ");
-            print_uart_dec(i);
-            print_uart(": expected 0x");
-            print_uart_addr(D_expected[i]);
-            print_uart(", got 0x");
-            print_uart_addr(Din[i]);
-            print_uart(" !!!\n");
+            printf("!!! Mismatch at index %d: expected 0x%016llx, got 0x%016llx !!!\n", i, D_expected[i], Din[i]);
             errors++;
         }
     }
 
-    if (errors == 0) {
-        print_uart("KeccakF1600_StatePermute Benchmark terminated with no errors.\n");
-    } else {
-        print_uart("KeccakF1600_StatePermute Benchmark terminated with ");
-        print_uart_dec(errors);
-        print_uart(" errors\n");
-    }
+    if (errors == 0)    printf("KeccakF1600_StatePermute Benchmark terminated with no errors.\n");
+    else                printf("KeccakF1600_StatePermute Benchmark terminated with %d errors\n", errors);
+
 	return 0;
 }

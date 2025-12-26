@@ -1,4 +1,4 @@
-// Keccak Accellerator IP - Tightly
+// Keccak Accelerator IP - Tightly
 // Package for XIF custom instructions definition
 // Author: Federico Runco
 
@@ -9,7 +9,8 @@ package keccak_xif_instr_pkg;
 		ILLEGAL	= 4'b0000,
 		XOR3 	= 4'b0001,
 		XANDN 	= 4'b0010,
-		DXROLS 	= 4'b0011
+		RXRIL	= 4'b0011,
+		RXRIH	= 4'b0100
 	} opcode_t;
 
 	// CV-X-IF issue response typedefs
@@ -26,29 +27,34 @@ package keccak_xif_instr_pkg;
 		opcode_t     opcode;
 	} copro_issue_resp_t;
 
-	// Instruction encoding (madd, unsupported extension of fpu to offload instr)
 	// REF on custom opcodes: https://docs.riscv.org/reference/isa/_attachments/riscv-unprivileged.pdf chapter 35
 	// R-type: funct7_rs2_rs1_funct3_rd_opcode
 	// R4-type: rs3_funct2_rs2_rs1_funct3_rd_opcode
-	parameter int unsigned NbInstr = 3;
+	parameter int unsigned NbInstr = 4;
 	parameter copro_issue_resp_t CoproInstr[NbInstr] = '{
 		'{
-			instr: 	32'b00000_10_00000_00000_000_00000_1000011, // MADD opcode, R4 type
+			instr: 	32'b00000_10_00000_00000_000_00000_0101011, // CUSTOM-1 opcode, R4 type
 			mask: 	32'b00000_11_00000_00000_111_00000_1111111,
 			resp: 	'{accept: 1'b1, writeback: 1'b1, register_read: 3'b111},
 			opcode:	XOR3
 		},
 		'{
-			instr: 	32'b00000_10_00000_00000_001_00000_1000011, // MADD opcode, R4 type
+			instr: 	32'b00000_10_00000_00000_001_00000_0101011, // CUSTOM-1 opcode, R4 type
 			mask: 	32'b00000_11_00000_00000_111_00000_1111111,
 			resp: 	'{accept: 1'b1, writeback: 1'b1, register_read: 3'b111},
 			opcode:	XANDN
 		},
 		'{
-			instr: 	32'b00000_10_00000_00000_010_00000_1000011, // MADD opcode, R4 type
-			mask: 	32'b00000_11_00000_00000_111_00000_1111111,
+			instr: 	32'b00000_00_00000_00000_000_00000_1011011, // CUSTOM-2 opcode, R4 type
+			mask: 	32'b00000_00_00000_00000_000_00000_1111111,
 			resp: 	'{accept: 1'b1, writeback: 1'b1, register_read: 3'b111},
-			opcode:	DXROLS
+			opcode:	RXRIL
+		},
+		'{
+			instr: 	32'b00000_00_00000_00000_000_00000_1111011, // CUSTOM-3 opcode, R4 type
+			mask: 	32'b00000_00_00000_00000_000_00000_1111111,
+			resp: 	'{accept: 1'b1, writeback: 1'b1, register_read: 3'b111},
+			opcode:	RXRIH
 		}
 	};
 
