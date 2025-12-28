@@ -3,8 +3,8 @@
 # Source environment setup
 source ./verif/sim/setup-env.sh
 
-#DV_TARGET=cv64a6_imafdc_sv39
-DV_TARGET=cv64a6_imac_crypto
+DV_TARGET=cv64a6_imafdc_sv39
+#DV_TARGET=cv64a6_imac_crypto
 
 # Set the NUM_JOBS variable to increase the number of parallel make jobs
 # export NUM_JOBS=
@@ -15,13 +15,19 @@ export DV_SIMULATORS=veri-testharness
 
 cd ./verif/sim
 
-
+ASM_FILE=""
+USE_COPRO=""
+if [[ $1 == "copro" ]]; then
+    ASM_FILE="../../tests/keccak64/keccak_permute.s"
+    USE_COPRO="-DUSE_COPROCESSOR_ASM"
+    echo "Using coprocessor assembly implementation for KeccakF1600_StatePermute"
+fi
 
 python3 cva6.py --target=$DV_TARGET --iss=$DV_SIMULATORS --iss_yaml=cva6.yaml \
     --c_tests ../../tests/ml-kem-512/main.c \
     --iss_timeout 1000000 --issrun_opts="+time_out=100000000000" \
     --linker=../tests/custom/common/test.ld \
-    --gcc_opts="-static -mcmodel=medany -fvisibility=hidden -02 \
+    --gcc_opts="-static -mcmodel=medany $USE_COPRO -fvisibility=hidden -O1 \
     -funroll-loops -finline-functions \
     -nostartfiles -g ../tests/custom/common/syscalls.c \
     ../tests/custom/common/crt.S \
@@ -36,6 +42,7 @@ python3 cva6.py --target=$DV_TARGET --iss=$DV_SIMULATORS --iss_yaml=cva6.yaml \
     ../../tests/ml-kem-512/reduce.c \
     ../../tests/ml-kem-512/symmetric-shake.c \
     ../../tests/ml-kem-512/verify.c \
+    $ASM_FILE \
     -lgcc -fstack-usage\
     -I../tests/custom/env -I../tests/custom/common -I../../tests/ml-kem-512/inc"
 

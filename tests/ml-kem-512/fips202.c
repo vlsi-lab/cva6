@@ -44,6 +44,7 @@ static void store64(uint8_t x[8], uint64_t u) {
     x[i] = u >> 8*i;
 }
 
+#ifndef USE_COPROCESSOR_ASM
 /* Keccak round constants */
 static const uint64_t KeccakF_RoundConstants[NROUNDS] = {
   (uint64_t)0x0000000000000001ULL,
@@ -342,6 +343,9 @@ static void KeccakF1600_StatePermute(uint64_t state[25])
         state[23] = Aso;
         state[24] = Asu;
 }
+#else
+extern void KeccakF1600_StatePermute(uint64_t state[25]);
+#endif
 
 /*************************************************
 * Name:        keccak_init
