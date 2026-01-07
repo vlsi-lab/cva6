@@ -49,35 +49,39 @@ The shared toolchain is built from the official CVA6 scripts (util/toolchain-bui
 
 
 ### Tests
-To run tests for the Keccak Coprocessor, run:
+To run tests for the Keccak Coprocessor, issue:
 ```bash
 source tests/keccak/run.sh
 ```
 A list of available tests will be printed on screen.
 
+To run Kyber512 tests, issue:
+```bash
+source tests/ml-kem-512/run.sh
+source tests/ml-kem-512/run.sh copro
+```
+Depending on wether you want to simulate Kyber tests with or without the coprocessor.
+
 # Results
 ## KeccakF1600_StatePermute
-Tests for different implementations of the coprocessor instructions were runned. The reference C code is taken from the [benchmarks of SHA3 for the RISC-V Cryptography Extension](https://github.com/riscv/riscv-crypto/blob/main/benchmarks/sha3/zscrypto_rv64/Keccak.c). All tests are runned with -O1 flag.
+Tests for different implementations of the coprocessor instructions were runned. The reference C code is taken from the [benchmarks of SHA3 for the RISC-V Cryptography Extension](https://github.com/riscv/riscv-crypto/blob/main/benchmarks/sha3/zscrypto_rv64/Keccak.c). All tests are runned with -O2 flag.
 
 | Implementation | Cycles per permutation | Speedup vs baseline |
 | --- | --- | --- |  
-| Baseline - No ISA Extensions | 7018 | 1x | 
-| Z* extensions | 5299 | 1.32x | 
-| XOR3 | 5218 | 1.34x | 
-| RXRI | 4483  | 1.56x | 
-| XANDN | 5097 | 1.37x | 
-| XOR3+RXRI+XANDN, register keyword | 3182 | 2.21x | 
-| XOR3+RXRI+XANDN, asm implementation | 2469 | 2.85x |
+| Baseline - No ISA Extensions | 8031 | 1x | 
+| XOR3 | 7656 | 1.05x | 
+| RXRI | 5051  | 1.59x | 
+| XANDN | 6711 | 1.20x | 
+| XOR3+RXRI+XANDN, register keyword | 3182 | 2.52x | 
+| XOR3+RXRI+XANDN, asm implementation | 2476 | 3.24x |
 
 ## ML-KEM-512
-To estimate performance gains in a real-world usage scenario of Keccak, Kyber512 was executed on both the Baseline ISA (rv64gc_z*) and the accelerated ISA featuring Keccak instructions.
+To estimate performance gains in a real-world usage scenario of Keccak, Kyber512 was executed on both the Baseline ISA (rv64imac_zicsr_zifencei) and the accelerated ISA featuring Keccak instructions.
 
 | Implementation | Keygen CPU cycles | Encapsulation CPU cycles | Decapsulation CPU cycles |
 | --- | --- | --- |  --- |  
-| Baseline (-O0) | 2372223 | 5532302 | 9769437 | 
-| Extern ASM Keccak_F1600StatePermute, Coprocessor (-O0) | 1856505 (1.27x)  | 4519888 (1.22x)  | 8260765 (1.18x) | 
-| Baseline (-O1) | 484534  | 1102504  | 1927521 | 
-| Extern ASM Keccak_F1600StatePermute, Coprocessor (-O1) | 404378 (1.19x) | 944988 (1.16x) | 1691699 (1.14x) | 
+| Baseline (-O2) | 573784 | 1291938 | 2212396 | 
+| Extern ASM Keccak_F1600StatePermute, Coprocessor (-O2) | 385272 (1.49x)  | 922625 (1.40x)  | 1661645 (1.33x) | 
 
 # Acknowledgements
 Check out the [acknowledgements](ACKNOWLEDGEMENTS.md).
