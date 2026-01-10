@@ -38,6 +38,23 @@ ${CVA6_REPO_DIR}/vendor/pulp-platform/fpga-support/rtl/SyncDpRam_ind_r_w.sv
 +incdir+${CVA6_REPO_DIR}/vendor/pulp-platform/axi/include/
 +incdir+${CVA6_REPO_DIR}/common/local/util/
 
+// Keccak IP
+${CVA6_REPO_DIR}/keccak_ip/gen/keccak_reg_pkg.sv
+${CVA6_REPO_DIR}/keccak_ip/gen/keccak_reg_top.sv
+${CVA6_REPO_DIR}/keccak_ip/rtl/pkg_keccak.sv
+${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_cu.sv
+${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_round_constants_gen.sv
+${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_round.sv
+${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_dp.sv
+${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_f.sv
++incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/include
++incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/vendor/lowrisc_opentitan/src/
++incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/src/
++incdir+${CVA6_REPO_DIR}/vendor/pulp-platform/axi/src/
+${CVA6_REPO_DIR}/vendor/pulp-platform/axi/src/axi_pkg.sv
+${CVA6_REPO_DIR}/corev_apu/register_interface/src/axi_to_reg.sv
+${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_axi_top.sv
+
 // Floating point unit
 ${CVA6_REPO_DIR}/core/cvfpu/src/fpnew_pkg.sv
 ${CVA6_REPO_DIR}/core/cvfpu/src/fpnew_cast_multi.sv
@@ -89,7 +106,7 @@ ${CVA6_REPO_DIR}/core/include/${TARGET_CFG}_config_pkg.sv
 ${CVA6_REPO_DIR}/core/include/riscv_pkg.sv
 // Note: depends on fpnew_pkg, above
 ${CVA6_REPO_DIR}/core/include/ariane_pkg.sv
-${CVA6_REPO_DIR}/vendor/pulp-platform/axi/src/axi_pkg.sv
+//${CVA6_REPO_DIR}/vendor/pulp-platform/axi/src/axi_pkg.sv
 
 // Packages
 ${CVA6_REPO_DIR}/core/include/wt_cache_pkg.sv

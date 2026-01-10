@@ -1,0 +1,49 @@
+// Keccak Accelerator IP - Loosely
+// Register definition for reggen.py 
+// Author: Federico Runco
+
+{
+  name: "keccak",
+  clock_primary: "clk_i",
+  reset_primary: "rst_ni",
+  bus_interfaces: [
+    {
+      protocol: "reg_iface", 
+      direction: "device" 
+    }
+  ],
+  regwidth: "64",
+  registers: [
+    {
+      multireg: {
+        name: "DATA",
+        desc: "I/O cryptographic state register of the Keccak AXI Accellerator",
+        count: "25",
+        cname: "data",
+        swaccess: "rw",
+        hwaccess: "hrw",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      name: "CSREG",
+      desc: "Control and status register for Keccak AXI Accellerator",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "0",
+          name: "START",
+          desc: "Start the permutation"
+        },
+        {
+          bits: "1",
+          name: "DONE",
+          desc: "Asserted if permutation is done"
+        }
+      ]
+    }
+  ]
+}

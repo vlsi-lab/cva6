@@ -393,6 +393,29 @@ module ariane_testharness #(
     .slv_resp_o ( gpio_resp )
   );
 
+  logic keccak_irq;
+  ariane_axi_soc::req_slv_t  keccak_req;
+  ariane_axi_soc::resp_slv_t keccak_resp;
+  `AXI_ASSIGN_TO_REQ(keccak_req, master[ariane_soc::Keccak])
+  `AXI_ASSIGN_FROM_RESP(master[ariane_soc::Keccak], keccak_resp)
+  keccak_axi_top #(
+    	.AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH            ),
+      .AXI_DATA_WIDTH ( AXI_DATA_WIDTH               ),
+      .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
+      .AXI_USER_WIDTH ( AXI_USER_WIDTH               ),
+      .axi_req_t ( ariane_axi_soc::req_slv_t ),
+      .axi_rsp_t ( ariane_axi_soc::resp_slv_t )
+  ) i_keccak_slv (
+    .clk_i      ( clk_i        ),
+    .rst_ni     ( ndmreset_n   ),
+    //.test_i     ( test_en      ),
+    .axi_req_i  ( keccak_req  ),
+    .axi_rsp_o  ( keccak_resp ),
+    //.axi_slave  ( master[ariane_soc::Keccak] )`
+    .keccak_intr_o (keccak_irq)
+  );
+  
+
 
   // ------------------------------
   // Memory + Exclusive Access
@@ -508,7 +531,8 @@ module ariane_testharness #(
     '{ idx: ariane_soc::SPI,      start_addr: ariane_soc::SPIBase,      end_addr: ariane_soc::SPIBase + ariane_soc::SPILength           },
     '{ idx: ariane_soc::Ethernet, start_addr: ariane_soc::EthernetBase, end_addr: ariane_soc::EthernetBase + ariane_soc::EthernetLength },
     '{ idx: ariane_soc::GPIO,     start_addr: ariane_soc::GPIOBase,     end_addr: ariane_soc::GPIOBase + ariane_soc::GPIOLength         },
-    '{ idx: ariane_soc::DRAM,     start_addr: ariane_soc::DRAMBase,     end_addr: ariane_soc::DRAMBase + ariane_soc::DRAMLength         }
+    '{ idx: ariane_soc::DRAM,     start_addr: ariane_soc::DRAMBase,     end_addr: ariane_soc::DRAMBase + ariane_soc::DRAMLength         },
+    '{ idx: ariane_soc::Keccak,   start_addr: ariane_soc::KeccakBase,   end_addr: ariane_soc::KeccakBase + ariane_soc::KeccakLength     }
   };
 
   localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{
@@ -643,7 +667,7 @@ module ariane_testharness #(
     .rst_ni               ( ndmreset_n          ),
     .boot_addr_i          ( ariane_soc::ROMBase ), // start fetching from ROM
     .hart_id_i            ( {56'h0, hart_id}    ),
-    .irq_i                ( irqs                ),
+    .irq_i                ( irqs               ),
     .ipi_i                ( ipi                 ),
     .time_irq_i           ( timer_irq           ),
     .rvfi_probes_o        ( rvfi_probes         ),

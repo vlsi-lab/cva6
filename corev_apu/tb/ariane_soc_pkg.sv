@@ -30,10 +30,11 @@ package ariane_soc;
     CLINT    = 7,
     ROM      = 8,
     Debug    = 9,
-    HPS      = 10
+    //HPS      = 10,
+    Keccak   = 10
   } axi_slaves_t;
 
-  localparam NB_PERIPHERALS = Debug + 1;
+  localparam NB_PERIPHERALS = Keccak + 1;
 
   localparam logic[63:0] DebugLength    = 64'h1000;
   localparam logic[63:0] ROMLength      = 64'h10000;
@@ -45,6 +46,7 @@ package ariane_soc;
   localparam logic[63:0] EthernetLength = 64'h10000;
   localparam logic[63:0] GPIOLength     = 64'h1000;
   localparam logic[63:0] HPSLength      = 64'h800000;
+  localparam logic[63:0] KeccakLength   = 64'h1000; // TODO: change length
 `ifdef NEXYS_VIDEO
   localparam logic[63:0] DRAMLength     = 64'h20000000; // 512MByte of DDR on Nexys video board
 `else
@@ -65,7 +67,8 @@ package ariane_soc;
     EthernetBase = 64'h3000_0000,
     GPIOBase     = 64'h4000_0000,
     DRAMBase     = 64'h8000_0000,
-    HPSBase      = 64'hFF80_0000
+    HPSBase      = 64'hFF80_0000,
+    KeccakBase   = 64'h5000_0000 // TODO: change address
   } soc_bus_start_t;
 
   localparam NrRegion = 1;
