@@ -3,6 +3,13 @@ CVA6 is a 6-stage, single-issue, in-order CPU which implements the 64-bit RISC-V
 
 This branch implements a coprocessor for Keccak acceleration instantiated in the AXI-4 crossbar. By default its base address is set to ```0x50000000``` and it exposes 25 registers for the cryptographic state and one Control/Status register.
 
+The mapping of the accellerator is the following:
+| Register Name | Offset | Width | Description | Fields |
+|--------------|--------|-------|-------------|--------|
+| DATA_0 - DATA_24 | 0x00 - 0xC0 | 64 bit | I/O cryptographic state registers (25 registers, 8 byte stride) | DATA[63:0] |
+| CSREG | 0xC8 | 64 bit | Control and status register | START[0], DONE[1], others unused |
+
+
 # Getting Started
 Clone the repository
 ```bash
@@ -59,6 +66,7 @@ The reference C code is taken from the [benchmarks of SHA3 for the RISC-V Crypto
 | --- | --- | --- |  
 | Baseline - No ISA Extensions | 8031 | 1x | 
 | AXI Coprocessor | 493 | 16.29x |
+
 
 ## ML-KEM-512
 To estimate performance gains in a real-world usage scenario of Keccak, Kyber512 was executed on both the Baseline ISA (rv64imac_zicsr_zifencei) and the CPU with the Keccak accellerator
