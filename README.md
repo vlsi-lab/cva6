@@ -73,8 +73,8 @@ To estimate performance gains in a real-world usage scenario of Keccak, Kyber512
 
 | Implementation | Keygen CPU cycles | Encapsulation CPU cycles | Decapsulation CPU cycles |
 | --- | --- | --- |  --- |  
-| Baseline (-O2) | 573784 | 1291938 | 2212396 | 
-| AXI Coprocessor (-O2) | 335208 (1.71x)  | 823927 (1.57x)  | 1514975 (1.46x) | 
+| Baseline (-O2) | 573784 | 712582 | 917591 | 
+| AXI Coprocessor (-O2) | 335202 (1.71x)  | 483173 (1.48x)  | 688285 (1.33x) | 
 
 # Acknowledgements
 Check out the [acknowledgements](ACKNOWLEDGEMENTS.md).

@@ -77,6 +77,7 @@ int main(void)
             memcpy(pk, TVEC_OUT_PK, KYBER_PUBLICKEYBYTES);
         #endif /* TEST_KEY */
 
+        write_csr(mcycle, 0);
         crypto_kem_enc_derand(ct, key_b, pk, encaps_rnd);
         cycles = read_csr(mcycle);
         print_uart("Number of clock cycles for crypto_kem_enc_derand: ");
@@ -101,6 +102,7 @@ int main(void)
             memcpy(ct, TVEC_OUT_CT, KYBER_CIPHERTEXTBYTES);
         #endif /* TEST_ENC */
 
+        write_csr(mcycle, 0);
         crypto_kem_dec(key_a, ct, sk);
         cycles = read_csr(mcycle);
         print_uart("Number of clock cycles for crypto_kem_dec: ");
