@@ -80,8 +80,8 @@ To estimate performance gains in a real-world usage scenario of Keccak, Kyber512
 
 | Implementation | Keygen CPU cycles | Encapsulation CPU cycles | Decapsulation CPU cycles |
 | --- | --- | --- |  --- |  
-| Baseline (-O2) | 573784 | 1291938 | 2212396 | 
-| Extern ASM Keccak_F1600StatePermute, Coprocessor (-O2) | 385272 (1.49x)  | 922625 (1.40x)  | 1661645 (1.33x) | 
+| Baseline (-O2) | 573788 | 712582 | 917591 | 
+| Extern ASM Keccak_F1600StatePermute, Coprocessor (-O2) | 385287 (1.49x)  | 531484 (1.34x)  | 736226 (1.25x) | 
 
 # Acknowledgements
 Check out the [acknowledgements](ACKNOWLEDGEMENTS.md).
