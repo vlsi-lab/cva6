@@ -105,11 +105,11 @@ ${CVA6_REPO_DIR}/core/cvxif_issue_register_commit_if_driver.sv
 ${CVA6_REPO_DIR}/core/cvxif_fu.sv
 
 // KECCAK IP
-${CVA6_REPO_DIR}/keccak_ip/hw/include/keccak_xif_instr_pkg.sv
-${CVA6_REPO_DIR}/keccak_ip/hw/keccak_xif_cid.sv
-${CVA6_REPO_DIR}/keccak_ip/hw/keccak_xif_id.sv
-${CVA6_REPO_DIR}/keccak_ip/hw/keccak_xif_ex.sv
-${CVA6_REPO_DIR}/keccak_ip/hw/keccak_xif.sv
+${CVA6_REPO_DIR}/horcrux_coproc/hw/include/horcrux_xif_instr_pkg.sv
+${CVA6_REPO_DIR}/horcrux_coproc/hw/horcrux_xif_cid.sv
+${CVA6_REPO_DIR}/horcrux_coproc/hw/horcrux_xif_id.sv
+${CVA6_REPO_DIR}/horcrux_coproc/hw/horcrux_xif_ex.sv
+${CVA6_REPO_DIR}/horcrux_coproc/hw/horcrux_top.sv
 
 // Common Cells
 ${CVA6_REPO_DIR}/vendor/pulp-platform/common_cells/src/cf_math_pkg.sv

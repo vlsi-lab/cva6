@@ -9,7 +9,6 @@ extern void KeccakF1600_StatePermute(uint64_t state[25]);
 
 int main(){
     static uint64_t Din[25], D_expected[25];
-    int cycles;
     int errors = 0;
 
     // Initial state 
@@ -47,6 +46,7 @@ int main(){
 
     printf("KeccakF1600_StatePermute Benchmark - Coprocessor ASM permutation\n");
 
+    int cycles;
     clear_csr(mcountinhibit, 1);
     write_csr(mcycle, 0);
     KeccakF1600_StatePermute(Din);
