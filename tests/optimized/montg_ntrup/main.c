@@ -24,8 +24,7 @@
 
 #define MONTG_NTRUP(dest, a) \
     asm volatile ( \
-        "addi t0, %[r1], 0\n" \
-        ".insn r 0x3b, 0x7, 0x3, %[rd], t0, x0 \n" \
+        ".insn r 0x7b, 0x1, 0x3, %[rd], %[r1], x0 \n" \
         : [rd] "=&r" (dest) \
         : [r1] "r" (a) \
     );
@@ -41,10 +40,8 @@ int main(void) {
     };
 
 
-    int16_t got_sw[N_TESTS] = {0};
-    int16_t got_hw[N_TESTS] = {0};
+    int16_t got[N_TESTS] = {0};
     int kem_ok_sw = 1;
-    int kem_ok_hw = 1;
 
     int cycles;
     clear_csr(mcountinhibit, 1);
@@ -60,9 +57,9 @@ int main(void) {
 
 
     for (int i = 0; i < N_TESTS; i++) {
-        if (got_sw[i] != ntrup_golden[i]) {
+        if (got[i] != ntrup_golden[i]) {
             printf("[NTRU-P] Test %2d FAIL: a=%d  exp=%d  got=%d\n",
-                    i, ntrup_inputs[i], ntrup_golden[i], got_sw[i]);
+                    i, ntrup_inputs[i], ntrup_golden[i], got[i]);
             kem_ok_sw = 0;
             }
         }

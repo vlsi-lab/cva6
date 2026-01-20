@@ -24,13 +24,12 @@
 #define DSA_Q     8380417
 #define DSA_QINV  58728449  // matches Dilithium reference
 
-// Exact body as requested (for ML-DSA)
-static inline int32_t montgomery_reduce_dsa(int64_t a) {
-  int32_t t;
-  t = (int64_t)(int32_t)a * DSA_QINV;
-  t = (a - (int64_t)t * DSA_Q) >> 32;
-  return t;
-}
+#define MONTG_DIL(dest, a) \
+    asm volatile ( \
+        ".insn r 0x3b, 0x7, 0x4, %[rd], %[r1], x0 \n" \
+        : [rd] "=&r" (dest) \
+        : [r1] "r" (a) \
+    );
 
 
 int main(void) {
@@ -54,7 +53,8 @@ int main(void) {
     write_csr(mcycle, 0);
 
     for (int i = 0; i < N_TESTS; i++) {
-        got_sw[i] = montgomery_reduce_dsa((int64_t) dsa_inputs[i]);
+        //got_sw[i] = montgomery_reduce_dsa((int64_t) dsa_inputs[i]);
+        MONTG_DIL(got_sw[i], (int64_t) dsa_inputs[i]);
     }
 
     cycles = read_csr(mcycle);

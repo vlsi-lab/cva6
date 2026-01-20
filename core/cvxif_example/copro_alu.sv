@@ -69,77 +69,13 @@ module copro_alu
         rd_n     = '0;
         we_n     = '0;
       end
-      cvxif_instr_pkg::MONTG_KYBER: begin
+      cvxif_instr_pkg::MONTG_KYBER, cvxif_instr_pkg::MONTG_FALCON, cvxif_instr_pkg::MONTG_NEWHOPE, cvxif_instr_pkg::MONTG_NTRU, cvxif_instr_pkg::MONTG_DILITHIUM: begin
         result_n = montg_result;
         hartid_n = hartid_i;
         id_n     = id_i;
         valid_n  = 1'b1;
         rd_n     = rd_i;
         we_n     = 1'b1;
-      end
-      cvxif_instr_pkg::DOUBLE_RS1: begin
-        result_n = registers_i[0] + registers_i[0];
-        hartid_n = hartid_i;
-        id_n     = id_i;
-        valid_n  = 1'b1;
-        rd_n     = rd_i;
-        we_n     = 1'b1;
-      end
-      cvxif_instr_pkg::DOUBLE_RS2: begin
-        result_n = registers_i[1] + registers_i[1];
-        hartid_n = hartid_i;
-        id_n     = id_i;
-        valid_n  = 1'b1;
-        rd_n     = rd_i;
-        we_n     = 1'b1;
-      end
-      cvxif_instr_pkg::ADD_MULTI: begin
-        result_n = registers_i[1] + registers_i[0];
-        hartid_n = hartid_i;
-        id_n     = id_i;
-        valid_n  = 1'b1;
-        rd_n     = rd_i;
-        we_n     = 1'b1;
-      end
-      cvxif_instr_pkg::MADD_RS3_R4: begin
-        result_n = NrRgprPorts == 3 ? (registers_i[0] + registers_i[1] + registers_i[2]) : (registers_i[0] + registers_i[1]);
-        hartid_n = hartid_i;
-        id_n = id_i;
-        valid_n = 1'b1;
-        rd_n = rd_i;
-        we_n = 1'b1;
-      end
-      cvxif_instr_pkg::MSUB_RS3_R4: begin
-        result_n = NrRgprPorts == 3 ? (registers_i[0] - registers_i[1] - registers_i[2]) : (registers_i[0] - registers_i[1]);
-        hartid_n = hartid_i;
-        id_n = id_i;
-        valid_n = 1'b1;
-        rd_n = rd_i;
-        we_n = 1'b1;
-      end
-      cvxif_instr_pkg::NMADD_RS3_R4: begin
-        result_n = NrRgprPorts == 3 ? ~(registers_i[0] + registers_i[1] + registers_i[2]) : ~(registers_i[0] + registers_i[1]);
-        hartid_n = hartid_i;
-        id_n = id_i;
-        valid_n = 1'b1;
-        rd_n = rd_i;
-        we_n = 1'b1;
-      end
-      cvxif_instr_pkg::NMSUB_RS3_R4: begin
-        result_n = NrRgprPorts == 3 ? ~(registers_i[0] - registers_i[1] - registers_i[2]) : ~(registers_i[0] - registers_i[1]);
-        hartid_n = hartid_i;
-        id_n = id_i;
-        valid_n = 1'b1;
-        rd_n = rd_i;
-        we_n = 1'b1;
-      end
-      cvxif_instr_pkg::ADD_RS3_R: begin
-        result_n = NrRgprPorts == 3 ? registers_i[2] + registers_i[1] + registers_i[0] : registers_i[1] + registers_i[0];
-        hartid_n = hartid_i;
-        id_n = id_i;
-        valid_n = 1'b1;
-        rd_n = 5'b01010;
-        we_n = 1'b1;
       end
       default: begin
         result_n = '0;

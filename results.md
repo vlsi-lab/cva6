@@ -23,10 +23,10 @@ ntt_dilithium               |       30,339                                     1
 ntt_kyber                   |       23,981                                     1
 
 montg_dilithium             |       351                                       20
-montg_falcon                |       368                                       20
-montg_kyber                 |       326                                       20
+montg_falcon                |       368                     264               20
+montg_kyber                 |       326                     264               20
 montg_newhope               |       368                                       20
-montg_ntrup                 |       326                                       20
+montg_ntrup                 |       326                     264               20
 
 
 rej8x4                      |       2,821                                    100

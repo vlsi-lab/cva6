@@ -66,26 +66,26 @@ module montg
                 qinv_sel_32 = 32'sd0;  
             end
 
-            //cvxif_instr_pkg::MONTG_NEWHOPE: begin
-            //    q_sel    = Q_newhope;
-            //    qinv_sel = QINV_newhope;
-            //    qinv_sel_32 = 32'sd0;
-            //end
-            //cvxif_instr_pkg::MONTG_FALCON: begin
-            //    q_sel    = Q_falcon;
-            //    qinv_sel = QINV_falcon;
-            //    qinv_sel_32 = 32'sd0;
-            //end
-            //cvxif_instr_pkg::MONTG_NTRU: begin
-            //    q_sel    = Q_ntru;
-            //    qinv_sel = QINV_ntru;
-            //    qinv_sel_32 = 32'sd0;
-            //end
-            //cvxif_instr_pkg::MONTG_DILITHIUM: begin
-            //    q_sel    = Q_dilithium;
-            //    qinv_sel_32 = QINV_dilithium;
-            //    qinv_sel    = 16'sd0;
-            //end
+            cvxif_instr_pkg::MONTG_NEWHOPE: begin
+                q_sel    = Q_newhope;
+                qinv_sel = QINV_newhope;
+                qinv_sel_32 = 32'sd0;
+            end
+            cvxif_instr_pkg::MONTG_FALCON: begin
+                q_sel    = Q_falcon;
+                qinv_sel = QINV_falcon;
+                qinv_sel_32 = 32'sd0;
+            end
+            cvxif_instr_pkg::MONTG_NTRU: begin
+                q_sel    = Q_ntru;
+                qinv_sel = QINV_ntru;
+                qinv_sel_32 = 32'sd0;
+            end
+            cvxif_instr_pkg::MONTG_DILITHIUM: begin
+                q_sel    = Q_dilithium;
+                qinv_sel_32 = QINV_dilithium;
+                qinv_sel    = 16'sd0;
+            end
 
             default: begin
                 // NOP / 0
@@ -101,8 +101,7 @@ module montg
 
         unique case (opcode_i)
 
-            cvxif_instr_pkg::MONTG_KYBER: begin
-            //cvxif_instr_pkg::MONTG_NEWHOPE, cvxif_instr_pkg::MONTG_FALCON, cvxif_instr_pkg::MONTG_NTRU: begin
+            cvxif_instr_pkg::MONTG_KYBER, cvxif_instr_pkg::MONTG_NEWHOPE, cvxif_instr_pkg::MONTG_FALCON, cvxif_instr_pkg::MONTG_NTRU: begin
                 prod = $signed(a16) * $signed(qinv_sel);
                 t16 = prod[15:0];
                 result = ($signed(a) - $signed({{16{t16[15]}}, t16}) * $signed(q_sel)) >>> 16;
@@ -110,19 +109,19 @@ module montg
                 prod64   = 64'sd0;
                 temp64   = 64'sd0;
                 tQ64     = 64'sd0;
-                diff      = 64'sd0;
+                diff     = 64'sd0;
             end
 
-            //cvxif_instr_pkg::MONTG_DILITHIUM: begin
-            //    a64    = { $signed(b), $unsigned(a) };
-            //    prod64 = $signed(a) * qinv_sel_32;
-            //    temp64 = {{32{prod64[31]}}, prod64[31:0]};
-            //    tQ64   = temp64 * q_sel;
-            //    diff   = a64 - tQ64;
-            //    result = diff[63:32];
-            //    prod     = 32'sd0;
-            //    t16      = 16'sd0;
-            //end
+            cvxif_instr_pkg::MONTG_DILITHIUM: begin
+                a64    = { $unsigned(a) };
+                prod64 = $signed(a) * qinv_sel_32;
+                temp64 = {{32{prod64[31]}}, prod64[31:0]};
+                tQ64   = temp64 * q_sel;
+                diff   = a64 - tQ64;
+                result = diff[63:32];
+                prod     = 32'sd0;
+                t16      = 16'sd0;
+            end
 
             default: begin
                 prod     = 32'sd0;

@@ -33,8 +33,7 @@ static inline int16_t montgomery_reduce_kem(int32_t a) {
 
 #define MONTG_KYBER(dest, a) \
     asm volatile ( \
-        "addi t0, %[r1], 0\n" \
-        ".insn r 0x7b, 0x1, 0x0, %[rd], t0, x0 \n" \
+        ".insn r 0x7b, 0x1, 0x0, %[rd], %[r1], x0 \n" \
         : [rd] "=&r" (dest) \
         : [r1] "r" (a) \
     );

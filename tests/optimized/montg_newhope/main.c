@@ -25,8 +25,7 @@
 
 #define MONTG_NEWHOPE(dest, a) \
     asm volatile ( \
-        "addi t0, %[r1], 0\n" \
-        ".insn r 0x3b, 0x7, 0x1, %[rd], t0, x0 \n" \
+        ".insn r 0x7b, 0x1, 0x2, %[rd], %[r1], x0 \n" \
         : [rd] "=&r" (dest) \
         : [r1] "r" (a) \
     );
@@ -43,7 +42,7 @@ int main(void) {
     };
 
 
-    int16_t got_sw[N_TESTS] = {0};
+    int16_t got[N_TESTS] = {0};
     int kem_ok_sw = 1;
     
     int cycles;
@@ -52,16 +51,16 @@ int main(void) {
 
     for (int i = 0; i < N_TESTS; i++) {
         //got_sw[i] = montgomery_reduce_newhope(nh_inputs[i]);
-        MONTG_NEWHOPE(got_sw[i], nh_inputs[i]);
+        MONTG_NEWHOPE(got[i], nh_inputs[i]);
     }
 
     cycles = read_csr(mcycle);
-    printf("montg_kyber [Executed %d tests]: %d\n", N_TESTS, cycles);
+    printf("montg_newhope [Executed %d tests]: %d\n", N_TESTS, cycles);
 
     for (int i = 0; i < N_TESTS; i++) {
-        if (got_sw[i] != nh_golden[i]) {
+        if (got[i] != nh_golden[i]) {
             printf("[NEWHOPE] Test %2d FAIL: a=%d  exp=%d  got=%d\n",
-                    i, nh_inputs[i], nh_golden[i], got_sw[i]);
+                    i, nh_inputs[i], nh_golden[i], got[i]);
             kem_ok_sw = 0;
             }
         }
