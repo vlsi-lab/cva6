@@ -231,7 +231,7 @@ src :=  $(if $(spike-tandem),verif/tb/core/uvma_core_cntrl_pkg.sv)              
         corev_apu/instr_tracing/rv_encapsulator-main/src/rtl/encapsulator.sv
 src := $(addprefix $(root-dir), $(src))
 
-copro_src := horcrux/hw/include/horcrux_xif_instr_pkg.sv \
+copro_src := horcrux/hw/include/horcrux_pkg.sv \
              $(wildcard horcrux/hw/*.sv)
 copro_src := $(addprefix $(root-dir), $(copro_src))
 

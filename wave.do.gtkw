@@ -1,0 +1,193 @@
+[*]
+[*] GTKWave Analyzer v3.3.118 (w)1999-2023 BSI
+[*] Tue Jan 20 09:06:22 2026
+[*]
+[dumpfile] "/home/alessandra.dolmeta/crheepto/cva6/verif/sim/out_2026-01-20/veri-testharness_sim/main.cv64a6_imac_crypto.vcd"
+[dumpfile_mtime] "Tue Jan 20 08:54:14 2026"
+[dumpfile_size] 955863446
+[savefile] "/home/alessandra.dolmeta/crheepto/cva6/wave.do.gtkw"
+[timestart] 6528
+[size] 2560 1394
+[pos] 1915 0
+*-1.655796 6541 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.ariane_testharness.
+[treeopen] TOP.ariane_testharness.i_ariane.
+[treeopen] TOP.ariane_testharness.i_ariane.cvxif_req.
+[treeopen] TOP.ariane_testharness.i_ariane.gen_cvxif.
+[treeopen] TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.
+[treeopen] TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.
+[treeopen] TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.
+[treeopen] TOP.ariane_testharness.i_ariane.i_cva6.
+[treeopen] TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.
+[treeopen] TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.
+[treeopen] TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.
+[sst_width] 275
+[signals_width] 424
+[sst_expanded] 1
+[sst_vpaned_height] 444
+@22
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.NrRgprPorts[31:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.XLEN[31:0]
+@28
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.clk_i
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.compressed_ready
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.compressed_valid
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.ex_valid
+@22
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.hartid[63:0]
+@28
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.id[2:0]
+@22
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.issue_hartid[63:0]
+@28
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.issue_id[2:0]
+@22
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.issue_rd[4:0]
+@28
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.issue_ready
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.issue_valid
+@22
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.opcode[6:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.rd[4:0]
+@28
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.register_valid
+@22
+[color] 2
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.registers[0][63:0]
+[color] 2
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.registers[1][63:0]
+[color] 2
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.registers[2][63:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.result[63:0]
+@28
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.rst_ni
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.we
+@200
+-i_id
+@22
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.NbInstr[31:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.NrRgprPorts[31:0]
+@28
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.clk_i
+@22
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.hartid_o[63:0]
+@28
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.id_o[2:0]
+@22
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.instr[8:0]
+@28
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.issue_ready_o
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.issue_valid_i
+@22
+[color] 7
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.opcode_o[6:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.rd_o[4:0]
+@28
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.reg_rdy[2:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.register_valid_i
+@22
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.registers_o[0][63:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.registers_o[1][63:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.registers_o[2][63:0]
+@28
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_id.rst_ni
+@200
+-horcrux
+@22
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.rd_i[4:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.rd_n[4:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.rd_o[4:0]
+[color] 2
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.registers_i[0][63:0]
+[color] 2
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.registers_i[1][63:0]
+[color] 2
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.registers_i[2][63:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.result_n[63:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.result_o[63:0]
+@200
+-montg
+@22
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.montg_inst.a16[15:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.montg_inst.a64[63:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.montg_inst.diff[63:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.montg_inst.prod64[63:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.montg_inst.prod[31:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.montg_inst.q_sel[31:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.montg_inst.qinv_sel[15:0]
+TOP.ariane_testharness.i_ariane.cvxif_req.issue_req.hartid[63:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.opcode_i[6:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.montg_inst.qinv_sel_32[31:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.montg_inst.result[31:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.montg_inst.t16[15:0]
+TOP.ariane_testharness.i_ariane.gen_cvxif.gen_COPRO_HORCRUX.i_horcrux_coprocessor.i_ex.montg_inst.tQ64[63:0]
+@200
+-cva6-reg-file
+@22
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[0][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[1][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[2][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[3][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[4][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[5][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[6][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[7][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[8][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[9][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[10][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[11][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[12][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[13][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[14][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[15][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[16][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[17][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[18][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[19][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[20][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[21][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[22][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[23][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[24][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[25][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[26][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[27][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[28][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[29][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[30][63:0]
+[color] 5
+TOP.ariane_testharness.i_ariane.i_cva6.issue_stage_i.i_issue_read_operands.gen_asic_regfile.i_ariane_regfile.mem[31][63:0]
+[pattern_trace] 1
+[pattern_trace] 0

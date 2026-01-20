@@ -4,15 +4,20 @@
 //                                                                                      //
 //////////////////////////////////////////////////////////////////////////////////////////
 
-package horcrux_xif_instr_pkg;
+package horcrux_pkg;
 
 	// Allowed opcodes in the accellerator
-	typedef enum logic [3:0] {
-		ILLEGAL	= 4'b0000,
-		XOR3 	= 4'b0001,
-		XANDN 	= 4'b0010,
-		RXRIL	= 4'b0011,
-		RXRIH	= 4'b0100
+	typedef enum logic [6:0] {
+		ILLEGAL	        = 7'b0000000,
+		XOR3 	        = 7'b0000001,
+		XANDN 	        = 7'b0000010,
+		RXRIL	        = 7'b0000011,
+		RXRIH	        = 7'b0000100,
+		MONTG_KYBER     = 7'b0000101,
+		MONTG_NEWHOPE   = 7'b0000110,
+		MONTG_FALCON    = 7'b0000111,
+		MONTG_NTRU      = 7'b0001000,
+		MONTG_DILITHIUM = 7'b0001001
 	} opcode_t;
 
 	// CV-X-IF issue response typedefs
@@ -32,7 +37,8 @@ package horcrux_xif_instr_pkg;
 	// REF on custom opcodes: https://docs.riscv.org/reference/isa/_attachments/riscv-unprivileged.pdf chapter 35
 	// R-type: funct7_rs2_rs1_funct3_rd_opcode
 	// R4-type: rs3_funct2_rs2_rs1_funct3_rd_opcode
-	parameter int unsigned NbInstr = 4;
+	parameter int unsigned NbInstr = 9;
+
 	parameter copro_issue_resp_t CoproInstr[NbInstr] = '{
 		'{
 			instr: 	32'b00000_10_00000_00000_000_00000_0101011, // CUSTOM-1 opcode, R4 type
@@ -57,6 +63,36 @@ package horcrux_xif_instr_pkg;
 			mask: 	32'b00000_00_00000_00000_000_00000_1111111,
 			resp: 	'{accept: 1'b1, writeback: 1'b1, register_read: 3'b111},
 			opcode:	RXRIH
+		},
+		'{ 
+			instr: 32'b0000000_00000_00000_111_00000_1111011,  // MONTG KYBER, 3b, 0x07, 0x00
+			mask:  32'b1111111_00000_00000_111_00000_1111111,
+			resp:  '{accept: 1'b1, writeback: 1'b1, register_read: 3'b100},
+			opcode: MONTG_KYBER
+		}, 
+		'{ 
+			instr: 32'b0000001_00000_00000_111_00000_1111011,  // MONTG NEWHOPE
+			mask:  32'b1111111_00000_00000_111_00000_1111111,
+			resp:  '{accept: 1'b1, writeback: 1'b1, register_read: 3'b100},
+			opcode: MONTG_NEWHOPE
+		},
+		'{ 
+			instr: 32'b0000010_00000_00000_111_00000_1111011,  // MONTG FALCON
+			mask:  32'b1111111_00000_00000_111_00000_1111111,
+			resp:  '{accept: 1'b1, writeback: 1'b1, register_read: 3'b100},
+			opcode: MONTG_FALCON
+		},
+		'{ 
+			instr: 32'b0000011_00000_00000_111_00000_1111011,  // MONTG NTRU
+			mask:  32'b1111111_00000_00000_111_00000_1111111,
+			resp:  '{accept: 1'b1, writeback: 1'b1, register_read: 3'b100},
+			opcode: MONTG_NTRU
+		},
+		'{ 
+			instr: 32'b0000100_00000_00000_111_00000_1111011,  // MONTG DILITHIUM
+			mask:  32'b1111111_00000_00000_111_00000_1111111,
+			resp:  '{accept: 1'b1, writeback: 1'b1, register_read: 3'b100},
+			opcode: MONTG_DILITHIUM
 		}
 	};
 

@@ -27,11 +27,12 @@ ${CVA6_REPO_DIR}/core/include/instr_tracer_pkg.sv
 ${CVA6_REPO_DIR}/core/include/build_config_pkg.sv
 
 // KECCAK IP
-${CVA6_REPO_DIR}/../horcrux_coproc/hw/include/horcrux_xif_instr_pkg.sv
+${CVA6_REPO_DIR}/../horcrux_coproc/hw/include/horcrux_pkg.sv
 ${CVA6_REPO_DIR}/../horcrux_coproc/hw/horcrux_xif_cid.sv
+${CVA6_REPO_DIR}/../horcrux_coproc/hw/montg.sv
 ${CVA6_REPO_DIR}/../horcrux_coproc/hw/horcrux_xif_id.sv
 ${CVA6_REPO_DIR}/../horcrux_coproc/hw/horcrux_xif_ex.sv
-${CVA6_REPO_DIR}/../horcrux_coproc/hw/horcrux_xif.sv
+${CVA6_REPO_DIR}/../horcrux_coproc/hw/horcrux_top.sv
 
 
 // Common Cells

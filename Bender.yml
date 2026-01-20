@@ -100,7 +100,7 @@ sources:
       - core/cvxif_compressed_if_driver.sv
 
       # horcrux IP
-      - horcrux_coproc/hw/include/horcrux_xif_instr_pkg.sv
+      - horcrux_coproc/hw/include/horcrux_pkg.sv
       - horcrux_coproc/hw/horcrux_xif_cid.sv
       - horcrux_coproc/hw/horcrux_xif_id.sv
       - horcrux_coproc/hw/horcrux_xif_ex.sv

@@ -5,7 +5,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 
 module horcrux_top 
-	import horcrux_xif_instr_pkg::*;
+	import horcrux_pkg::*;
 #(
 	parameter	int unsigned	NrRgprPorts			= 2,
 	parameter	int unsigned	XLEN				= 64,
@@ -57,10 +57,10 @@ module horcrux_top
 
 	// Units instantiation
 	horcrux_xif_id #(
-		.copro_issue_resp_t (horcrux_xif_instr_pkg::copro_issue_resp_t),
-		.opcode_t			(horcrux_xif_instr_pkg::opcode_t),
-		.NbInstr			(horcrux_xif_instr_pkg::NbInstr),
-		.CoproInstr			(horcrux_xif_instr_pkg::CoproInstr),
+		.copro_issue_resp_t (horcrux_pkg::copro_issue_resp_t),
+		.opcode_t			(horcrux_pkg::opcode_t),
+		.NbInstr			(horcrux_pkg::NbInstr),
+		.CoproInstr			(horcrux_pkg::CoproInstr),
 		.NrRgprPorts		(NrRgprPorts),
 		.hartid_t			(hartid_t),
 		.id_t				(id_t),
@@ -90,6 +90,7 @@ module horcrux_top
 		.hartid_t		(hartid_t),
 		.id_t			(id_t),
 		.registers_t	(registers_t),
+		.opcode_t	    (opcode_t),
 		.x_issue_req_t	(x_issue_req_t)
 	) i_ex (
 		.clk_i			(clk_i),
@@ -130,9 +131,9 @@ module horcrux_top
 	assign compressed_valid	= cvxif_req_i.compressed_valid;
 
 	horcrux_xif_cid #(
-		.copro_compressed_resp_t 	(horcrux_xif_instr_pkg::copro_compressed_resp_t),
-		.NbInstr					(horcrux_xif_instr_pkg::NbCompInstr),
-		.CoproInstr					(horcrux_xif_instr_pkg::CoproCompInstr),
+		.copro_compressed_resp_t 	(horcrux_pkg::copro_compressed_resp_t),
+		.NbInstr					(horcrux_pkg::NbCompInstr),
+		.CoproInstr					(horcrux_pkg::CoproCompInstr),
 		.x_compressed_req_t			(x_compressed_req_t),
 		.x_compressed_resp_t		(x_compressed_resp_t)
 	) i_cid (

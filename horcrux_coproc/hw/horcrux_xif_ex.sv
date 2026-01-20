@@ -5,12 +5,12 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 
 module horcrux_xif_ex
-	import horcrux_xif_instr_pkg::*;
 #(
 	parameter int unsigned NrRgprPorts = 2,
 	parameter int unsigned XLEN = 64,
 	parameter type hartid_t = logic,
 	parameter type id_t = logic,
+	parameter type opcode_t = logic,
 	parameter type registers_t = logic,
 	parameter type x_issue_req_t = logic
 ) (
@@ -25,10 +25,13 @@ module horcrux_xif_ex
 	output	logic [XLEN-1:0]	result_o,
 	output	hartid_t			hartid_o,
 	output	id_t				id_o,
-	output	logic [4:0]			rd_o,
+	output	logic [4:0]			rd_o, 
 	output	logic				valid_o,
 	output	logic				we_o
 );
+
+
+
 	logic [XLEN-1:0]	result_n;
 	hartid_t 			hartid_n;
 	id_t 				id_n;
@@ -55,10 +58,24 @@ module horcrux_xif_ex
 		end
 	end
 
+
+	logic [31:0] mnontg_result;
+
+	montg  #(
+		.opcode_t (horcrux_pkg::opcode_t)
+	) montg_inst (
+		.a			(registers_i[0]),
+		.b			(32'sd0),
+		.opcode_i   (opcode_i), 
+		.result		(mnontg_result)
+	);
+
+
+
 	// Execution logic for the different XIF instructions
 	always_comb begin
 		case (opcode_i)
-			horcrux_xif_instr_pkg::XOR3: begin
+			horcrux_pkg::XOR3: begin
 				result_n	= registers_i[0] ^ registers_i[1] ^ registers_i[2];
 				hartid_n	= hartid_i;
 				id_n		= id_i;
@@ -66,7 +83,7 @@ module horcrux_xif_ex
 				valid_n		= 1'b1;
 				we_n		= 1'b1;
 			end
-			horcrux_xif_instr_pkg::XANDN: begin
+			horcrux_pkg::XANDN: begin
 				result_n	= registers_i[0] ^ (~registers_i[1] & registers_i[2]);
 				hartid_n	= hartid_i;
 				id_n		= id_i;
@@ -74,11 +91,11 @@ module horcrux_xif_ex
 				valid_n		= 1'b1;
 				we_n		= 1'b1;
 			end
-			horcrux_xif_instr_pkg::RXRIL, horcrux_xif_instr_pkg::RXRIH: begin
+			horcrux_pkg::RXRIL, horcrux_pkg::RXRIH: begin
 				int funct_imm;
 				funct_imm = {issue_req_i.instr[26:25], issue_req_i.instr[14:12]};
 
-				if (opcode_i == horcrux_xif_instr_pkg::RXRIH)
+				if (opcode_i == horcrux_pkg::RXRIH)
 					funct_imm = funct_imm + 32;
 
 				result_n	= rol(registers_i[0] ^ (registers_i[1] ^ {registers_i[2][XLEN-2:0], registers_i[2][XLEN-1]}), funct_imm);
@@ -87,6 +104,16 @@ module horcrux_xif_ex
 				rd_n        = rd_i;
 				valid_n     = 1'b1;
 				we_n        = 1'b1;
+			end
+			horcrux_pkg::MONTG_KYBER, horcrux_pkg::MONTG_NEWHOPE,
+			horcrux_pkg::MONTG_FALCON, horcrux_pkg::MONTG_NTRU,
+			horcrux_pkg::MONTG_DILITHIUM: begin
+				result_n	= mnontg_result;
+				hartid_n	= hartid_i;
+				id_n		= id_i;
+				rd_n		= rd_i;
+				valid_n		= 1'b1;
+				we_n		= 1'b1;
 			end
 			default: begin
 				result_n	= '0;
