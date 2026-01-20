@@ -46,6 +46,19 @@ module copro_alu
   assign rd_o     = rd_q;
   assign we_o     = we_q;
 
+  logic [31:0] montg_result;
+
+	montg  #(
+    .opcode_t (cvxif_instr_pkg::opcode_t)
+	) montg_inst (
+		.a			(registers_i[0]),
+		.b			(32'sd0),
+		.opcode_i   (opcode_i), 
+		.result		(montg_result)
+	);
+
+
+
   always_comb begin
     case (opcode_i)
       cvxif_instr_pkg::NOP: begin
@@ -56,8 +69,8 @@ module copro_alu
         rd_n     = '0;
         we_n     = '0;
       end
-      cvxif_instr_pkg::ADD: begin
-        result_n = registers_i[1] + registers_i[0];
+      cvxif_instr_pkg::MONTG_KYBER: begin
+        result_n = montg_result;
         hartid_n = hartid_i;
         id_n     = id_i;
         valid_n  = 1'b1;

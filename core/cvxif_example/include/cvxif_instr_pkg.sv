@@ -12,17 +12,17 @@
 package cvxif_instr_pkg;
 
   typedef enum logic [3:0] {
-    ILLEGAL = 4'b0000,
-    NOP = 4'b0001,
-    ADD = 4'b0010,
-    DOUBLE_RS1 = 4'b0011,
-    DOUBLE_RS2 = 4'b0100,
-    ADD_MULTI = 4'b0101,
-    MADD_RS3_R4 = 4'b0110,
-    MSUB_RS3_R4 = 4'b0111,
-    NMADD_RS3_R4 = 4'b1000,
-    NMSUB_RS3_R4 = 4'b1001,
-    ADD_RS3_R = 4'b1111
+    ILLEGAL         = 4'b0000,
+    NOP             = 4'b0001,
+    MONTG_KYBER     = 4'b0010,
+    DOUBLE_RS1      = 4'b0011,
+    DOUBLE_RS2      = 4'b0100,
+    ADD_MULTI       = 4'b0101,
+    MADD_RS3_R4     = 4'b0110,
+    MSUB_RS3_R4     = 4'b0111,
+    NMADD_RS3_R4    = 4'b1000,
+    NMSUB_RS3_R4    = 4'b1001,
+    ADD_RS3_R       = 4'b1111
   } opcode_t;
 
 
@@ -63,12 +63,12 @@ package cvxif_instr_pkg;
           opcode : NOP
       },
       '{
-          // Custom Add : cus_add rd, rs1, rs2
+          // Custom MONTG_KYBER : MONTG_KYBER rd, rs1, rs2
           instr:
           32'b00000_00_00000_00000_0_01_00000_1111011,  // custom3 opcode
           mask: 32'b11111_11_00000_00000_1_11_00000_1111111,
           resp : '{accept : 1'b1, writeback : 1'b1, register_read : {1'b0, 1'b1, 1'b1}},
-          opcode : ADD
+          opcode : MONTG_KYBER
       },
       '{
           // Custom Add rs1 : cus_add rd, rs1, rs1
