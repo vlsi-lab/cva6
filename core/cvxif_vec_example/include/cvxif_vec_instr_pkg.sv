@@ -9,7 +9,7 @@
 
 
 
-package cvxif_instr_pkg;
+package cvxif_vec_instr_pkg;
 
   typedef enum logic [3:0] {
     ILLEGAL         = 4'b0000,
@@ -18,8 +18,7 @@ package cvxif_instr_pkg;
     MONTG_FALCON    = 4'b0011,
     MONTG_NEWHOPE   = 4'b0100,
     MONTG_NTRU      = 4'b0101,
-    MONTG_DILITHIUM = 4'b0110,
-    BARRETT         = 4'b0111
+    MONTG_DILITHIUM = 4'b0110
   } opcode_t;
 
 
@@ -49,7 +48,7 @@ package cvxif_instr_pkg;
   //} copro_compressed_resp_t;
 
   // 4 Possible RISCV instructions for Coprocessor
-  parameter int unsigned NbInstr = 7;
+  parameter int unsigned NbInstr = 6;
   parameter copro_issue_resp_t CoproInstr[NbInstr] = '{
       '{
           // Custom Nop
@@ -98,14 +97,6 @@ package cvxif_instr_pkg;
           mask: 32'b11111_11_00000_00000_1_11_00000_1111111,
           resp : '{accept : 1'b1, writeback : 1'b1, register_read : {1'b1, 1'b1, 1'b1}},
           opcode : MONTG_DILITHIUM
-      },
-      '{
-          // Custom BARRETT : BARRETT rd, rs1, rs2
-          instr:
-          32'b00001_01_00000_00000_0_01_00000_1111011,  // custom3 opcode
-          mask: 32'b11111_11_00000_00000_1_11_00000_1111111,
-          resp : '{accept : 1'b1, writeback : 1'b1, register_read : {1'b1, 1'b1, 1'b1}},
-          opcode : BARRETT
       }
   };
 

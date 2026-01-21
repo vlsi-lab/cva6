@@ -7,8 +7,8 @@
 //
 // Original Author: Guillaume Chauvon
 
-module cvxif_example_coprocessor
-  import cvxif_instr_pkg::*;
+module cvxif_vec_example_coprocessor
+  import cvxif_vec_instr_pkg::*;
 #(
     // CVXIF Types
     parameter  int unsigned NrRgprPorts         = 2,
@@ -72,9 +72,9 @@ module cvxif_example_coprocessor
   assign register_valid                = cvxif_req_i.register_valid;
 
   //compressed_instr_decoder #(
-  //    .copro_compressed_resp_t(cvxif_instr_pkg::copro_compressed_resp_t),
-  //    .NbInstr(cvxif_instr_pkg::NbCompInstr),
-  //    .CoproInstr(cvxif_instr_pkg::CoproCompInstr),
+  //    .copro_compressed_resp_t(cvxif_vec_instr_pkg::copro_compressed_resp_t),
+  //    .NbInstr(cvxif_vec_instr_pkg::NbCompInstr),
+  //    .CoproInstr(cvxif_vec_instr_pkg::CoproCompInstr),
   //    .x_compressed_req_t(x_compressed_req_t),
   //    .x_compressed_resp_t(x_compressed_resp_t)
   //) compressed_instr_decoder_i (
@@ -86,11 +86,11 @@ module cvxif_example_coprocessor
   //    .compressed_resp_o (compressed_resp)
   //);
 
-  instr_decoder #(
-      .copro_issue_resp_t (cvxif_instr_pkg::copro_issue_resp_t),
-      .opcode_t (cvxif_instr_pkg::opcode_t),
-      .NbInstr   (cvxif_instr_pkg::NbInstr),
-      .CoproInstr(cvxif_instr_pkg::CoproInstr),
+  instr_vec_decoder #(
+      .copro_issue_resp_t (cvxif_vec_instr_pkg::copro_issue_resp_t),
+      .opcode_t (cvxif_vec_instr_pkg::opcode_t),
+      .NbInstr   (cvxif_vec_instr_pkg::NbInstr),
+      .CoproInstr(cvxif_vec_instr_pkg::CoproInstr),
       .NrRgprPorts(NrRgprPorts),
       .hartid_t (hartid_t),
       .id_t (id_t),
@@ -116,7 +116,7 @@ module cvxif_example_coprocessor
 
   logic alu_valid;
   // Result interface
-  copro_alu #(
+  copro_alu_vec #(
       .NrRgprPorts(NrRgprPorts),
       .XLEN(XLEN),
       .hartid_t(hartid_t),

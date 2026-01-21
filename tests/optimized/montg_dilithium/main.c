@@ -26,7 +26,7 @@
 
 #define MONTG_DIL(dest, a) \
     asm volatile ( \
-        ".insn r 0x3b, 0x7, 0x4, %[rd], %[r1], x0 \n" \
+        ".insn r 0x7b, 0x1, 0x4, %[rd], %[r1], x0 \n" \
         : [rd] "=&r" (dest) \
         : [r1] "r" (a) \
     );

@@ -898,6 +898,9 @@ def load_config(args, cwd):
     elif base in ("cv64a6_imac_crypto"):
       args.mabi = "lp64"
       args.isa  = "rv64imac"
+    elif base in ("cv64a6_imac_crypto_vec"):
+      args.mabi = "lp64"
+      args.isa  = "rv64imac"
     elif base == "cv32a60x":
       args.mabi = "ilp32"
       args.isa  = "rv32imc_zba_zbb_zbs_zbc"

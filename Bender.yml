@@ -102,6 +102,12 @@ sources:
       - core/cvxif_example/cvxif_example_coprocessor.sv
       - core/cvxif_example/instr_decoder.sv
 
+      # Extension Interface Vec
+      - core/cvxif_vec_example/include/cvxif_vec_instr_pkg.sv
+      - core/cvxif_vec_example/cvxif_vec_example_coprocessor.sv
+      - core/cvxif_vec_example/instr_vec_decoder.sv
+
+
       # Tracing
       - core/cva6_rvfi_probes.sv
       - core/cva6_fifo_v3.sv

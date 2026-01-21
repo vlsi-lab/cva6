@@ -54,7 +54,8 @@ package config_pkg;
   /// Coprocessor type parameter
   typedef enum {
     COPRO_NONE,
-    COPRO_EXAMPLE
+    COPRO_EXAMPLE,
+    COPRO_EXAMPLE_VEC
   } copro_type_t;
 
   localparam NrMaxRules = 16;

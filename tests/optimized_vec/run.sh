@@ -5,14 +5,14 @@ source ./verif/sim/setup-env.sh
 
 # Simulation options
 export DV_OPTS="$DV_OPTS --issrun_opts=+time_out=100000000000"
-DV_TARGET=cv64a6_imac_crypto
+DV_TARGET=cv64a6_imac_crypto_vec
 export DV_SIMULATORS=veri-testharness
 
 #unset TRACE_FAST
 export TRACE_FAST=1 
 
-# Root optimized directory
-BASE_DIR="./tests/optimized"
+# Root optimized_vec directory
+BASE_DIR="./tests/optimized_vec"
 
 # List immediate subfolders (one level)
 mapfile -t TEST_FOLDERS < <(find "$BASE_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
@@ -23,7 +23,7 @@ if (( ${#TEST_FOLDERS[@]} == 0 )); then
 fi
 
 echo ""
-echo "Available optimized folders:"
+echo "Available optimized_vec folders:"
 for i in "${!TEST_FOLDERS[@]}"; do
     echo "[$i] ${TEST_FOLDERS[$i]}"
 done
@@ -58,7 +58,6 @@ echo ""
 
 # Optional assembly (same rule as before)
 ASM_FILE=""
-
 if [[ "$SELECTED_TEST" == *"asm"* ]]; then
     # Try to find keccak_permute.s in the selected folder first, then fall back to old path
     if [[ -f "$SELECTED_DIR/keccak_permute.s" ]]; then
@@ -73,8 +72,6 @@ if [[ "$SELECTED_TEST" == *"asm"* ]]; then
         echo "Including assembly file: $(basename "$ASM_FILE")"
     fi
 fi
-
-ASM_FILE+="../../tests/optimized/ntt_kyber/ntt.s"
 
 cd ./verif/sim/
 
@@ -101,12 +98,12 @@ cflags_opt=(
     -Wl,-gc-sections
 )
 
-# Include directory: prefer selected_folder/include, otherwise optimized/include, otherwise nothing
+# Include directory: prefer selected_folder/include, otherwise optimized_vec/include, otherwise nothing
 EXTRA_INCLUDE=""
 if [[ -d "../../${SELECTED_DIR#./}/include" ]]; then
     EXTRA_INCLUDE="-I../../${SELECTED_DIR#./}/include"
-elif [[ -d "../../tests/optimized/include" ]]; then
-    EXTRA_INCLUDE="-I../../tests/optimized/include"
+elif [[ -d "../../tests/optimized_vec/include" ]]; then
+    EXTRA_INCLUDE="-I../../tests/optimized_vec/include"
 fi
 
 cflags=(

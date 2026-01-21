@@ -7,8 +7,8 @@
 //
 // Original Author: Guillaume Chauvon
 
-module copro_alu
-  import cvxif_instr_pkg::*;
+module copro_alu_vec
+  import cvxif_vec_instr_pkg::*;
 #(
     parameter int unsigned NrRgprPorts = 2,
     parameter int unsigned XLEN = 32,
@@ -46,34 +46,22 @@ module copro_alu
   assign rd_o     = rd_q;
   assign we_o     = we_q;
 
+  logic [63:0] montg_result;
 
-  // Instantiate Montg module
-  logic [31:0] montg_result;
-	montg  #(
-    .opcode_t (cvxif_instr_pkg::opcode_t)
+	montg_vec  #(
+    .opcode_t (cvxif_vec_instr_pkg::opcode_t)
 	) montg_inst (
-		.a			(registers_i[0]),
-		.b			(32'sd0),
-		.opcode_i   (opcode_i), 
+		.a			  (registers_i[0]),
+		.b		    (registers_i[1]),
+		.opcode_i (opcode_i), 
 		.result		(montg_result)
 	);
-
-  // Instantiate Barrett module
-  logic [31:0] barrett_result;
-  barrett  #(
-    .opcode_t (cvxif_instr_pkg::opcode_t)
-	) barrett_inst (
-    .a        (registers_i[0]),
-    .b        (registers_i[1]),
-    .opcode_i (opcode_i),
-    .result   (barrett_result)
-  );
 
 
 
   always_comb begin
     case (opcode_i)
-      cvxif_instr_pkg::NOP: begin
+      cvxif_vec_instr_pkg::NOP: begin
         result_n = '0;
         hartid_n = hartid_i;
         id_n     = id_i;
@@ -81,16 +69,8 @@ module copro_alu
         rd_n     = '0;
         we_n     = '0;
       end
-      cvxif_instr_pkg::MONTG_KYBER, cvxif_instr_pkg::MONTG_FALCON, cvxif_instr_pkg::MONTG_NEWHOPE, cvxif_instr_pkg::MONTG_NTRU, cvxif_instr_pkg::MONTG_DILITHIUM: begin
+      cvxif_vec_instr_pkg::MONTG_KYBER, cvxif_vec_instr_pkg::MONTG_FALCON, cvxif_vec_instr_pkg::MONTG_NEWHOPE, cvxif_vec_instr_pkg::MONTG_NTRU, cvxif_vec_instr_pkg::MONTG_DILITHIUM: begin
         result_n = montg_result;
-        hartid_n = hartid_i;
-        id_n     = id_i;
-        valid_n  = 1'b1;
-        rd_n     = rd_i;
-        we_n     = 1'b1;
-      end
-      cvxif_instr_pkg::BARRETT: begin
-        result_n = barrett_result;
         hartid_n = hartid_i;
         id_n     = id_i;
         valid_n  = 1'b1;

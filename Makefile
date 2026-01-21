@@ -218,6 +218,10 @@ copro_src := core/cvxif_example/include/cvxif_instr_pkg.sv \
              $(wildcard core/cvxif_example/*.sv)
 copro_src := $(addprefix $(root-dir), $(copro_src))
 
+copro_vec_src := core/cvxif_vec_example/include/cvxif_vec_instr_pkg.sv \
+             $(wildcard core/cvxif_vec_example/*.sv)
+copro_vec_src := $(addprefix $(root-dir), $(copro_vec_src))
+
 uart_src := $(wildcard corev_apu/fpga/src/apb_uart/src/vhdl_orig/*.vhd)
 uart_src := $(addprefix $(root-dir), $(uart_src))
 
