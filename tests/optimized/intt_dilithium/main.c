@@ -143,8 +143,7 @@ void invntt_dilithium_hw(int32_t a[N]) {
             "sub    %[al],  %[t],   %[al]\n\t"
             "mul    %[rlo], %[z],   %[al]\n\t"
             "mulh   %[rhi], %[z],   %[al]\n\t"
-            "mv     a3,     %[rlo]\n\t"
-            ".insn r 0x7b, 0x1, 0x4, %[al], a3, %[rhi]\n\t"
+            ".insn r 0x7b, 0x1, 0x4, %[al], %[rlo], %[rhi]\n\t"
             : [aj] "+r"(aj), [al] "+r"(alen), [t]  "=&r"(t), [rlo] "=&r"(rlo), [rhi] "=&r"(rhi)
             : [z] "r"(zeta)
             : "cc", "a3"

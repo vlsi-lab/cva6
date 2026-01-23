@@ -92,6 +92,9 @@ const int16_t kyber_zetas[128] = {
 };
 
 
+
+
+
 void kyber_intt_hw(int16_t r[256]) {
     unsigned int start, len, j, k;
     int16_t t, zeta;
@@ -129,15 +132,14 @@ void kyber_intt_hw(int16_t r[256]) {
     }
 
 for (j = 0; j < 256; j++) {
-    int32_t out, prod_lo;
+    int32_t prod_lo;
     asm volatile(
-        "mul    %[prod], %[x], %[f]\n\t"
-        ".insn r 0x7b, 0x1, 0, %[out], %[prod], x0\n\t"
-        : [out] "=&r"(out), [prod] "=&r"(prod_lo)
+        "mul    t0, %[x], %[f]\n\t"
+        ".insn r 0x7b, 0x1, 0, %[out], t0, x0\n\t"
+        : [out] "=&r"(r[j]), [prod] "=&r"(prod_lo)
         : [x] "r"((int32_t)r[j]), [f] "r"((int32_t)f)
         : "cc", "a3"
     );
-    r[j] = out;
 }
 }
 

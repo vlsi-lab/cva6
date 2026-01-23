@@ -19,7 +19,10 @@ package cvxif_instr_pkg;
     MONTG_NEWHOPE   = 4'b0100,
     MONTG_NTRU      = 4'b0101,
     MONTG_DILITHIUM = 4'b0110,
-    BARRETT         = 4'b0111
+    BARRETT         = 4'b0111,
+    GF_MUL          = 4'b1000,
+    KARATS_1        = 4'b1001,
+    KARATS_2        = 4'b1010
   } opcode_t;
 
 
@@ -49,7 +52,8 @@ package cvxif_instr_pkg;
   //} copro_compressed_resp_t;
 
   // 4 Possible RISCV instructions for Coprocessor
-  parameter int unsigned NbInstr = 7;
+  parameter int unsigned NbInstr = 10;
+
   parameter copro_issue_resp_t CoproInstr[NbInstr] = '{
       '{
           // Custom Nop
@@ -106,7 +110,32 @@ package cvxif_instr_pkg;
           mask: 32'b11111_11_00000_00000_1_11_00000_1111111,
           resp : '{accept : 1'b1, writeback : 1'b1, register_read : {1'b1, 1'b1, 1'b1}},
           opcode : BARRETT
-      }
+      },
+      '{
+            // Custom GF_MUL : GF_MUL rd, rs1, rs2
+            instr:
+            32'b00001_10_00000_00000_0_01_00000_1111011,  // custom3 opcode
+            mask: 32'b11111_11_00000_00000_1_11_00000_1111111,
+            resp : '{accept : 1'b1, writeback : 1'b1, register_read : {1'b1, 1'b1, 1'b1}},
+            opcode : GF_MUL
+        },
+        '{
+            // Custom KARATS_1 : KARATS_1 rd, rs1, rs2
+            instr:
+            32'b00001_11_00000_00000_0_01_00000_1111011,  // custom3 opcode
+            mask: 32'b11111_11_00000_00000_1_11_00000_1111111,
+            resp : '{accept : 1'b1, writeback : 1'b1, register_read : {1'b1, 1'b1, 1'b1}},
+            opcode : KARATS_1
+        },
+        '{
+            // Custom KARATS_2 : KARATS_2 rd, rs1, rs2
+            instr:
+            32'b00010_00_00000_00000_0_01_00000_1111011,  // custom3 opcode
+            mask: 32'b11111_11_00000_00000_1_11_00000_1111111,
+            resp : '{accept : 1'b1, writeback : 1'b1, register_read : {1'b1, 1'b1, 1'b1}},
+            opcode : KARATS_2
+        }
+
   };
 
 

@@ -163,8 +163,7 @@ void ntt_hw(int32_t a[N]) {
         asm volatile(
             "mul    %[rlo], %[z], %[al]\n\t"
             "mulh   %[rhi], %[z], %[al]\n\t"
-            "mv     a3,     %[rlo]\n\t"
-            ".insn r 0x7b, 0x1, 0x4, %[t], a3, %[rhi]\n\t"
+            ".insn r 0x7b, 0x1, 0x4, %[t], %[rlo], %[rhi]\n\t"
             "sub    %[al],  %[aj], %[t]\n\t"   // alen = aj - t
             "add    %[aj],  %[aj], %[t]\n\t"   // aj   = aj + t
             : [aj] "+r"(aj), [al] "+r"(alen),

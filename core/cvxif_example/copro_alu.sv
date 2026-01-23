@@ -69,6 +69,30 @@ module copro_alu
     .result   (barrett_result)
   );
 
+  // Instantiate GF Carryless Multiplication module
+  logic [31:0] gf_carryless_mul_result;
+  gf_carryless_mul  #(
+    .opcode_t (cvxif_instr_pkg::opcode_t)
+	) gf_carryless_mul_inst ( 
+    .gf_carryless_mul_i_0  (registers_i[0]),
+    .gf_carryless_mul_i_1  (registers_i[1]),
+    .opcode_i               (opcode_i),
+    .gf_carryless_mul_o    (gf_carryless_mul_result)
+  );
+
+  // Instantiate Karatsuba module
+  logic [63:0] karats_result;
+  karats  #(
+    .opcode_t (cvxif_instr_pkg::opcode_t)
+  ) karats_inst (
+    .clk_i          (clk_i),
+    .rst_ni         (rst_ni),
+    .karatsuba1_i   ({registers_i[0]}), // 64-bit Input A
+    .karatsuba2_i   ({registers_i[1]}), // 64-bit Input B
+    .opcode_i       (opcode_i),
+    .result_o       (karats_result)      // 64-bit Output (Half of the 128-bit result)
+  );
+
 
 
   always_comb begin
@@ -91,6 +115,22 @@ module copro_alu
       end
       cvxif_instr_pkg::BARRETT: begin
         result_n = barrett_result;
+        hartid_n = hartid_i;
+        id_n     = id_i;
+        valid_n  = 1'b1;
+        rd_n     = rd_i;
+        we_n     = 1'b1;
+      end
+      cvxif_instr_pkg::GF_MUL: begin
+        result_n = gf_carryless_mul_result;
+        hartid_n = hartid_i;
+        id_n     = id_i;
+        valid_n  = 1'b1;
+        rd_n     = rd_i;
+        we_n     = 1'b1;
+      end
+      cvxif_instr_pkg::KARATS_1, cvxif_instr_pkg::KARATS_2: begin
+        result_n = karats_result;
         hartid_n = hartid_i;
         id_n     = id_i;
         valid_n  = 1'b1;

@@ -14,9 +14,9 @@ compress4                   |       1,807                                     10
 
 barrett                     |        1,083                   888              100          x1.22
 
-intt_dilithium              |       36,378                26,283                1          x1.38
+intt_dilithium              |       36,378                25,297                1          x1.44
 intt_kyber                  |       35,783                19,780                1          x1.81
-ntt_dilithium               |       30,339                21,823                1          x1.39
+ntt_dilithium               |       30,339                20,791                1          x1.45
 ntt_kyber                   |       23,981                15,732                1          x1.52
 
 montg_dilithium             |          351                   281               20          x1.25
@@ -29,3 +29,7 @@ montg_ntrup                 |          326                   264               2
 rej8x4                      |       2,821                                    100
 rej12x2                     |       1,753                                    100
 rej23x1                     |       1,016                                    100
+
+gf_carryless                |      14,038                   1,233            100
+karats                      |       7,465
+
