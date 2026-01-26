@@ -2,6 +2,7 @@
 
 Keccak                      |      8,031                  2,476                 1          x3.24
 
+
 cbd_eta1                    |      13,621                                     100
 cbd_eta2                    |       6,751                                     100
 cbd_eta3                    |       3,414                                     100
@@ -11,8 +12,6 @@ compress1                   |       1,311                                     10
 compress2                   |       1,311                                     100
 compress3                   |       1,807                                     100
 compress4                   |       1,807                                     100
-
-barrett                     |        1,083                   888              100          x1.22
 
 intt_dilithium              |       36,378                25,297                1          x1.44
 intt_kyber                  |       35,783                19,780                1          x1.81
@@ -25,11 +24,13 @@ montg_kyber                 |          326                   264               2
 montg_newhope               |          368                                     20
 montg_ntrup                 |          326                   264               20          x1.23
 
+barrett                     |        1,083                   888              100          x1.22
 
 rej8x4                      |       2,821                                    100
 rej12x2                     |       1,753                                    100
 rej23x1                     |       1,016                                    100
 
-gf_carryless                |      14,038                   1,233            100
+gf_carryless                |      14,038                   1,233            100            x11.4
 karats                      |       7,465
+
 
