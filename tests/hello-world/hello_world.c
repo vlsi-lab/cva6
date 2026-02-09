@@ -19,17 +19,25 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "encoding.h"
 #include "uart.h"
 
 int main(int argc, char* arg[]) {
 	
-	printf("%d: Hello World !", 0);
+	unsigned int cycles;
 	
 	int a = 0;
+	clear_csr(mcountinhibit, 1);
+    write_csr(mcycle, 0);
+        
 	for (int i = 0; i < 5; i++)
 	{
 		a += i;
 	}
+	cycles = read_csr(mcycle);
+	print_uart("Number of clock cycles for crypto_kem_keypair_derand: ");
+	print_uart_dec(cycles);
+	print_uart("\n");
 
 	print_uart("Hi World! :)");
 	return 0;

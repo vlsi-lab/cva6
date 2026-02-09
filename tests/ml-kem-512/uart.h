@@ -191,4 +191,3 @@ static uint32_t read_uint32_from_uart() {
     }
     return value;
 }
-

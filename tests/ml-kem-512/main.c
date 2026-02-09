@@ -18,8 +18,8 @@
 #include "uart.h"
 
 #define TEST_KEY  1
-#define TEST_ENC  0
-#define TEST_DEC  0
+#define TEST_ENC  1
+#define TEST_DEC  1
 
 
 uint8_t keypair_rnd[2*KYBER_SYMBYTES];

@@ -94,6 +94,19 @@ static void bin_to_hex(uint8_t inp, uint8_t res[2])
     return;
 }
 
+static void print_uart_hex4(uint8_t v)
+{
+    v &= 0xF;
+    write_serial((v < 10) ? ('0' + v) : ('A' + (v - 10)));
+}
+
+static void print_uart_hex8(uint8_t v)
+{
+    print_uart_hex4(v >> 4);
+    print_uart_hex4(v);
+}
+
+
 static void print_uart_int(uint32_t addr)
 {
     int i;
@@ -105,6 +118,21 @@ static void print_uart_int(uint32_t addr)
         write_serial(hex[0]);
         write_serial(hex[1]);
     }
+}
+
+// aggiunto
+static void print_uart_dec(int v)
+{
+    int tmp = v;
+    if (tmp < 0) {
+        write_serial('-');
+        tmp = -tmp;
+    }
+
+    if (tmp >= 10)
+        print_uart_dec(tmp / 10);
+
+    write_serial('0' + (tmp % 10));
 }
 
 static void print_uart_addr(uint64_t addr)
@@ -163,4 +191,3 @@ static uint32_t read_uint32_from_uart() {
     }
     return value;
 }
-

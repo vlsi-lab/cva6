@@ -254,7 +254,7 @@ void indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   write_csr(mcycle, 0);
   polyvec_ntt(&skpv);
   cycles = read_csr(mcycle);
-  print_uart("Number of clock cycles for gen_a_cycles: ");
+  print_uart("Number of clock cycles for polyvec_ntt: ");
   print_uart_dec(cycles);
   print_uart("\n");
 
