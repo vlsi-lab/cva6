@@ -13,6 +13,14 @@ if [ "$BOARD" = "genesys2" ]; then
   export CLK_PERIOD_NS="20"
 fi
 
+if [ "$BOARD" = "cw305" ]; then
+  echo -n "Configuring for"
+  echo "CW305"
+  export XILINX_PART="xc7a100tftg256-2"
+  export XILINX_BOARD="NULL"
+  export CLK_PERIOD_NS="8.33"
+fi
+
 if [ "$BOARD" = "kc705" ]; then
   echo -n "Configuring for "
   echo "Kintex kc705"

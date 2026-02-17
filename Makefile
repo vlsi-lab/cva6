@@ -86,6 +86,10 @@ else ifeq ($(BOARD), nexys_video)
 	XILINX_PART              := xc7a200tsbg484-1
 	XILINX_BOARD             := digilentinc.com:nexys_video:part0:1.1
 	CLK_PERIOD_NS            := 40
+else ifeq ($(BOARD), cw305)
+	XILINX_PART		 	 := xc7a100tftg256-2
+	XILINX_BOARD		 := NULL
+	CLK_PERIOD_NS		 := 83
 else
 $(error Unknown board - please specify a supported FPGA board)
 endif
@@ -184,6 +188,9 @@ src :=  $(if $(spike-tandem),verif/tb/core/uvma_core_cntrl_pkg.sv)              
         vendor/pulp-platform/axi/src/axi_cut.sv                                      \
         vendor/pulp-platform/axi/src/axi_join.sv                                     \
         vendor/pulp-platform/axi/src/axi_delayer.sv                                  \
+        vendor/pulp-platform/common_cells/src/onehot_to_bin.sv                        \
+        vendor/pulp-platform/common_cells/src/id_queue.sv                             \
+        vendor/pulp-platform/axi/src/axi_burst_splitter.sv                            \
         vendor/pulp-platform/axi/src/axi_to_axi_lite.sv                              \
         vendor/pulp-platform/axi/src/axi_id_prepend.sv                               \
         vendor/pulp-platform/axi/src/axi_atop_filter.sv                              \

@@ -4,8 +4,9 @@ set boardName  $::env(XILINX_BOARD)
 set ipName xlnx_clk_gen
 
 create_project $ipName . -force -part $partNumber
-set_property board_part $boardName [current_project]
-
+if {$::env(BOARD) ne "cw305"} {
+    set_property board_part $boardName [current_project]
+}
 create_ip -name clk_wiz -vendor xilinx.com -library ip -module_name $ipName
 
 if {$::env(BOARD) eq "nexys_video"} {
@@ -21,6 +22,19 @@ if {$::env(BOARD) eq "nexys_video"} {
                         CONFIG.CLKOUT3_REQUESTED_PHASE {90.000} \
                         CONFIG.CLKOUT4_REQUESTED_OUT_FREQ {50} \
                         CONFIG.CLKOUT5_REQUESTED_OUT_FREQ {200} \
+                        CONFIG.CLKIN1_JITTER_PS {50.0} \
+                       ] [get_ips $ipName]
+} elseif {$::env(BOARD) eq "cw305"} {
+set_property -dict [list CONFIG.PRIM_IN_FREQ {12.000} \
+                        CONFIG.NUM_OUT_CLKS {4} \
+                        CONFIG.CLKOUT2_USED {true} \
+                        CONFIG.CLKOUT3_USED {true} \
+                        CONFIG.CLKOUT4_USED {true} \
+                        CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {50} \
+                        CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {125} \
+                        CONFIG.CLKOUT3_REQUESTED_OUT_FREQ {125} \
+                        CONFIG.CLKOUT3_REQUESTED_PHASE {90.000} \
+                        CONFIG.CLKOUT4_REQUESTED_OUT_FREQ {50} \
                         CONFIG.CLKIN1_JITTER_PS {50.0} \
                        ] [get_ips $ipName]
 } else {

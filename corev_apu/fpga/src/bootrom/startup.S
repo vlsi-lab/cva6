@@ -8,7 +8,7 @@
   .option norvc
   .globl _prog_start
 _prog_start:
-  smp_pause(s1, s2)
+  # smp_pause(s1, s2)
   li sp, 0x84000000
   call main
   smp_resume(s1, s2)

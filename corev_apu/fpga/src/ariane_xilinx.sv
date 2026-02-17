@@ -49,6 +49,12 @@ module ariane_xilinx (
   input  logic [ 7:0]  sw          ,
   output logic         fan_pwm     ,
   input  logic         trst_n      ,
+`elsif CW305
+  input	 logic	       clk	   ,
+
+  input  logic	       cpu_resetn  ,
+  output logic [ 2:0]  led	   ,
+  input  logic [ 3:0]  sw	   ,
 `elsif KC705
   input  logic         sys_clk_p   ,
   input  logic         sys_clk_n   ,
@@ -185,6 +191,7 @@ module ariane_xilinx (
   input  logic        tms         ,
   input  logic        tdi         ,
   output  wire         tdo         ,
+ `ifndef CW305
   input  logic        prog_clko   ,
   input  logic        prog_rxen   ,
   input  logic        prog_txen   ,
@@ -194,14 +201,38 @@ module ariane_xilinx (
   output logic        prog_oen    ,
   output logic        prog_siwun  ,
   inout  logic [7:0]  prog_d      ,
+ `endif 
+
   input  logic        rx          ,
   output logic        tx
 );
+
+ `ifdef CW305
+  logic        prog_clko   ;
+  logic        prog_rxen   ;
+  logic        prog_txen   ;
+  logic        prog_spien  ;
+  logic        prog_rdn    ;
+  logic        prog_wrn    ;
+  logic        prog_oen    ;
+  logic        prog_siwun  ;
+  logic [7:0]  prog_d      ;
+ `endif 
 
 // CVA6 Xilinx configuration
 function automatic config_pkg::cva6_cfg_t build_fpga_config(config_pkg::cva6_user_cfg_t CVA6UserCfg);
   config_pkg::cva6_user_cfg_t cfg = CVA6UserCfg;
   cfg.RVZiCond = bit'(0);
+  `ifdef CW305
+	  cfg.RVF = 0;
+	  cfg.RVD = 0;
+	  cfg.XF16 = 0;
+	  cfg.XF16ALT = 0;
+	  cfg.XF8 = 0;
+	  cfg.XFVec = 0;
+	  // cfg.PerfCounterEn = 0;
+	  cfg.MmuPresent = 0;
+  `endif
   cfg.NrNonIdempotentRules = unsigned'(1);
   cfg.NonIdempotentAddrBase = 1024'({64'b0});
   cfg.NonIdempotentLength = 1024'({ariane_soc::DRAMBase});
@@ -291,6 +322,11 @@ assign cpu_resetn = ~cpu_reset;
 `elsif GENESYSII
 logic cpu_reset;
 assign cpu_reset  = ~cpu_resetn;
+`elsif CW305
+logic cpu_reset;
+assign cpu_reset  = ~cpu_resetn;
+assign trst_n = 1'b1;
+assign trst = 1'b0;
 `elsif KC705
 assign cpu_resetn = ~cpu_reset;
 `elsif VC707
@@ -342,17 +378,41 @@ assign rst = ddr_sync_reset;
 axi_pkg::xbar_rule_64_t [ariane_soc::NB_PERIPHERALS-1:0] addr_map;
 
 assign addr_map = '{
-  '{ idx: ariane_soc::Debug,    start_addr: ariane_soc::DebugBase,    end_addr: ariane_soc::DebugBase + ariane_soc::DebugLength       },
-  '{ idx: ariane_soc::ROM,      start_addr: ariane_soc::ROMBase,      end_addr: ariane_soc::ROMBase + ariane_soc::ROMLength           },
-  '{ idx: ariane_soc::CLINT,    start_addr: ariane_soc::CLINTBase,    end_addr: ariane_soc::CLINTBase + ariane_soc::CLINTLength       },
-  '{ idx: ariane_soc::PLIC,     start_addr: ariane_soc::PLICBase,     end_addr: ariane_soc::PLICBase + ariane_soc::PLICLength         },
-  '{ idx: ariane_soc::UART,     start_addr: ariane_soc::UARTBase,     end_addr: ariane_soc::UARTBase + ariane_soc::UARTLength         },
-  '{ idx: ariane_soc::Timer,    start_addr: ariane_soc::TimerBase,    end_addr: ariane_soc::TimerBase + ariane_soc::TimerLength       },
-  '{ idx: ariane_soc::SPI,      start_addr: ariane_soc::SPIBase,      end_addr: ariane_soc::SPIBase + ariane_soc::SPILength           },
-  '{ idx: ariane_soc::Ethernet, start_addr: ariane_soc::EthernetBase, end_addr: ariane_soc::EthernetBase + ariane_soc::EthernetLength },
-  '{ idx: ariane_soc::GPIO,     start_addr: ariane_soc::GPIOBase,     end_addr: ariane_soc::GPIOBase + ariane_soc::GPIOLength         },
-  '{ idx: ariane_soc::DRAM,     start_addr: ariane_soc::DRAMBase,     end_addr: ariane_soc::DRAMBase + ariane_soc::DRAMLength         }
+    '{ idx: ariane_soc::Debug,    start_addr: ariane_soc::DebugBase,    end_addr: ariane_soc::DebugBase + ariane_soc::DebugLength       },
+    '{ idx: ariane_soc::ROM,      start_addr: ariane_soc::ROMBase,      end_addr: ariane_soc::ROMBase + ariane_soc::ROMLength           },
+    '{ idx: ariane_soc::CLINT,    start_addr: ariane_soc::CLINTBase,    end_addr: ariane_soc::CLINTBase + ariane_soc::CLINTLength       },
+    '{ idx: ariane_soc::PLIC,     start_addr: ariane_soc::PLICBase,     end_addr: ariane_soc::PLICBase + ariane_soc::PLICLength         },
+    '{ idx: ariane_soc::UART,     start_addr: ariane_soc::UARTBase,     end_addr: ariane_soc::UARTBase + ariane_soc::UARTLength         },
+    '{ idx: ariane_soc::Timer,    start_addr: ariane_soc::TimerBase,    end_addr: ariane_soc::TimerBase + ariane_soc::TimerLength       },
+    '{ idx: ariane_soc::SPI,      start_addr: ariane_soc::SPIBase,      end_addr: ariane_soc::SPIBase + ariane_soc::SPILength           },
+    '{ idx: ariane_soc::Ethernet, start_addr: ariane_soc::EthernetBase, end_addr: ariane_soc::EthernetBase + ariane_soc::EthernetLength },
+    '{ idx: ariane_soc::GPIO,     start_addr: ariane_soc::GPIOBase,     end_addr: ariane_soc::GPIOBase + ariane_soc::GPIOLength         },
+    '{ idx: ariane_soc::DRAM,     start_addr: ariane_soc::DRAMBase,     end_addr: ariane_soc::DRAMBase + ariane_soc::DRAMLength         },
+    '{ idx: ariane_soc::Keccak,   start_addr: ariane_soc::KeccakBase,   end_addr: ariane_soc::KeccakBase + ariane_soc::KeccakLength     }
 };
+
+/// Keccak AXI Accellerator
+logic keccak_irq;
+  axi_slave_req_t  keccak_req;
+  axi_slave_resp_t keccak_resp;
+  `AXI_ASSIGN_TO_REQ(keccak_req, master[ariane_soc::Keccak])
+  `AXI_ASSIGN_FROM_RESP(master[ariane_soc::Keccak], keccak_resp)
+  keccak_axi_top #(
+    	.AXI_ADDR_WIDTH ( CVA6Cfg.XLEN ),
+      .AXI_DATA_WIDTH ( CVA6Cfg.XLEN ),
+      .AXI_ID_WIDTH   ( AxiIdWidthSlaves ),
+      .AXI_USER_WIDTH ( AxiUserWidth     ),
+      .axi_req_t ( axi_slave_req_t ),
+      .axi_rsp_t ( axi_slave_resp_t )
+  ) i_keccak_slv (
+    .clk_i      ( clk        ),
+    .rst_ni     ( ndmreset_n   ),
+    //.test_i     ( test_en      ),
+    .axi_req_i  ( keccak_req  ),
+    .axi_rsp_o  ( keccak_resp ),
+    //.axi_slave  ( master[ariane_soc::Keccak] )`
+    .keccak_intr_o (keccak_irq)
+  );
 
 localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{
   NoSlvPorts:         ariane_soc::NrSlaves,
@@ -799,6 +859,7 @@ ariane #(
 `AXI_ASSIGN_FROM_REQ(slave[0], axi_ariane_req)
 `AXI_ASSIGN_TO_RESP(axi_ariane_resp, slave[0])
 
+`ifndef CW305 
   cva6_rvfi #(
       .CVA6Cfg   (CVA6Cfg),
       .rvfi_instr_t(rvfi_instr_t),
@@ -815,7 +876,7 @@ ariane #(
       .rvfi_to_iti_o   (rvfi_to_iti),
       .rvfi_csr_o   ()
   );
-
+`endif
 
     cva6_iti #(
         .CVA6Cfg   (CVA6Cfg),
@@ -1065,10 +1126,10 @@ assign FifoEn = !usrFull && !usrEmpty;
 // ---------------
 // Peripherals
 // ---------------
-`ifdef KC705
+//`ifdef KC705
   logic [7:0] unused_led;
   logic [3:0] unused_switches = 4'b0000;
-`endif
+//`endif
 
 logic clk_200MHz_ref;
 
@@ -1082,6 +1143,9 @@ ariane_peripherals #(
     `ifdef KINTEX7
     .InclSPI      ( 1'b1         ),
     .InclEthernet ( 1'b1         )
+    `elsif CW305
+    .InclSPI	  ( 1'b1	 ),
+    .InclEthernet ( 1'b0	 )
     `elsif KC705
     .InclSPI      ( 1'b1         ),
     .InclEthernet ( 1'b0         ) // Ethernet requires RAMB16 fpga/src/ariane-ethernet/dualmem_widen8.sv to be defined
@@ -1109,6 +1173,7 @@ ariane_peripherals #(
     .irq_o        ( irq                          ),
     .rx_i         ( rx                           ),
     .tx_o         ( tx                           ),
+    `ifndef CW305
     .eth_txck,
     .eth_rxck,
     .eth_rxctl,
@@ -1119,6 +1184,7 @@ ariane_peripherals #(
     .eth_mdio,
     .eth_mdc,
     .phy_tx_clk_i   ( phy_tx_clk                  ),
+    `endif
     .sd_clk_i       ( sd_clk_sys                  ),
     .spi_clk_o      ( spi_clk_o                   ),
     .spi_mosi       ( spi_mosi                    ),
@@ -1127,6 +1193,9 @@ ariane_peripherals #(
     `ifdef KC705
       .leds_o         ( {led[3:0], unused_led[7:4]}),
       .dip_switches_i ( {sw, unused_switches}     )
+    `elsif CW305
+      .leds_o	      ( {led[2:0], unused_led[7:3]}),
+      .dip_switches_i ( {sw, unused_switches}	  )
     `else
       .leds_o         ( led                       ),
       .dip_switches_i ( sw                        )
@@ -1259,6 +1328,78 @@ xlnx_protocol_checker i_xlnx_protocol_checker (
 assign dram.r_user = '0;
 assign dram.b_user = '0;
 
+`ifdef CW305 
+
+  AXI_BUS #(
+    .AXI_ADDR_WIDTH ( AxiAddrWidth            ),
+    .AXI_DATA_WIDTH ( AxiDataWidth               ),
+    .AXI_ID_WIDTH   ( AxiIdWidthSlaves ),
+    .AXI_USER_WIDTH ( AxiUserWidth             )
+  ) dram_delayed();
+
+  axi_multicut_intf #(
+    .ADDR_WIDTH      ( AxiAddrWidth            ),
+    .DATA_WIDTH      ( AxiDataWidth               ),
+    .USER_WIDTH      ( AxiUserWidth               ),
+    .ID_WIDTH	     ( AxiIdWidthSlaves		),
+    .NUM_CUTS  ( 1                            )
+  ) i_axi_delayer (
+    .clk_i  ( clk        ),
+    .rst_ni ( ndmreset_n   ),
+    .in    ( dram         ),
+    .out    ( dram_delayed )
+  );
+
+
+
+  axi2mem #(
+    .AXI_ID_WIDTH   ( AxiIdWidthSlaves),
+    .AXI_ADDR_WIDTH ( AxiAddrWidth            ),
+    .AXI_DATA_WIDTH ( AxiDataWidth               ),
+    .AXI_USER_WIDTH ( AxiUserWidth               )
+  ) i_axi2mem (
+    .clk_i  ( clk        ),
+    .rst_ni ( ndmreset_n   ),
+    .slave  ( dram_delayed ),
+    .req_o  ( req          ),
+    .we_o   ( we           ),
+    .addr_o ( addr         ),
+    .be_o   ( be           ),
+    .user_o ( wuser        ),
+    .data_o ( wdata        ),
+    .user_i ( ruser        ),
+    .data_i ( rdata        )
+  );
+  logic                         req;
+  logic                         we;
+  logic [AxiAddrWidth-1:0] addr;
+  logic [AxiDataWidth/8-1:0]  be;
+  logic [AxiDataWidth-1:0]    wdata;
+  logic [AxiDataWidth-1:0]    rdata;
+  logic [AxiUserWidth-1:0]    wuser;
+  logic [AxiUserWidth-1:0]    ruser;
+  localparam int NUM_WORDS = 65536;
+
+  sram #(
+    .DATA_WIDTH ( AxiDataWidth ),
+    .USER_WIDTH ( AxiUserWidth ),
+    .USER_EN    ( CVA6Cfg.AXI_USER_EN    ),
+    .SIM_INIT   ( "zeros"        ),
+    .NUM_WORDS  ( NUM_WORDS      ),
+    .OUT_REGS   ( 0		)
+  ) i_sram (
+    .clk_i      ( clk                                                                       ),
+    .rst_ni     ( ndmreset_n                                                                      ),
+    .req_i      ( req                                                                         ),
+    .we_i       ( we                                                                          ),
+    .addr_i     ( addr[$clog2(NUM_WORDS)-1+$clog2(AxiDataWidth/8):$clog2(AxiDataWidth/8)] ),
+    .wuser_i    ( wuser                                                                       ),
+    .wdata_i    ( wdata                                                                       ),
+    .be_i       ( be                                                                          ),
+    .ruser_o    ( ruser                                                                       ),
+    .rdata_o    ( rdata                                                                       )
+  );
+`else
 xlnx_axi_clock_converter i_xlnx_axi_clock_converter_ddr (
   .s_axi_aclk     ( clk              ),
   .s_axi_aresetn  ( ndmreset_n       ),
@@ -1344,6 +1485,7 @@ xlnx_axi_clock_converter i_xlnx_axi_clock_converter_ddr (
   .m_axi_rvalid   ( s_axi_rvalid     ),
   .m_axi_rready   ( s_axi_rready     )
 );
+`endif
 
 `ifdef NEXYS_VIDEO
 xlnx_clk_gen i_xlnx_clk_gen (
@@ -1356,6 +1498,15 @@ xlnx_clk_gen i_xlnx_clk_gen (
   .locked   ( pll_locked      ),
   .clk_in1  ( ddr_clock_out   )  // 100MHz input clock
 );
+
+
+`elsif CW305
+
+assign phy_tx_clk = 1'b0;
+assign eth_clk = 1'b0;
+assign sd_clk_sys = 1'b0;
+assign ddr_clk_out = 1'b0;
+assign pll_locked = cpu_resetn;
 
 `else
 
@@ -2117,6 +2268,8 @@ axi_clock_converter_0 pcie_axi_clock_converter (
   .s_axi_rvalid   ( pcie_dwidth_axi_rvalid   ),
   .s_axi_rready   ( pcie_dwidth_axi_rready   )
 );
+`elsif CW305
+
 `endif
 
 endmodule

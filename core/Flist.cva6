@@ -39,6 +39,8 @@ ${CVA6_REPO_DIR}/vendor/pulp-platform/fpga-support/rtl/SyncDpRam_ind_r_w.sv
 +incdir+${CVA6_REPO_DIR}/common/local/util/
 
 // Keccak IP
+${CVA6_REPO_DIR}/corev_apu/register_interface/vendor/lowrisc_opentitan/src/prim_subreg_arb.sv
+${CVA6_REPO_DIR}/corev_apu/register_interface/vendor/lowrisc_opentitan/src/prim_subreg.sv
 ${CVA6_REPO_DIR}/keccak_ip/gen/keccak_reg_pkg.sv
 ${CVA6_REPO_DIR}/keccak_ip/gen/keccak_reg_top.sv
 ${CVA6_REPO_DIR}/keccak_ip/rtl/pkg_keccak.sv
@@ -52,6 +54,7 @@ ${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_f.sv
 +incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/src/
 +incdir+${CVA6_REPO_DIR}/vendor/pulp-platform/axi/src/
 ${CVA6_REPO_DIR}/vendor/pulp-platform/axi/src/axi_pkg.sv
+${CVA6_REPO_DIR}/corev_apu/register_interface/src/axi_lite_to_reg.sv
 ${CVA6_REPO_DIR}/corev_apu/register_interface/src/axi_to_reg.sv
 ${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_axi_top.sv
 

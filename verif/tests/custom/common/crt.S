@@ -129,7 +129,7 @@ _start:
   # modified to 1MB    (20)
   # modified to 256KB  (18)
   # original was 128KB (17)
-#define STKSHIFT 18 
+#define STKSHIFT 17 
   add sp, a0, 1
   sll sp, sp, STKSHIFT
   add sp, sp, tp

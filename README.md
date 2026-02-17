@@ -10,6 +10,7 @@ The mapping of the accellerator is the following:
 | CSREG | 0xC8 | 64 bit | Control and status register | START[0], DONE[1], others unused |
 
 
+This work has been developed for the Integrated Systems Architecture course special project at Politecnico di Torino.
 # Getting Started
 Clone the repository
 ```bash
@@ -59,8 +60,9 @@ source tests/ml-kem-512/run.sh copro
 Depending on wether you want to simulate Kyber tests with or without the coprocessor.
 
 # Results
-## KeccakF1600_StatePermute
-The reference C code is taken from the [benchmarks of SHA3 for the RISC-V Cryptography Extension](https://github.com/riscv/riscv-crypto/blob/main/benchmarks/sha3/zscrypto_rv64/Keccak.c). All tests are runned with -O2 flag.
+## veri-testharness
+### KeccakF1600_StatePermute
+Tests for different implementations of the coprocessor instructions were runned. The reference C code is taken from the [benchmarks of SHA3 for the RISC-V Cryptography Extension](https://github.com/riscv/riscv-crypto/blob/main/benchmarks/sha3/zscrypto_rv64/Keccak.c). All tests are runned with -O2 flag.
 
 | Implementation | Cycles per permutation | Speedup vs baseline |
 | --- | --- | --- |  
@@ -73,8 +75,22 @@ To estimate performance gains in a real-world usage scenario of Keccak, Kyber512
 
 | Implementation | Keygen CPU cycles | Encapsulation CPU cycles | Decapsulation CPU cycles |
 | --- | --- | --- |  --- |  
-| Baseline (-O2) | 573784 | 712582 | 917591 | 
+| Baseline - No ISA Extensions (-O2) | 573784 | 712582 | 917591 | 
 | AXI Coprocessor (-O2) | 335202 (1.71x)  | 483173 (1.48x)  | 688285 (1.33x) | 
+
+## Hardware Validation on CW305 board
+To validate the design in a real-world environment, the system was synthesized and deployed on the CW305 FPGA. The integration of the accellerator into the CVA6 required 7091 LEs, representing a 18.6% overhead on the CPU total area of 38081 LEs. The HW implementations instantiates a 512 KB SRAM that increases the memory latency compared to the simulation environment, resulting in different speedups compared to the simulation.
+### KeccakF1600_StatePermute
+| Implementation | Cycles per permutation | Speedup vs baseline |
+| --- | --- | --- |  
+| Baseline - No ISA Extensions (-O2) | 11126 | 1x | 
+| AXI Coprocessor (-O2) | 839 | 13.26x |
+
+### ML-KEM-512
+| Implementation | Keygen CPU cycles | Encapsulation CPU cycles | Decapsulation CPU cycles |
+| --- | --- | --- |  --- |  
+| Baseline (-O2) | 756712 | 882759 | 1114188 | 
+| Extern ASM Keccak_F1600StatePermute, Coprocessor (-O2) | 399422 (1.89x) | 539382 (1.64x) | 771085 (1.44x) | 
 
 # Acknowledgements
 Check out the [acknowledgements](ACKNOWLEDGEMENTS.md).
