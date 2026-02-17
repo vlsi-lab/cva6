@@ -61,7 +61,8 @@ int read_serial(uint8_t *res)
 
 void init_uart(uint32_t freq, uint32_t baud)
 {
-    uint32_t divisor = freq / (baud << 4);
+    //uint32_t divisor = freq / (baud << 4);
+    uint32_t divisor = 13;
 
     write_reg_u8(UART_INTERRUPT_ENABLE, 0x00); // Disable all interrupts
     write_reg_u8(UART_LINE_CONTROL, 0x80);     // Enable DLAB (set baud rate divisor)

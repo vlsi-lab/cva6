@@ -16,6 +16,7 @@ This branch implements a CV-X-IF Coprocessor for Keccak acceleration, adding the
 
 The CVA6 ID stage has been modified to support R4-type instruction formats for `CUSTOM_1`, `CUSTOM_2` and `CUSTOM_3` opcodes when offloading via CV-X-IF. This change allows the core to select directly `rs3` from the instruction rather than passing `rd` value.
 
+This work has been developed for the Integrated Systems Architecture course special project at Politecnico di Torino.
 # Getting Started
 Clone the repository
 ```bash
@@ -63,7 +64,8 @@ source tests/ml-kem-512/run.sh copro
 Depending on wether you want to simulate Kyber tests with or without the coprocessor.
 
 # Results
-## KeccakF1600_StatePermute
+## veri-testharness
+### KeccakF1600_StatePermute
 Tests for different implementations of the coprocessor instructions were runned. The reference C code is taken from the [benchmarks of SHA3 for the RISC-V Cryptography Extension](https://github.com/riscv/riscv-crypto/blob/main/benchmarks/sha3/zscrypto_rv64/Keccak.c). All tests are runned with -O2 flag.
 
 | Implementation | Cycles per permutation | Speedup vs baseline |
@@ -75,13 +77,32 @@ Tests for different implementations of the coprocessor instructions were runned.
 | XOR3+RXRI+XANDN, register keyword | 3182 | 2.52x | 
 | XOR3+RXRI+XANDN, asm implementation | 2476 | 3.24x |
 
-## ML-KEM-512
+### ML-KEM-512
 To estimate performance gains in a real-world usage scenario of Keccak, Kyber512 was executed on both the Baseline ISA (rv64imac_zicsr_zifencei) and the accelerated ISA featuring Keccak instructions.
 
 | Implementation | Keygen CPU cycles | Encapsulation CPU cycles | Decapsulation CPU cycles |
 | --- | --- | --- |  --- |  
 | Baseline (-O2) | 573788 | 712582 | 917591 | 
 | Extern ASM Keccak_F1600StatePermute, Coprocessor (-O2) | 385287 (1.49x)  | 531484 (1.34x)  | 736226 (1.25x) | 
+
+## Hardware Validation on CW305 board
+To validate the design in a real-world environment, the system was synthesized and deployed on the CW305 FPGA. The integration of the accellerator into the CVA6 required only 333 LEs, representing a negligible overhead (less than 1% of the CPU's total area of  42116 LEs). The HW implementations instantiates a 512 KB SRAM that increases the memory latency compared to the simulation environment, resulting in an higher speedup for the final implementation. 
+
+### KeccakF1600_StatePermute
+| Implementation | Cycles per permutation | Speedup vs baseline |
+| --- | --- | --- |  
+| Baseline - No ISA Extensions | 11126 | 1x | 
+| XOR3 | 11089 | 1.01x | 
+| RXRI | 7889  | 1.41x | 
+| XANDN | 10097 | 1.10x | 
+| XOR3+RXRI+XANDN, register keyword | 4681 | 2.38x | 
+| XOR3+RXRI+XANDN, asm implementation | 3190 | 3.49x |
+
+### ML-KEM-512
+| Implementation | Keygen CPU cycles | Encapsulation CPU cycles | Decapsulation CPU cycles |
+| --- | --- | --- |  --- |  
+| Baseline (-O2) | 756712 | 882747 | 1114196 | 
+| Extern ASM Keccak_F1600StatePermute, Coprocessor (-O2) | 450987 (1.67x)  | 589000 (1.50x)  | 820286 (1.36x) | 
 
 # Acknowledgements
 Check out the [acknowledgements](ACKNOWLEDGEMENTS.md).
