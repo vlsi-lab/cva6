@@ -18,19 +18,34 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <inttypes.h>
 
 #include "uart.h"
+#include "encoding.h"
 
 int main(int argc, char* arg[]) {
-	
-	printf("%d: Hello World !", 0);
-	
+
+	printf("%d: Hello World !\n", 0);
+
+	/* Cycle-count a small loop using cva6's encoding.h CSR helpers
+	 * (replaces the X-HEEP CSR_WRITE/CSR_READ pattern). */
+	clear_csr(mcountinhibit, 1);
+	write_csr(mcycle, 0);
+
 	int a = 0;
 	for (int i = 0; i < 5; i++)
 	{
 		a += i;
 	}
 
-	print_uart("Hi World! :)");
+	uint32_t cycles = (uint32_t)read_csr(mcycle);
+
+	print_uart("Number of clock cycles for hello-world loop: 0x");
+	print_uart_int(cycles);
+	print_uart("\n");
+
+	printf("cycles = %" PRIu32 "\n", cycles);
+
+	print_uart("Hi World! :)\n");
 	return 0;
 }

@@ -109,7 +109,30 @@ module ariane import ariane_pkg::*; #(
   );
 
   if (CVA6Cfg.CvxifEn) begin: gen_cvxif
-    if (CVA6Cfg.CoproType == config_pkg::COPRO_KECCAK) begin: gen_COPRO_KECCAK
+    if (CVA6Cfg.CoproType == config_pkg::COPRO_HASH) begin: gen_COPRO_HASH
+      hash_xif #(
+        .NrRgprPorts (CVA6Cfg.NrRgprPorts),
+        .XLEN (CVA6Cfg.XLEN),
+        .readregflags_t (readregflags_t),
+        .writeregflags_t (writeregflags_t),
+        .id_t (id_t),
+        .hartid_t (hartid_t),
+        .x_compressed_req_t (x_compressed_req_t),
+        .x_compressed_resp_t (x_compressed_resp_t),
+        .x_issue_req_t (x_issue_req_t),
+        .x_issue_resp_t (x_issue_resp_t),
+        .x_register_t (x_register_t),
+        .x_commit_t (x_commit_t),
+        .x_result_t (x_result_t),
+        .cvxif_req_t (cvxif_req_t),
+        .cvxif_resp_t (cvxif_resp_t)
+      ) i_hash_coprocessor (
+        .clk_i                ( clk_i                          ),
+        .rst_ni               ( rst_ni                         ),
+        .cvxif_req_i          ( cvxif_req                      ),
+        .cvxif_resp_o         ( cvxif_resp                     )
+      );
+    end else if (CVA6Cfg.CoproType == config_pkg::COPRO_KECCAK) begin: gen_COPRO_KECCAK
       keccak_xif #(
         .NrRgprPorts (CVA6Cfg.NrRgprPorts),
         .XLEN (CVA6Cfg.XLEN),

@@ -104,7 +104,24 @@ ${CVA6_REPO_DIR}/core/cvxif_compressed_if_driver.sv
 ${CVA6_REPO_DIR}/core/cvxif_issue_register_commit_if_driver.sv
 ${CVA6_REPO_DIR}/core/cvxif_fu.sv
 
-// KECCAK IP
+// HASH IP (Keccak + SPHINCS+ + WOTS+ chain-lengths, 64-bit native)
+${CVA6_REPO_DIR}/hash_ip/hw/include/hash_pkg.sv
+${CVA6_REPO_DIR}/hash_ip/hw/keccak/pkg_keccak.sv
+${CVA6_REPO_DIR}/hash_ip/hw/keccak/keccak_round_constants_gen.sv
+${CVA6_REPO_DIR}/hash_ip/hw/keccak/keccak_round.sv
+${CVA6_REPO_DIR}/hash_ip/hw/keccak/keccak_dp.sv
+${CVA6_REPO_DIR}/hash_ip/hw/keccak/keccak_cu.sv
+${CVA6_REPO_DIR}/hash_ip/hw/keccak/keccak_f.sv
+${CVA6_REPO_DIR}/hash_ip/hw/hash_register.sv
+${CVA6_REPO_DIR}/hash_ip/hw/chain_lengths.sv
+${CVA6_REPO_DIR}/hash_ip/hw/sphincs_ops.sv
+${CVA6_REPO_DIR}/hash_ip/hw/hash.sv
+${CVA6_REPO_DIR}/hash_ip/hw/hash_xif_id.sv
+${CVA6_REPO_DIR}/hash_ip/hw/hash_xif_ex.sv
+${CVA6_REPO_DIR}/hash_ip/hw/hash_xif_cid.sv
+${CVA6_REPO_DIR}/hash_ip/hw/hash_xif.sv
+
+// (legacy) Keccak XIF IP - kept for COPRO_KECCAK builds
 ${CVA6_REPO_DIR}/keccak_ip/hw/include/keccak_xif_instr_pkg.sv
 ${CVA6_REPO_DIR}/keccak_ip/hw/keccak_xif_cid.sv
 ${CVA6_REPO_DIR}/keccak_ip/hw/keccak_xif_id.sv
