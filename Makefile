@@ -177,8 +177,7 @@ src :=  $(if $(spike-tandem),verif/tb/core/uvma_core_cntrl_pkg.sv)              
         corev_apu/rv_plic/rtl/rv_plic_target.sv                                      \
         corev_apu/rv_plic/rtl/rv_plic_gateway.sv                                     \
         corev_apu/rv_plic/rtl/plic_regmap.sv                                         \
-        corev_apu/rv_plic/rtl/plic_top.sv                                            \
-        corev_apu/riscv-dbg/debug_rom/debug_rom.sv                                   \
+		corev_apu/rv_plic/rtl/plic_top.sv                                            \
         corev_apu/register_interface/src/apb_to_reg.sv                               \
         vendor/pulp-platform/axi/src/axi_multicut.sv                                 \
         vendor/pulp-platform/common_cells/src/rstgen_bypass.sv                       \
@@ -296,8 +295,8 @@ altera_filter := corev_apu/tb/ariane_testharness.sv \
 								corev_apu/fpga/src/gpio/test/tb_gpio.sv \
 								vendor/pulp-platform/axi/src/axi_test.sv \
 								corev_apu/riscv-dbg/src/dm_pkg.sv \
-								corev_apu/riscv-dbg/src/dmi_jtag_tap.sv \
-								corev_apu/riscv-dbg/src/dmi_jtag.sv \
+#                                corev_apu/riscv-dbg/src/dmi_jtag_tap.sv \
+#                                corev_apu/riscv-dbg/src/dmi_jtag.sv \
 								corev_apu/fpga/src/apb_uart/src/reg_uart_wrap.sv
 								
 altera_filter := $(addprefix $(root-dir), $(altera_filter))
