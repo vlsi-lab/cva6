@@ -38,6 +38,7 @@
 .global keccak_hw_store_word
 .global keccak_hw_read3
 .global cus_load
+.global cus_load2_pair
 .global cus_store
 .global keccak_coproc_S
 .align 4
@@ -72,6 +73,13 @@
     .insn r 0x5b, 2, 0x01, \rd, \rs_off, x0
 .endm
 
+# OP_LOAD2 (R4-type, funct3=5, funct2=0):
+#   lane[rs_idx]   <- rs_lo
+#   lane[rs_idx+1] <- rs_hi
+.macro HASH_LOAD2 rs_lo, rs_hi, rs_idx
+    .insn r4 0x5b, 5, 0, x0, \rs_lo, \rs_hi, \rs_idx
+.endm
+
 # ---------------- helpers ----------------
 
 # Pack a HORCRUX (lo32, hi32) pair into a single 64-bit lane in t3.
@@ -94,6 +102,33 @@ cus_load:
     PACK_LO_HI
     srli    t5, a2, 1           # lane index = idx32 / 2
     HASH_LOAD t3, t5
+    ret
+
+# ============================================================================
+# void cus_load2_pair(uint32_t lo_lo, uint32_t lo_hi,
+#                     uint32_t hi_lo, uint32_t hi_hi,
+#                     uint32_t idx32);
+#   - Fuses two legacy cus_load calls into a single OP_LOAD2 (one issue
+#     cycle instead of two).  Equivalent to:
+#       cus_load(lo_lo, lo_hi, idx32);
+#       cus_load(hi_lo, hi_hi, idx32 + 2);
+#   - idx32 must be even (legacy 32-bit index).  Lane index is idx32 >> 1
+#     and the second lane is lane+1 (HW saturates to NUM_LANES-1).
+# ============================================================================
+cus_load2_pair:
+    # lane "lo" = (a1 << 32) | (a0 & 0xFFFFFFFF) -> t3
+    slli    t3, a0, 32
+    srli    t3, t3, 32
+    slli    t4, a1, 32
+    or      t3, t3, t4
+    # lane "hi" = (a3 << 32) | (a2 & 0xFFFFFFFF) -> t4
+    slli    t4, a2, 32
+    srli    t4, t4, 32
+    slli    t5, a3, 32
+    or      t4, t4, t5
+    # lane index = a4 >> 1
+    srli    t5, a4, 1
+    HASH_LOAD2 t3, t4, t5
     ret
 
 # ============================================================================
@@ -158,24 +193,38 @@ keccak_hw_read3:
 #   - Legacy whole-state load/permute/store helper.
 #   - Loads 50 32-bit words from `state` into 25 64-bit lanes, runs one
 #     permutation, then writes the result back.
+#   - Loads use HASH_LOAD2 (dual lane) to halve the load count: 12 LOAD2
+#     cover lanes 0..23, then a single HASH_LOAD writes lane 24.
 # ============================================================================
 keccak_coproc_S:
     addi    sp, sp, -8
     sd      ra, 0(sp)
 
-    li      t0, 0               # 64-bit lane index (0..24)
+    li      t0, 0               # 64-bit lane index (0, 2, 4, ..., 22)
     mv      t1, a0              # word pointer
+    li      t6, 24              # loop bound (lanes 0..23 in pairs)
 
-1:  # Load lane t0 from words [t1+0]:[t1+4]
-    lwu     t2, 0(t1)           # lo (zero-extended)
-    lwu     t3, 4(t1)           # hi (zero-extended)
+1:  # Load lanes t0 and t0+1 in one insn (16 bytes from state)
+    lwu     t2, 0(t1)           # lo lane: low half
+    lwu     t3, 4(t1)           # lo lane: high half
+    slli    t3, t3, 32
+    or      t3, t2, t3          # t3 = lane[t0]
+    lwu     t4, 8(t1)           # hi lane: low half
+    lwu     t5, 12(t1)          # hi lane: high half
+    slli    t5, t5, 32
+    or      t4, t4, t5          # t4 = lane[t0+1]
+    HASH_LOAD2 t3, t4, t0
+    addi    t0, t0, 2
+    addi    t1, t1, 16
+    blt     t0, t6, 1b
+
+    # Lane 24 (last) via single HASH_LOAD (no pair available).
+    lwu     t2, 0(t1)
+    lwu     t3, 4(t1)
     slli    t3, t3, 32
     or      t3, t2, t3
+    li      t0, 24
     HASH_LOAD t3, t0
-    addi    t0, t0, 1
-    addi    t1, t1, 8
-    li      t2, 25
-    blt     t0, t2, 1b
 
     HASH_KPERM
 

@@ -16,6 +16,11 @@
 /* Load a pair of 32-bit words into horcrux register file at index */
 extern void cus_load(uint32_t lo, uint32_t hi, uint32_t index);
 
+/* Fused dual-lane load: one OP_LOAD2 instead of two cus_load (halves cycles). */
+extern void cus_load2_pair(uint32_t lo_lo, uint32_t lo_hi,
+                           uint32_t hi_lo, uint32_t hi_hi,
+                           uint32_t idx32);
+
 /* Store (read) a 32-bit word from horcrux register file at index */
 extern uint32_t cus_store(uint32_t index);
 
@@ -64,18 +69,19 @@ void thash_hw(uint8_t *out, const uint8_t *in, unsigned int inblocks,
     if (inblocks == 1) {
         /* Use OP_THASH1 for single-block case */
         
-        /* Load pub_seed to reg[0:3] (16 bytes = 4 words) */
-        cus_load(load32(ctx->pub_seed + 0), load32(ctx->pub_seed + 4), 0);
-        cus_load(load32(ctx->pub_seed + 8), load32(ctx->pub_seed + 12), 2);
-        
-        /* Load addr to reg[4:11] (32 bytes = 8 words) */
-        for (i = 0; i < 8; i += 2) {
-            cus_load(load32(addr + 4*i), load32(addr + 4*(i+1)), 4 + i);
+        /* Load pub_seed to reg[0:3] (16 bytes) - 1 fused LOAD2. */
+        cus_load2_pair(load32(ctx->pub_seed + 0), load32(ctx->pub_seed + 4),
+                       load32(ctx->pub_seed + 8), load32(ctx->pub_seed + 12), 0);
+
+        /* Load addr to reg[4:11] (32 bytes) - 2 fused LOAD2. */
+        for (i = 0; i < 8; i += 4) {
+            cus_load2_pair(load32(addr + 4*i),     load32(addr + 4*(i+1)),
+                           load32(addr + 4*(i+2)), load32(addr + 4*(i+3)), 4 + i);
         }
-        
-        /* Load input to reg[12:15] (16 bytes = 4 words) */
-        cus_load(load32(in + 0), load32(in + 4), 12);
-        cus_load(load32(in + 8), load32(in + 12), 14);
+
+        /* Load input to reg[12:15] (16 bytes) - 1 fused LOAD2. */
+        cus_load2_pair(load32(in + 0), load32(in + 4),
+                       load32(in + 8), load32(in + 12), 12);
         
         /* Memory fence before triggering compute */
         __asm__ volatile("fence" ::: "memory");

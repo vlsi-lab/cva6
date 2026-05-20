@@ -28,10 +28,10 @@ static inline void cl_unpack_word(uint8_t *dst, uint32_t w) {
     dst[6] = (w >>  4) & 0xF; dst[7] =  w        & 0xF;
 }
 
-/* 128f: 16 input bytes -> 32 nibbles + 3 checksum nibbles (35 total). */
+/* 128f: 16 input bytes -> 32 nibbles + 3 checksum nibbles (35 total).
+ * 1 fused LOAD2 covers lanes 0,1 (16 bytes). */
 static inline void chain_lengths_hw_128f(uint8_t *lengths, const uint32_t *msg32) {
-    cus_load(msg32[0], msg32[1], 0);
-    cus_load(msg32[2], msg32[3], 2);
+    cus_load2_pair(msg32[0], msg32[1], msg32[2], msg32[3], 0);
     __asm__ volatile ("fence" ::: "memory");
     hash_cl_128f();
 
@@ -44,10 +44,10 @@ static inline void chain_lengths_hw_128f(uint8_t *lengths, const uint32_t *msg32
     lengths[34] = (w[4] >> 20) & 0xF;
 }
 
-/* 192f: 24 input bytes -> 48 nibbles + 3 checksum nibbles (51 total). */
+/* 192f: 24 input bytes -> 48 nibbles + 3 checksum nibbles (51 total).
+ * 1 fused LOAD2 (lanes 0,1) + 1 single LOAD (lane 2) = 2 load insns. */
 static inline void chain_lengths_hw_192f(uint8_t *lengths, const uint32_t *msg32) {
-    cus_load(msg32[0], msg32[1], 0);
-    cus_load(msg32[2], msg32[3], 2);
+    cus_load2_pair(msg32[0], msg32[1], msg32[2], msg32[3], 0);
     cus_load(msg32[4], msg32[5], 4);
     __asm__ volatile ("fence" ::: "memory");
     hash_cl_192f();
@@ -60,12 +60,11 @@ static inline void chain_lengths_hw_192f(uint8_t *lengths, const uint32_t *msg32
     lengths[50] = (w[6] >> 20) & 0xF;
 }
 
-/* 256f: 32 input bytes -> 64 nibbles + 3 checksum nibbles (67 total). */
+/* 256f: 32 input bytes -> 64 nibbles + 3 checksum nibbles (67 total).
+ * 2 fused LOAD2 cover lanes 0,1 and 2,3 (4 lanes total). */
 static inline void chain_lengths_hw_256f(uint8_t *lengths, const uint32_t *msg32) {
-    cus_load(msg32[0], msg32[1], 0);
-    cus_load(msg32[2], msg32[3], 2);
-    cus_load(msg32[4], msg32[5], 4);
-    cus_load(msg32[6], msg32[7], 6);
+    cus_load2_pair(msg32[0], msg32[1], msg32[2], msg32[3], 0);
+    cus_load2_pair(msg32[4], msg32[5], msg32[6], msg32[7], 4);
     __asm__ volatile ("fence" ::: "memory");
     hash_cl_256f();
 

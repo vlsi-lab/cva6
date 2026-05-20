@@ -98,6 +98,7 @@ module hash_xif_ex
     .insn_i         (insn_to_hash),
     .rs1_i          (registers_i[0]),
     .rs2_i          (registers_i[1]),
+    .rs3_i          (registers_i[2]),
     .start_i        (hash_start),
     .done_keccak_o  (done_keccak),
     .done_sphincs_o (done_sphincs),
