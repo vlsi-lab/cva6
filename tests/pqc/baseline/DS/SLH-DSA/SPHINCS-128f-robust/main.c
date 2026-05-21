@@ -22,9 +22,15 @@
 #include "test_vectors_shake256_128f_robust.h"
 
 
-#define TEST_KEY  0
-#define TEST_SIGN  1
+#ifndef TEST_KEY
+#define TEST_KEY 0
+#endif
+#ifndef TEST_SIGN
+#define TEST_SIGN 1
+#endif
+#ifndef TEST_SIGN_OPEN
 #define TEST_SIGN_OPEN 0
+#endif
 
 #define MLEN_KAT 33
 uint8_t keypair_rnd[CRYPTO_SEEDBYTES];
