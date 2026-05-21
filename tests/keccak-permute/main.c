@@ -3,8 +3,9 @@
  *
  * Minimal Keccak-f[1600] sanity test for the new HASH coprocessor on
  * opcode 0x5B.  Runs ONE permutation in software (KeccakF1600_StatePermute)
- * and ONE permutation in hardware (HASH_LOAD x25, HASH_KPERM, HASH_STORE x25)
- * over an identical input state and compares the two output states.
+ * and ONE permutation in hardware (HASH_LOAD2 x12 + HASH_LOAD x1, HASH_KPERM,
+ * HASH_STORE x25) over an identical input state and compares the two output
+ * states.  The dual-lane LOAD2 halves the loading cycles (13 vs 25).
  *
  * Keccak SW reference taken from tests/keccak/keccak_noopt.c.
  */
@@ -208,10 +209,15 @@ static void keccak_hw_full_permute(const uint64_t in[25], uint64_t out[25]) {
     /* INIT clears the lane file (all 25 lanes <- 0). */
     hash_init();
 
-    /* LOAD all 25 lanes from `in`. */
-    for (uint64_t i = 0; i < 25; i++) {
-        hash_load(in[i], i);
+    /* LOAD all 25 lanes from `in` using the dual-lane LOAD2:
+     *   12 x hash_load2 covers lanes  0..23 (two lanes per insn)
+     *    1 x hash_load  covers lane  24    (HW saturates idx+1 to 24, so we
+     *                                       use a single-lane LOAD for clarity)
+     * Total: 13 issue cycles vs 25 with single-lane LOAD. */
+    for (uint64_t i = 0; i < 12; i++) {
+        hash_load2(in[2 * i], in[2 * i + 1], 2 * i);
     }
+    hash_load(in[24], 24);
 
     /* Single Keccak-f[1600]. */
     hash_kperm();
@@ -241,42 +247,42 @@ int main(void) {
     printf("=== Keccak-f[1600] single permutation: SW vs HW ===\n");
 
     /* Enable mcycle. */
-//    clear_csr(mcountinhibit, 1);
-//
-//    /* ---- SW ---- */
-//    write_csr(mcycle, 0);
-//    KeccakF1600_StatePermute(sw_state);
-//    cycles_sw = (uint32_t)read_csr(mcycle);
-//    printf("[SW] cycles = %u\n", cycles_sw);
-//
-//    /* ---- HW ---- */
-//    write_csr(mcycle, 0);
-//    keccak_hw_full_permute(in_state, hw_state);
-//    cycles_hw = (uint32_t)read_csr(mcycle);
-//    printf("[HW] cycles = %u\n", cycles_hw);
-//
-//    /* ---- Compare ---- */
-//    int mismatches = 0;
-//    for (int i = 0; i < 25; i++) {
-//        if (sw_state[i] != hw_state[i]) {
-//            mismatches++;
-//            printf("  lane[%2d]  SW=%08x%08x  HW=%08x%08x\n",
-//                   i,
-//                   (uint32_t)(sw_state[i] >> 32), (uint32_t)sw_state[i],
-//                   (uint32_t)(hw_state[i] >> 32), (uint32_t)hw_state[i]);
-//        }
-//    }
-//
-//    if (mismatches == 0) {
-//        printf("RESULT: PASS (SW == HW, %d lanes)\n", 25);
-//        if (cycles_hw > 0) {
-//            printf("Speedup SW/HW: %u.%02ux\n",
-//                   cycles_sw / cycles_hw,
-//                   ((cycles_sw * 100U) / cycles_hw) % 100U);
-//        }
-//        return 0;
-//    }
-//
-//    printf("RESULT: FAIL (%d / 25 lanes mismatched)\n", mismatches);
+    clear_csr(mcountinhibit, 1);
+
+    /* ---- SW ---- */
+    write_csr(mcycle, 0);
+    KeccakF1600_StatePermute(sw_state);
+    cycles_sw = (uint32_t)read_csr(mcycle);
+    printf("[SW] cycles = %u\n", cycles_sw);
+
+    /* ---- HW ---- */
+    write_csr(mcycle, 0);
+    keccak_hw_full_permute(in_state, hw_state);
+    cycles_hw = (uint32_t)read_csr(mcycle);
+    printf("[HW] cycles = %u\n", cycles_hw);
+
+    /* ---- Compare ---- */
+    int mismatches = 0;
+    for (int i = 0; i < 25; i++) {
+        if (sw_state[i] != hw_state[i]) {
+            mismatches++;
+            printf("  lane[%2d]  SW=%08x%08x  HW=%08x%08x\n",
+                   i,
+                   (uint32_t)(sw_state[i] >> 32), (uint32_t)sw_state[i],
+                   (uint32_t)(hw_state[i] >> 32), (uint32_t)hw_state[i]);
+        }
+    }
+
+    if (mismatches == 0) {
+        printf("RESULT: PASS (SW == HW, %d lanes)\n", 25);
+        if (cycles_hw > 0) {
+            printf("Speedup SW/HW: %u.%02ux\n",
+                   cycles_sw / cycles_hw,
+                   ((cycles_sw * 100U) / cycles_hw) % 100U);
+        }
+        return 0;
+    }
+
+    printf("RESULT: FAIL (%d / 25 lanes mismatched)\n", mismatches);
     return 0;
 }

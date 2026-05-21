@@ -57,6 +57,16 @@ static inline uint64_t hash_store(uint64_t idx) {
     return r;
 }
 
+/* OP_LOAD2: 128-bit dual-lane load.
+ *   lane[idx]   <- lo  (rs1)
+ *   lane[idx+1] <- hi  (rs2)
+ *   funct3 = 5, R4-type with rs3 = idx (saturated to NUM_LANES-1 in HW).
+ */
+static inline void hash_load2(uint64_t lo, uint64_t hi, uint64_t idx) {
+    __asm__ volatile (".insn r4 0x5b, 5, 0, x0, %0, %1, %2"
+                      :: "r"(lo), "r"(hi), "r"(idx) : "memory");
+}
+
 static inline uint64_t hash_kread3(uint64_t byte_off) {
     uint64_t r;
     __asm__ volatile (".insn r 0x5b, 2, 0x01, %0, %1, x0"
@@ -85,13 +95,13 @@ static inline void hash_thash2_192(uint64_t simple) {
     __asm__ volatile (".insn r 0x5b, 3, 0x04, x0, x0, %0" :: "r"(simple) : "memory");
 }
 static inline void hash_prf_addr_192(void) {
-    __asm__ volatile (".insn r 0x5b, 3, 0x05, x0, x0, x0" ::: "memory");
+    __asm__ volatile (".insn r 0x5b, 3, 0x07, x0, x0, x0" ::: "memory");
 }
 static inline void hash_thash1_256(uint64_t simple) {
-    __asm__ volatile (".insn r 0x5b, 3, 0x06, x0, x0, %0" :: "r"(simple) : "memory");
+    __asm__ volatile (".insn r 0x5b, 3, 0x05, x0, x0, %0" :: "r"(simple) : "memory");
 }
 static inline void hash_thash2_256(uint64_t simple) {
-    __asm__ volatile (".insn r 0x5b, 3, 0x07, x0, x0, %0" :: "r"(simple) : "memory");
+    __asm__ volatile (".insn r 0x5b, 3, 0x06, x0, x0, %0" :: "r"(simple) : "memory");
 }
 static inline void hash_prf_addr_256(void) {
     __asm__ volatile (".insn r 0x5b, 3, 0x08, x0, x0, x0" ::: "memory");
@@ -128,6 +138,31 @@ static inline void cus_load(uint32_t lo, uint32_t hi, uint32_t idx32) {
 static inline uint32_t cus_store(uint32_t idx32) {
     uint64_t v = hash_store((uint64_t)(idx32 >> 1));
     return (idx32 & 1u) ? (uint32_t)(v >> 32) : (uint32_t)v;
+}
+
+/* 64-bit native load/store: one lane per call (no HORCRUX 32-bit pairing). */
+static inline void cus_load64(uint64_t v, uint32_t lane_idx) {
+    hash_load(v, (uint64_t)lane_idx);
+}
+
+static inline uint64_t cus_store64(uint32_t lane_idx) {
+    return hash_store((uint64_t)lane_idx);
+}
+
+/* 128-bit dual-lane load: writes lane[lane_idx] = lo and lane[lane_idx+1] = hi
+ * in a single coprocessor instruction (one issue cycle). */
+static inline void cus_load2(uint64_t lo, uint64_t hi, uint32_t lane_idx) {
+    hash_load2(lo, hi, (uint64_t)lane_idx);
+}
+
+/* Legacy 32-bit-pair flavour: equivalent to two cus_load() calls but issued
+ * as ONE OP_LOAD2 (halves the load cycles).  idx32 must be even. */
+static inline void cus_load2_pair(uint32_t lo_lo, uint32_t lo_hi,
+                                  uint32_t hi_lo, uint32_t hi_hi,
+                                  uint32_t idx32) {
+    uint64_t lo64 = ((uint64_t)lo_hi << 32) | (uint64_t)lo_lo;
+    uint64_t hi64 = ((uint64_t)hi_hi << 32) | (uint64_t)hi_lo;
+    hash_load2(lo64, hi64, (uint64_t)(idx32 >> 1));
 }
 
 static inline void keccak_hw_init(void) { hash_init(); }

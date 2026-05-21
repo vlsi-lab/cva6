@@ -13,6 +13,24 @@
 extern void cus_load(uint32_t lo, uint32_t hi, uint32_t index);
 extern uint32_t cus_store(uint32_t index);
 
+/* 64-bit native HASH wrappers (provided as inline in hash_ip.h, but the SPHINCS
+ * reference path here links via direct .insn so we re-declare them locally to
+ * keep this header self-contained). */
+static inline void spx_cus_load2(uint64_t lo, uint64_t hi, uint32_t lane_idx) {
+    __asm__ volatile (".insn r4 0x5b, 5, 0, x0, %0, %1, %2"
+                      :: "r"(lo), "r"(hi), "r"((uint64_t)lane_idx) : "memory");
+}
+static inline void spx_cus_load64(uint64_t v, uint32_t lane_idx) {
+    __asm__ volatile (".insn r 0x5b, 1, 0x00, x0, %0, %1"
+                      :: "r"(v), "r"((uint64_t)lane_idx) : "memory");
+}
+static inline uint64_t spx_cus_store64(uint32_t lane_idx) {
+    uint64_t r;
+    __asm__ volatile (".insn r 0x5b, 2, 0x00, %0, %1, x0"
+                      : "=r"(r) : "r"((uint64_t)lane_idx) : "memory");
+    return r;
+}
+
 /* =============================== Utilities =============================== */
 
 static inline uint32_t spx_load32(const uint8_t *x) {
@@ -25,6 +43,20 @@ static inline void spx_store32(uint8_t *x, uint32_t v) {
     x[1] = (uint8_t)(v >> 8);
     x[2] = (uint8_t)(v >> 16);
     x[3] = (uint8_t)(v >> 24);
+}
+
+static inline uint64_t spx_load64(const uint8_t *x) {
+    return (uint64_t)x[0]        | ((uint64_t)x[1] << 8)  |
+           ((uint64_t)x[2] << 16) | ((uint64_t)x[3] << 24) |
+           ((uint64_t)x[4] << 32) | ((uint64_t)x[5] << 40) |
+           ((uint64_t)x[6] << 48) | ((uint64_t)x[7] << 56);
+}
+
+static inline void spx_store64(uint8_t *x, uint64_t v) {
+    x[0] = (uint8_t)(v);       x[1] = (uint8_t)(v >> 8);
+    x[2] = (uint8_t)(v >> 16); x[3] = (uint8_t)(v >> 24);
+    x[4] = (uint8_t)(v >> 32); x[5] = (uint8_t)(v >> 40);
+    x[6] = (uint8_t)(v >> 48); x[7] = (uint8_t)(v >> 56);
 }
 
 static inline int spx_compare_arrays(const uint8_t *a, const uint8_t *b, size_t len) {
@@ -332,29 +364,61 @@ static inline void spx_hw_exec(uint8_t *out,
                                size_t n,
                                uint8_t funct7,
                                int simple_mode) {
-    uint32_t idx = 0;
-    size_t i;
+    /* RV64-optimized load path:
+     *   - 16 bytes per cus_load2  (writes 2 lanes per insn, +2 to lane idx)
+     *   - 8  bytes per cus_load64 (writes 1 lane,           +1 to lane idx)
+     * Each input region is byte-aligned and a multiple of 8 bytes.
+     */
+    uint32_t lane = 0;
+    size_t   i;
 
-    for (i = 0; i < n; i += 8) {
-        cus_load(spx_load32(pub_seed + i), spx_load32(pub_seed + i + 4), idx);
-        idx += 2;
+    /* pub_seed: n bytes (n in {16, 24, 32}) */
+    for (i = 0; i + 16 <= n; i += 16) {
+        spx_cus_load2(spx_load64(pub_seed + i),
+                      spx_load64(pub_seed + i + 8),
+                      lane);
+        lane += 2;
+    }
+    for (; i + 8 <= n; i += 8) {
+        spx_cus_load64(spx_load64(pub_seed + i), lane);
+        lane += 1;
     }
 
-    for (i = 0; i < SPX_ADDR_BYTES; i += 8) {
-        cus_load(spx_load32(addr + i), spx_load32(addr + i + 4), idx);
-        idx += 2;
+    /* addr: SPX_ADDR_BYTES (32) */
+    for (i = 0; i + 16 <= SPX_ADDR_BYTES; i += 16) {
+        spx_cus_load2(spx_load64(addr + i),
+                      spx_load64(addr + i + 8),
+                      lane);
+        lane += 2;
+    }
+    for (; i + 8 <= SPX_ADDR_BYTES; i += 8) {
+        spx_cus_load64(spx_load64(addr + i), lane);
+        lane += 1;
     }
 
-    for (i = 0; i < payload_len; i += 8) {
-        cus_load(spx_load32(payload + i), spx_load32(payload + i + 4), idx);
-        idx += 2;
+    /* payload: variable length, multiple of 8 */
+    for (i = 0; i + 16 <= payload_len; i += 16) {
+        spx_cus_load2(spx_load64(payload + i),
+                      spx_load64(payload + i + 8),
+                      lane);
+        lane += 2;
+    }
+    for (; i + 8 <= payload_len; i += 8) {
+        spx_cus_load64(spx_load64(payload + i), lane);
+        lane += 1;
     }
 
     __asm__ volatile("fence" ::: "memory");
     spx_hw_trigger(funct7, simple_mode);
     spx_hw_wait();
 
-    for (i = 0; i < n; i += 4) {
+    /* Output: read back n bytes, 8 bytes per cus_store64 (one lane per call). */
+    for (i = 0; i + 8 <= n; i += 8) {
+        uint64_t w = spx_cus_store64((uint32_t)(i / 8));
+        spx_store64(out + i, w);
+    }
+    /* Tail (n not a multiple of 8): fall back to 32-bit fetches. */
+    for (; i < n; i += 4) {
         uint32_t w = cus_store((uint32_t)(i / 4));
         spx_store32(out + i, w);
     }

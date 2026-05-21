@@ -16,8 +16,9 @@ module hash
 
   // Decoded request from XIF EX stage
   input  hash_pkg::opcode_t                   insn_i,
-  input  logic [LANE_W-1:0]                   rs1_i,   // data / index / byte_off
-  input  logic [LANE_W-1:0]                   rs2_i,   // index / simple_mode
+  input  logic [LANE_W-1:0]                   rs1_i,   // data / index / byte_off / load2_lo
+  input  logic [LANE_W-1:0]                   rs2_i,   // index / simple_mode / load2_hi
+  input  logic [LANE_W-1:0]                   rs3_i,   // load2 lane index
   input  logic                                start_i, // kicks KSTART/KPERM/KABSORB cycle
 
   // Status / response
@@ -30,8 +31,9 @@ module hash
   // Register file
   // ==========================================================================
   logic [LANE_W-1:0]                  reg_data_in;
+  logic [LANE_W-1:0]                  reg_data2_in;
   logic [4:0]                         reg_index;
-  logic                               reg_we, reg_xor, reg_init, reg_wb_en;
+  logic                               reg_we, reg_we_dual, reg_xor, reg_init, reg_wb_en;
   logic [0:NUM_LANES-1][LANE_W-1:0]   reg_wb_data;
   logic [0:NUM_LANES-1][LANE_W-1:0]   lanes64;
   logic [0:2*NUM_LANES-1][31:0]       lanes32;
@@ -40,24 +42,30 @@ module hash
     .NUM_LANES (NUM_LANES),
     .LANE_W    (LANE_W)
   ) i_reg (
-    .clk_i          (clk_i),
-    .rst_ni         (rst_ni),
-    .data_i         (reg_data_in),
-    .index_i        (reg_index),
-    .write_enable_i (reg_we),
-    .xor_enable_i   (reg_xor),
-    .init_i         (reg_init),
-    .wb_enable_i    (reg_wb_en),
-    .wb_data_i      (reg_wb_data),
-    .lanes_o        (lanes64),
-    .lanes32_o      (lanes32)
+    .clk_i           (clk_i),
+    .rst_ni          (rst_ni),
+    .data_i          (reg_data_in),
+    .data2_i         (reg_data2_in),
+    .index_i         (reg_index),
+    .write_enable_i  (reg_we),
+    .write_dual_i    (reg_we_dual),
+    .xor_enable_i    (reg_xor),
+    .init_i          (reg_init),
+    .wb_enable_i     (reg_wb_en),
+    .wb_data_i       (reg_wb_data),
+    .lanes_o         (lanes64),
+    .lanes32_o       (lanes32)
   );
 
-  assign reg_data_in = rs1_i;
-  assign reg_index   = rs2_i[4:0];
-  assign reg_we      = (insn_i == OP_LOAD);
-  assign reg_xor     = (insn_i == OP_KABSORB);
-  assign reg_init    = (insn_i == OP_INIT);
+  assign reg_data_in  = rs1_i;
+  assign reg_data2_in = rs2_i;
+  // OP_LOAD2 takes the lane index from rs3 (rs2 is data_hi); all other ops
+  // continue to read the index from rs2.
+  assign reg_index    = (insn_i == OP_LOAD2) ? rs3_i[4:0] : rs2_i[4:0];
+  assign reg_we       = (insn_i == OP_LOAD);
+  assign reg_we_dual  = (insn_i == OP_LOAD2);
+  assign reg_xor      = (insn_i == OP_KABSORB);
+  assign reg_init     = (insn_i == OP_INIT);
 
   // ==========================================================================
   // Keccak permutation core

@@ -18,8 +18,10 @@ module hash_register #(
 
   // Write port
   input  logic [LANE_W-1:0]                   data_i,
+  input  logic [LANE_W-1:0]                   data2_i,        // OP_LOAD2 hi64
   input  logic [4:0]                          index_i,        // 0..24
   input  logic                                write_enable_i, // OP_LOAD
+  input  logic                                write_dual_i,   // OP_LOAD2
   input  logic                                xor_enable_i,   // OP_KABSORB
   input  logic                                init_i,         // OP_INIT
 
@@ -34,6 +36,12 @@ module hash_register #(
 
   logic [LANE_W-1:0] reg_q [0:NUM_LANES-1];
 
+  // Pre-compute the second lane index for OP_LOAD2 with saturation so we
+  // never index past NUM_LANES-1 when the SW issues a load to the last lane.
+  logic [4:0] index_p1;
+  assign index_p1 = (index_i == 5'(NUM_LANES-1)) ? 5'(NUM_LANES-1)
+                                                 : (index_i + 5'd1);
+
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       for (int i = 0; i < NUM_LANES; i++) reg_q[i] <= '0;
@@ -41,6 +49,12 @@ module hash_register #(
       for (int i = 0; i < NUM_LANES; i++) reg_q[i] <= '0;
     end else if (wb_enable_i) begin
       for (int i = 0; i < NUM_LANES; i++) reg_q[i] <= wb_data_i[i];
+    end else if (write_dual_i) begin
+      // OP_LOAD2: write two consecutive lanes in one cycle.
+      reg_q[index_i] <= data_i;
+      if (index_p1 != index_i) begin
+        reg_q[index_p1] <= data2_i;
+      end
     end else if (write_enable_i) begin
       reg_q[index_i] <= data_i;
     end else if (xor_enable_i) begin

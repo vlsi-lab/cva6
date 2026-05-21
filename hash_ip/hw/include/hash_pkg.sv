@@ -39,7 +39,8 @@ package hash_pkg;
     OP_PRF_256      = 5'd16,
     OP_CL_128F      = 5'd17,
     OP_CL_192F      = 5'd18,
-    OP_CL_256F      = 5'd19
+    OP_CL_256F      = 5'd19,
+    OP_LOAD2        = 5'd20    // 128-bit dual-lane load (rs1=lo64, rs2=hi64, rs3=idx)
   } opcode_t;
 
   // --------------------------------------------------------------------------
@@ -68,7 +69,7 @@ package hash_pkg;
   // helper expanded inline (Verilog parameter functions are limited; we just
   // keep the encoding columns explicit below for readability)
 
-  parameter int unsigned NbInstr = 19;
+  parameter int unsigned NbInstr = 20;
   parameter copro_issue_resp_t CoproInstr[NbInstr] = '{
     // ---- Group 0: control ops, no register reads, no writeback ----
     '{ instr: {7'h00, 5'b0, 5'b0, 3'b000, 5'b0, HASH_OPCODE},
@@ -154,7 +155,17 @@ package hash_pkg;
     '{ instr: {7'h02, 5'b0, 5'b0, 3'b100, 5'b0, HASH_OPCODE},
        mask : HASH_MASK,
        resp : '{accept:1'b1, writeback:1'b0, register_read:3'b000},
-       opcode: OP_CL_256F }
+       opcode: OP_CL_256F },
+
+    // ---- Group 5: 128-bit dual-lane LOAD (R4-type) ----
+    //   rs1 = lo64 -> lane[rs3]
+    //   rs2 = hi64 -> lane[rs3 + 1]
+    //   funct3 = 3'b101 (unused by groups 0-4); funct2 = 0; rs3 = lane index
+    //   Mask covers only funct3 + opcode so any rs3 value matches.
+    '{ instr: {5'h00, 2'h0, 5'b0, 5'b0, 3'b101, 5'b0, HASH_OPCODE},
+       mask : 32'h0000_707F,
+       resp : '{accept:1'b1, writeback:1'b0, register_read:3'b111},
+       opcode: OP_LOAD2 }
   };
 
   // --------------------------------------------------------------------------
