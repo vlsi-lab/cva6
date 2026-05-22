@@ -174,6 +174,7 @@ src :=  $(if $(spike-tandem),verif/tb/core/uvma_core_cntrl_pkg.sv)              
         $(wildcard corev_apu/src/axi_riscv_atomics/src/*.sv)                         \
         $(wildcard corev_apu/axi_mem_if/src/*.sv)                                    \
         $(wildcard corev_apu/riscv-dbg/src/*.sv)                                     \
+        corev_apu/riscv-dbg/debug_rom/debug_rom.sv                                   \
         corev_apu/rv_plic/rtl/rv_plic_target.sv                                      \
         corev_apu/rv_plic/rtl/rv_plic_gateway.sv                                     \
         corev_apu/rv_plic/rtl/plic_regmap.sv                                         \

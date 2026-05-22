@@ -64,6 +64,8 @@ int main(void)
         
     unsigned long long  mlen, smlen, mlen1;
     unsigned cycles_keygen, cycles_sign, cycles_sign_open;
+    unsigned instr_keygen, instr_sign, instr_sign_open;
+    unsigned start_instret_keygen, start_instret_sign, start_instret_sign_open;
     
 
         clear_csr(mcountinhibit, 1);
@@ -93,11 +95,13 @@ int main(void)
     
 
             write_csr(mcycle, 0);
+            start_instret_keygen = (uint32_t)read_csr(minstret);
 
         crypto_sign_keypair(pk, sk, keypair_rnd);        
 
             cycles_keygen = (uint32_t)read_csr(mcycle);
-            printf("Keygen cycles: %u\n", cycles_keygen);
+            instr_keygen = (uint32_t)read_csr(minstret) - start_instret_keygen;
+            printf("Keygen cycles: %u, instructions: %u\n", cycles_keygen, instr_keygen);
 
         
 
@@ -121,12 +125,14 @@ int main(void)
         #endif /* TEST_KEY */
 
             write_csr(mcycle, 0);
+            start_instret_sign = (uint32_t)read_csr(minstret);
 
         crypto_sign(sm, &smlen, m, MLEN_KAT, sk, signature_rnd);
         
 
             cycles_sign = (uint32_t)read_csr(mcycle);
-            printf("Sign cycles: %u\n", cycles_sign);
+            instr_sign = (uint32_t)read_csr(minstret) - start_instret_sign;
+            printf("Sign cycles: %u, instructions: %u\n", cycles_sign, instr_sign);
 
   
               if(memcmp(sm, TVEC_IN_SM_SIGN, SPX_BYTES)) { printf("ERROR: SM mismatch\n");}
@@ -154,11 +160,13 @@ int main(void)
         #endif /* TEST_SIGN */
  
             write_csr(mcycle, 0);
+            start_instret_sign_open = (uint32_t)read_csr(minstret);
 
         crypto_sign_open(m1, &mlen1, sm, 35697, pk);
 
             cycles_sign_open = (uint32_t)read_csr(mcycle);
-            printf("Verify cycles: %u\n", cycles_sign_open);
+            instr_sign_open = (uint32_t)read_csr(minstret) - start_instret_sign_open;
+            printf("Verify cycles: %u, instructions: %u\n", cycles_sign_open, instr_sign_open);
 
         if(memcmp(m1, TVEC_IN_M_SIGN, MLEN_KAT)) { printf("ERROR: M mismatch\n");}
 
