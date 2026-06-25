@@ -55,6 +55,7 @@ module ariane_xilinx (
   input  logic	       cpu_resetn  ,
   output logic [ 2:0]  led	   ,
   input  logic [ 3:0]  sw	   ,
+  output logic         trigger_gpio_o,
 `elsif KC705
   input  logic         sys_clk_p   ,
   input  logic         sys_clk_n   ,
@@ -387,6 +388,7 @@ assign addr_map = '{
   '{ idx: ariane_soc::SPI,      start_addr: ariane_soc::SPIBase,      end_addr: ariane_soc::SPIBase + ariane_soc::SPILength           },
   '{ idx: ariane_soc::Ethernet, start_addr: ariane_soc::EthernetBase, end_addr: ariane_soc::EthernetBase + ariane_soc::EthernetLength },
   '{ idx: ariane_soc::GPIO,     start_addr: ariane_soc::GPIOBase,     end_addr: ariane_soc::GPIOBase + ariane_soc::GPIOLength         },
+  '{ idx: ariane_soc::Trigger,  start_addr: ariane_soc::TriggerBase,  end_addr: ariane_soc::TriggerBase + ariane_soc::TriggerLength   },
   '{ idx: ariane_soc::DRAM,     start_addr: ariane_soc::DRAMBase,     end_addr: ariane_soc::DRAMBase + ariane_soc::DRAMLength         }
 };
 
@@ -1179,6 +1181,28 @@ ariane_peripherals #(
       .dip_switches_i ( sw                        )
     `endif
 );
+
+// ---------------------
+// Trigger IP (AXI-mapped, drives a GPIO pin for SCA measurements)
+// ---------------------
+logic trigger_gpio;
+
+trigger_top #(
+  .AXI_ADDR_WIDTH ( AxiAddrWidth                 ),
+  .AXI_DATA_WIDTH ( AxiDataWidth                 ),
+  .AXI_ID_WIDTH   ( AxiIdWidthSlaves             ),
+  .AXI_USER_WIDTH ( AxiUserWidth                 )
+) i_trigger (
+  .clk_i        ( clk                            ),
+  .rst_ni       ( ndmreset_n                     ),
+  .test_mode_i  ( test_en                        ),
+  .trigger_o    ( trigger_gpio                   ),
+  .axi_slave    ( master[ariane_soc::Trigger]    )
+);
+
+`ifdef CW305
+assign trigger_gpio_o = trigger_gpio;
+`endif
 
 
 // ---------------------

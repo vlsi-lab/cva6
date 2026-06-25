@@ -1,0 +1,2 @@
+mode	variant	phase	status	duration_s	log
+optimized	SPHINCS-128f-simple	keygen	OK	234	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_cw305_20260525_145657/optimized-SPHINCS-128f-simple-keygen-cw305.log.iss

@@ -64,6 +64,9 @@ set_property include_dirs { \
 	"../register_interface/include" \
       "../instr_tracing/ITI/include" \
 	"../../core/include" \
+	"../../additional_files/trigger_ip" \
+	"../../additional_files/trigger_ip/register_interface" \
+	"../../additional_files/trigger_ip/sv" \
 } [current_fileset]
 
 source scripts/add_sources.tcl

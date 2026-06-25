@@ -1,0 +1,27 @@
+Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2019.2 (lin64) Build 2708876 Wed Nov  6 21:39:14 MST 2019
+| Date         : Tue May 26 09:33:02 2026
+| Host         : ugluk running 64-bit CentOS Stream release 8
+| Command      : report_utilization -hierarchical -file reports_copro/hash_xif_synth_top.utilization.rpt
+| Design       : hash_xif_synth_top
+| Device       : 7a100tftg256-2
+| Design State : Synthesized
+---------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++--------------------+--------+------------+------------+---------+------+------+--------+--------+--------------+
+|      Instance      | Module | Total LUTs | Logic LUTs | LUTRAMs | SRLs |  FFs | RAMB36 | RAMB18 | DSP48 Blocks |
++--------------------+--------+------------+------------+---------+------+------+--------+--------+--------------+
+| hash_xif_synth_top |  (top) |      15772 |      15772 |       0 |    0 | 4255 |      0 |      0 |            0 |
++--------------------+--------+------------+------------+---------+------+------+--------+--------+--------------+
+
+

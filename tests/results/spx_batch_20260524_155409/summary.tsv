@@ -1,0 +1,7 @@
+mode	variant	phase	status	duration_s	log
+optimized	SPHINCS-128f-robust	verify	OK	264	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_20260524_155409/optimized-SPHINCS-128f-robust-verify.log.iss
+optimized	SPHINCS-128f-simple	verify	OK	231	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_20260524_155409/optimized-SPHINCS-128f-simple-verify.log.iss
+optimized	SPHINCS-192f-robust	verify	OK	459	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_20260524_155409/optimized-SPHINCS-192f-robust-verify.log.iss
+optimized	SPHINCS-192f-simple	verify	OK	411	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_20260524_155409/optimized-SPHINCS-192f-simple-verify.log.iss
+optimized	SPHINCS-256f-robust	verify	OK	567	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_20260524_155409/optimized-SPHINCS-256f-robust-verify.log.iss
+optimized	SPHINCS-256f-simple	verify	OK	516	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_20260524_155409/optimized-SPHINCS-256f-simple-verify.log.iss

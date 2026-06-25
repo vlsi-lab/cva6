@@ -508,8 +508,27 @@ module ariane_testharness #(
     '{ idx: ariane_soc::SPI,      start_addr: ariane_soc::SPIBase,      end_addr: ariane_soc::SPIBase + ariane_soc::SPILength           },
     '{ idx: ariane_soc::Ethernet, start_addr: ariane_soc::EthernetBase, end_addr: ariane_soc::EthernetBase + ariane_soc::EthernetLength },
     '{ idx: ariane_soc::GPIO,     start_addr: ariane_soc::GPIOBase,     end_addr: ariane_soc::GPIOBase + ariane_soc::GPIOLength         },
+    '{ idx: ariane_soc::Trigger,  start_addr: ariane_soc::TriggerBase,  end_addr: ariane_soc::TriggerBase + ariane_soc::TriggerLength   },
     '{ idx: ariane_soc::DRAM,     start_addr: ariane_soc::DRAMBase,     end_addr: ariane_soc::DRAMBase + ariane_soc::DRAMLength         }
   };
+
+  // ---------------
+  // Trigger IP (AXI-mapped side-channel trigger signal)
+  // ---------------
+  logic trigger_gpio;
+
+  trigger_top #(
+    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH            ),
+    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH               ),
+    .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
+    .AXI_USER_WIDTH ( AXI_USER_WIDTH               )
+  ) i_trigger (
+    .clk_i        ( clk_i                          ),
+    .rst_ni       ( ndmreset_n                     ),
+    .test_mode_i  ( test_en                        ),
+    .trigger_o    ( trigger_gpio                   ),
+    .axi_slave    ( master[ariane_soc::Trigger]    )
+  );
 
   localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{
     NoSlvPorts: unsigned'(ariane_soc::NrSlaves),

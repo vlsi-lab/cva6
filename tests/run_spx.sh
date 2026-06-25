@@ -36,7 +36,7 @@ fi
 
 echo
 echo "╔════════════════════════════════════════════════════════╗"
-echo "║          SLH-DSA SPHINCS+ Test Selector              ║"
+echo "║       SLH-DSA SPHINCS+ Test Selector  [-O2]          ║"
 echo "║                                                        ║"
 echo "║ Choose a variant and optimization mode to test:       ║"
 echo "╚════════════════════════════════════════════════════════╝"

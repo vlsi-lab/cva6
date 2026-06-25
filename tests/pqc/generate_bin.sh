@@ -30,6 +30,9 @@ Examples:
   tests/pqc/generate_bin.sh SPHINCS-256f-simple
   tests/pqc/generate_bin.sh --test keygen
   tests/pqc/generate_bin.sh --variant baseline --test-sign-open
+  tests/pqc/generate_bin.sh --variant optimized --test keygen
+  tests/pqc/generate_bin.sh --variant optimized --test sign
+  tests/pqc/generate_bin.sh --variant optimized --test sign-open
   tests/pqc/generate_bin.sh --clean
 EOF
 }

@@ -1,0 +1,7 @@
+mode	variant	phase	status	duration_s	log
+optimized	SPHINCS-128f-robust	keygen	OK	231	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_cw305_20260525_150135/optimized-SPHINCS-128f-robust-keygen-cw305.log.iss
+optimized	SPHINCS-128f-simple	keygen	OK	204	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_cw305_20260525_150135/optimized-SPHINCS-128f-simple-keygen-cw305.log.iss
+optimized	SPHINCS-192f-robust	keygen	OK	406	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_cw305_20260525_150135/optimized-SPHINCS-192f-robust-keygen-cw305.log.iss
+optimized	SPHINCS-192f-simple	keygen	OK	383	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_cw305_20260525_150135/optimized-SPHINCS-192f-simple-keygen-cw305.log.iss
+optimized	SPHINCS-256f-robust	keygen	OK	1285	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_cw305_20260525_150135/optimized-SPHINCS-256f-robust-keygen-cw305.log.iss
+optimized	SPHINCS-256f-simple	keygen	OK	1162	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_cw305_20260525_150135/optimized-SPHINCS-256f-simple-keygen-cw305.log.iss

@@ -34,7 +34,7 @@ fi
 
 echo
 echo "╔════════════════════════════════════════════════════════╗"
-echo "║    SLH-DSA SPHINCS+ Selector  [CW305 build flags]    ║"
+echo "║  SLH-DSA SPHINCS+ Selector                             ║"
 echo "╚════════════════════════════════════════════════════════╝"
 echo
 

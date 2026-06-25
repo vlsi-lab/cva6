@@ -22,7 +22,7 @@ module ariane_peripherals #(
     parameter bit InclSPI      = 0,
     parameter bit InclEthernet = 0,
     parameter bit InclGPIO     = 0,
-    parameter bit InclTimer    = 1
+    parameter bit InclTimer    = 0
 ) (
     input  logic       clk_i           , // Clock
     input  logic       clk_200MHz_i    ,

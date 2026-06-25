@@ -1,0 +1,7 @@
+mode	variant	phase	status	duration_s	log
+optimized	SPHINCS-128f-robust	sign	OK	3851	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_20260522_173616/optimized-SPHINCS-128f-robust-sign.log.iss
+optimized	SPHINCS-128f-simple	sign	OK	3503	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_20260522_173616/optimized-SPHINCS-128f-simple-sign.log.iss
+optimized	SPHINCS-192f-robust	sign	OK	7615	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_20260522_173616/optimized-SPHINCS-192f-robust-sign.log.iss
+optimized	SPHINCS-192f-simple	sign	OK	7182	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_20260522_173616/optimized-SPHINCS-192f-simple-sign.log.iss
+optimized	SPHINCS-256f-robust	sign	OK	18988	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_20260522_173616/optimized-SPHINCS-256f-robust-sign.log.iss
+optimized	SPHINCS-256f-simple	sign	OK	17261	/home/alessandra.dolmeta/crheepto/HASH/cva6/tests/results/spx_batch_20260522_173616/optimized-SPHINCS-256f-simple-sign.log.iss
