@@ -8,7 +8,7 @@
 #include "gpt.h"
 
 #define SECOND_CYCLES   CLOCK_FREQUENCY
-#define WAIT_SECONDS    (10)
+#define WAIT_SECONDS    (2)
 
 static inline uintptr_t get_cycle_count() {
     uintptr_t cycle;
