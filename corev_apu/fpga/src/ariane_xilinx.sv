@@ -388,7 +388,8 @@ assign addr_map = '{
     '{ idx: ariane_soc::Ethernet, start_addr: ariane_soc::EthernetBase, end_addr: ariane_soc::EthernetBase + ariane_soc::EthernetLength },
     '{ idx: ariane_soc::GPIO,     start_addr: ariane_soc::GPIOBase,     end_addr: ariane_soc::GPIOBase + ariane_soc::GPIOLength         },
     '{ idx: ariane_soc::DRAM,     start_addr: ariane_soc::DRAMBase,     end_addr: ariane_soc::DRAMBase + ariane_soc::DRAMLength         },
-    '{ idx: ariane_soc::Keccak,   start_addr: ariane_soc::KeccakBase,   end_addr: ariane_soc::KeccakBase + ariane_soc::KeccakLength     }
+    '{ idx: ariane_soc::Keccak,   start_addr: ariane_soc::KeccakBase,   end_addr: ariane_soc::KeccakBase + ariane_soc::KeccakLength     },
+    '{ idx: ariane_soc::Ascon,    start_addr: ariane_soc::AsconBase,    end_addr: ariane_soc::AsconBase + ariane_soc::AsconLength       }
 };
 
 /// Keccak AXI Accellerator
@@ -412,6 +413,28 @@ logic keccak_irq;
     .axi_rsp_o  ( keccak_resp ),
     //.axi_slave  ( master[ariane_soc::Keccak] )`
     .keccak_intr_o (keccak_irq)
+  );
+
+/// Ascon AXI Accellerator
+logic ascon_irq;
+  axi_slave_req_t  ascon_req;
+  axi_slave_resp_t ascon_resp;
+  `AXI_ASSIGN_TO_REQ(ascon_req, master[ariane_soc::Ascon])
+  `AXI_ASSIGN_FROM_RESP(master[ariane_soc::Ascon], ascon_resp)
+  ascon_axi_top #(
+      .AXI_ADDR_WIDTH ( CVA6Cfg.XLEN ),
+      .AXI_DATA_WIDTH ( CVA6Cfg.XLEN ),
+      .AXI_ID_WIDTH   ( AxiIdWidthSlaves ),
+      .AXI_USER_WIDTH ( AxiUserWidth     ),
+      .axi_req_t ( axi_slave_req_t ),
+      .axi_rsp_t ( axi_slave_resp_t )
+  ) i_ascon_slv (
+    .clk_i        ( clk          ),
+    .rst_ni       ( ndmreset_n   ),
+    .test_mode_i  ( test_en      ),
+    .axi_req_i    ( ascon_req  ),
+    .axi_rsp_o    ( ascon_resp ),
+    .ascon_intr_o ( ascon_irq  )
   );
 
 localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{

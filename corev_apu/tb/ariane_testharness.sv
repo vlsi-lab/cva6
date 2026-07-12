@@ -414,7 +414,28 @@ module ariane_testharness #(
     //.axi_slave  ( master[ariane_soc::Keccak] )`
     .keccak_intr_o (keccak_irq)
   );
-  
+
+  logic ascon_irq;
+  ariane_axi_soc::req_slv_t  ascon_req;
+  ariane_axi_soc::resp_slv_t ascon_resp;
+  `AXI_ASSIGN_TO_REQ(ascon_req, master[ariane_soc::Ascon])
+  `AXI_ASSIGN_FROM_RESP(master[ariane_soc::Ascon], ascon_resp)
+  ascon_axi_top #(
+      .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH            ),
+      .AXI_DATA_WIDTH ( AXI_DATA_WIDTH               ),
+      .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
+      .AXI_USER_WIDTH ( AXI_USER_WIDTH               ),
+      .axi_req_t ( ariane_axi_soc::req_slv_t ),
+      .axi_rsp_t ( ariane_axi_soc::resp_slv_t )
+  ) i_ascon_slv (
+    .clk_i        ( clk_i        ),
+    .rst_ni       ( ndmreset_n   ),
+    .test_mode_i  ( test_en      ),
+    .axi_req_i    ( ascon_req  ),
+    .axi_rsp_o    ( ascon_resp ),
+    .ascon_intr_o ( ascon_irq  )
+  );
+
 
 
   // ------------------------------
@@ -532,7 +553,8 @@ module ariane_testharness #(
     '{ idx: ariane_soc::Ethernet, start_addr: ariane_soc::EthernetBase, end_addr: ariane_soc::EthernetBase + ariane_soc::EthernetLength },
     '{ idx: ariane_soc::GPIO,     start_addr: ariane_soc::GPIOBase,     end_addr: ariane_soc::GPIOBase + ariane_soc::GPIOLength         },
     '{ idx: ariane_soc::DRAM,     start_addr: ariane_soc::DRAMBase,     end_addr: ariane_soc::DRAMBase + ariane_soc::DRAMLength         },
-    '{ idx: ariane_soc::Keccak,   start_addr: ariane_soc::KeccakBase,   end_addr: ariane_soc::KeccakBase + ariane_soc::KeccakLength     }
+    '{ idx: ariane_soc::Keccak,   start_addr: ariane_soc::KeccakBase,   end_addr: ariane_soc::KeccakBase + ariane_soc::KeccakLength     },
+    '{ idx: ariane_soc::Ascon,    start_addr: ariane_soc::AsconBase,    end_addr: ariane_soc::AsconBase + ariane_soc::AsconLength       }
   };
 
   localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{

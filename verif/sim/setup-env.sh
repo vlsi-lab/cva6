@@ -19,7 +19,12 @@ export CVA6_DV_ROOT="$ROOT_PROJECT/verif/env/corev-dv"
 
 
 # Set RISCV toolchain-related variables
-export RISCV="/software/riscv/riscv64-cva6"                           ##@VLSI-Lab Server
+# Respect a RISCV already exported by the caller (e.g. a personal per-machine
+# setup script) instead of unconditionally clobbering it with the VLSI-Lab
+# Server default below - that default doesn't exist on other machines.
+if [ -z "$RISCV" ]; then
+  export RISCV="/software/riscv/riscv64-cva6"                        ##@VLSI-Lab Server
+fi
 if [ -z "$RISCV" ]; then
   echo "Error: RISCV variable undefined."
   return
@@ -61,10 +66,18 @@ fi
 # export SPIKE_INSTALL_DIR="$ROOT_PROJECT"/tools/spike
 # export SPIKE_PATH="$SPIKE_INSTALL_DIR"/bin
 
-export VERILATOR_INSTALL_DIR="/software/cva6/verilator-v5.008"        ##@VLSI-Lab Server
-export SPIKE_SRC_DIR="/software/cva6/riscv-isa-sim"                   ##@VLSI-Lab Server
-export SPIKE_INSTALL_DIR="/software/spike/spike"                      ##@VLSI-Lab Server
-export SPIKE_PATH="$SPIKE_INSTALL_DIR/bin"            
+# As with RISCV above, only fall back to the VLSI-Lab Server paths if the
+# caller hasn't already exported these (e.g. from a personal setup script).
+if [ -z "$VERILATOR_INSTALL_DIR" ]; then
+    export VERILATOR_INSTALL_DIR="/software/cva6/verilator-v5.008"    ##@VLSI-Lab Server
+fi
+if [ -z "$SPIKE_SRC_DIR" ]; then
+    export SPIKE_SRC_DIR="/software/cva6/riscv-isa-sim"               ##@VLSI-Lab Server
+fi
+if [ -z "$SPIKE_INSTALL_DIR" ]; then
+    export SPIKE_INSTALL_DIR="/software/spike/spike"                  ##@VLSI-Lab Server
+fi
+export SPIKE_PATH="$SPIKE_INSTALL_DIR/bin"
 
 # Update the PATH to add all the tools
 export PATH="$VERILATOR_INSTALL_DIR/bin:$RISCV/bin:$PATH"

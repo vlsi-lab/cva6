@@ -1,0 +1,53 @@
+// Ascon Accelerator IP - Loosely
+// Register definition for reggen.py
+
+{
+  name: "ascon",
+  clock_primary: "clk_i",
+  reset_primary: "rst_ni",
+  bus_interfaces: [
+    {
+      protocol: "reg_iface",
+      direction: "device"
+    }
+  ],
+  regwidth: "64",
+  registers: [
+    {
+      multireg: {
+        name: "DATA",
+        desc: "I/O 320-bit Ascon state register (5 x 64-bit lanes x0..x4)",
+        count: "5",
+        cname: "data",
+        swaccess: "rw",
+        hwaccess: "hrw",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      name: "CSREG",
+      desc: "Control and status register for the Ascon accelerator",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "0",
+          name: "START",
+          desc: "Start the permutation"
+        },
+        {
+          bits: "1",
+          name: "DONE",
+          desc: "Asserted if permutation is done"
+        },
+        {
+          bits: "5:2",
+          name: "ROUNDS",
+          desc: "Number of permutation rounds to run (6, 8, or 12; any other value defaults to 12)"
+        }
+      ]
+    }
+  ]
+}

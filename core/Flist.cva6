@@ -58,6 +58,17 @@ ${CVA6_REPO_DIR}/corev_apu/register_interface/src/axi_lite_to_reg.sv
 ${CVA6_REPO_DIR}/corev_apu/register_interface/src/axi_to_reg.sv
 ${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_axi_top.sv
 
+// Ascon IP
+${CVA6_REPO_DIR}/ascon/gen/ascon_reg_pkg.sv
+${CVA6_REPO_DIR}/ascon/gen/ascon_reg_top.sv
+${CVA6_REPO_DIR}/ascon/rtl/ascon_pkg.sv
+${CVA6_REPO_DIR}/ascon/rtl/ascon_round_constants_gen.sv
+${CVA6_REPO_DIR}/ascon/rtl/ascon_round.sv
+${CVA6_REPO_DIR}/ascon/rtl/ascon_dp.sv
+${CVA6_REPO_DIR}/ascon/rtl/ascon_cu.sv
+${CVA6_REPO_DIR}/ascon/rtl/ascon_top.sv
+${CVA6_REPO_DIR}/ascon/rtl/ascon_axi_top.sv
+
 // Floating point unit
 ${CVA6_REPO_DIR}/core/cvfpu/src/fpnew_pkg.sv
 ${CVA6_REPO_DIR}/core/cvfpu/src/fpnew_cast_multi.sv
