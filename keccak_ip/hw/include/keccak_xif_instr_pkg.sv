@@ -10,7 +10,8 @@ package keccak_xif_instr_pkg;
 		XOR3 	= 4'b0001,
 		XANDN 	= 4'b0010,
 		RXRIL	= 4'b0011,
-		RXRIH	= 4'b0100
+		RXRIH	= 4'b0100,
+		DRORX	= 4'b0101
 	} opcode_t;
 
 	// CV-X-IF issue response typedefs
@@ -30,7 +31,7 @@ package keccak_xif_instr_pkg;
 	// REF on custom opcodes: https://docs.riscv.org/reference/isa/_attachments/riscv-unprivileged.pdf chapter 35
 	// R-type: funct7_rs2_rs1_funct3_rd_opcode
 	// R4-type: rs3_funct2_rs2_rs1_funct3_rd_opcode
-	parameter int unsigned NbInstr = 4;
+	parameter int unsigned NbInstr = 5;
 	parameter copro_issue_resp_t CoproInstr[NbInstr] = '{
 		'{
 			instr: 	32'b00000_10_00000_00000_000_00000_0101011, // CUSTOM-1 opcode, R4 type
@@ -55,6 +56,16 @@ package keccak_xif_instr_pkg;
 			mask: 	32'b00000_00_00000_00000_000_00000_1111111,
 			resp: 	'{accept: 1'b1, writeback: 1'b1, register_read: 3'b111},
 			opcode:	RXRIH
+		},
+		'{
+			// drorx rd, rs1, r1, r2  ->  rd = rs1 ^ ROR(rs1,r1) ^ ROR(rs1,r2)
+			// CUSTOM-0 opcode, I type. Match on opcode only: the 12-bit immediate
+			// imm[31:20] carries both 6-bit rotation amounts (see keccak_xif_ex.sv).
+			// Only rs1 is read (register_read = 3'b001).
+			instr: 	32'b000000000000_00000_000_00000_0001011, // CUSTOM-0 opcode, I type
+			mask: 	32'b000000000000_00000_000_00000_1111111,
+			resp: 	'{accept: 1'b1, writeback: 1'b1, register_read: 3'b001},
+			opcode:	DRORX
 		}
 	};
 

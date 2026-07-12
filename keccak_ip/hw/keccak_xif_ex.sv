@@ -86,6 +86,22 @@ module keccak_xif_ex
 				valid_n     = 1'b1;
 				we_n        = 1'b1;
 			end
+			keccak_xif_instr_pkg::DRORX: begin
+				// drorx rd, rs1, r1, r2  ->  rd = rs1 ^ ROR(rs1,r1) ^ ROR(rs1,r2)
+				// I-type: both 6-bit rotation amounts live in imm[31:20]:
+				//   r1 = imm[11:6] = instr[31:26]
+				//   r2 = imm[ 5:0] = instr[25:20]
+				logic [5:0] rot1, rot2;
+				rot1 = issue_req_i.instr[31:26];
+				rot2 = issue_req_i.instr[25:20];
+
+				result_n	= registers_i[0] ^ ror(registers_i[0], rot1) ^ ror(registers_i[0], rot2);
+				hartid_n    = hartid_i;
+				id_n        = id_i;
+				rd_n        = rd_i;
+				valid_n     = 1'b1;
+				we_n        = 1'b1;
+			end
 			default: begin
 				result_n	= '0;
 				hartid_n	= '0;
@@ -102,5 +118,12 @@ module keccak_xif_ex
 		input int unsigned shamt;
 
 		rol = (value << shamt) | (value >> (XLEN - shamt));
+	endfunction
+
+	function automatic logic [XLEN-1:0] ror;
+		input logic [XLEN-1:0] value;
+		input int unsigned shamt;
+
+		ror = (value >> shamt) | (value << (XLEN - shamt));
 	endfunction
 endmodule
