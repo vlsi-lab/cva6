@@ -11,6 +11,15 @@
 # Examples:
 #   tests/PQC-ascon/run_all_host.sh                       # all 6 variants
 #   tests/PQC-ascon/run_all_host.sh --variants ML-DSA-2,ml-kem-512
+#
+# Run this with `bash`, not `source`/`.` -- it uses `set -u` and `exit`,
+# which would otherwise leak nounset into your interactive shell and/or
+# close your terminal on an error path.
+
+if (return 0 2>/dev/null); then
+  echo "Run this with bash, not 'source': bash ${BASH_SOURCE[0]} $*" >&2
+  return 1
+fi
 
 set -u
 

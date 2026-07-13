@@ -12,6 +12,15 @@
 #   tests/PQC-ascon/run_all.sh --only hw             # AXI-accelerated builds only
 #   tests/PQC-ascon/run_all.sh --variants ML-DSA-2,ml-kem-512
 #   tests/PQC-ascon/run_all.sh --timeout 900         # kill any single run after 15 min
+#
+# Run this with `bash`, not `source`/`.` -- it uses `set -u` and `exit`,
+# which would otherwise leak nounset into your interactive shell and/or
+# close your terminal on an error path.
+
+if (return 0 2>/dev/null); then
+  echo "Run this with bash, not 'source': bash ${BASH_SOURCE[0]} $*" >&2
+  return 1
+fi
 
 set -u
 
