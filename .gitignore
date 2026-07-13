@@ -52,3 +52,13 @@ Bender.lock
 # Both following lines are needed to list contents of ISA manual build dir.
 !/vendor/riscv/riscv-isa-manual/build/
 !/vendor/riscv/riscv-isa-manual/build/*
+
+# Simulation trace/log artifacts (regenerated per run, can grow past
+# GitHub's 100MB file size limit -- see verif/sim/iti.traces incident).
+*.trace
+*.traces
+
+# PQC-ascon benchmark script output (tests/PQC-ascon/run_all.sh and
+# run_all_host.sh), regenerated per run.
+tests/PQC-ascon/bench_results/
+tests/PQC-ascon/bench_results_host/

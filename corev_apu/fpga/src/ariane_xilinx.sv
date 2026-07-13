@@ -393,27 +393,27 @@ assign addr_map = '{
 };
 
 /// Keccak AXI Accellerator
-logic keccak_irq;
-  axi_slave_req_t  keccak_req;
-  axi_slave_resp_t keccak_resp;
-  `AXI_ASSIGN_TO_REQ(keccak_req, master[ariane_soc::Keccak])
-  `AXI_ASSIGN_FROM_RESP(master[ariane_soc::Keccak], keccak_resp)
-  keccak_axi_top #(
-    	.AXI_ADDR_WIDTH ( CVA6Cfg.XLEN ),
-      .AXI_DATA_WIDTH ( CVA6Cfg.XLEN ),
-      .AXI_ID_WIDTH   ( AxiIdWidthSlaves ),
-      .AXI_USER_WIDTH ( AxiUserWidth     ),
-      .axi_req_t ( axi_slave_req_t ),
-      .axi_rsp_t ( axi_slave_resp_t )
-  ) i_keccak_slv (
-    .clk_i      ( clk        ),
-    .rst_ni     ( ndmreset_n   ),
-    //.test_i     ( test_en      ),
-    .axi_req_i  ( keccak_req  ),
-    .axi_rsp_o  ( keccak_resp ),
-    //.axi_slave  ( master[ariane_soc::Keccak] )`
-    .keccak_intr_o (keccak_irq)
-  );
+//logic keccak_irq;
+//  axi_slave_req_t  keccak_req;
+//  axi_slave_resp_t keccak_resp;
+//  `AXI_ASSIGN_TO_REQ(keccak_req, master[ariane_soc::Keccak])
+//  `AXI_ASSIGN_FROM_RESP(master[ariane_soc::Keccak], keccak_resp)
+//  keccak_axi_top #(
+//    	.AXI_ADDR_WIDTH ( CVA6Cfg.XLEN ),
+//      .AXI_DATA_WIDTH ( CVA6Cfg.XLEN ),
+//      .AXI_ID_WIDTH   ( AxiIdWidthSlaves ),
+//      .AXI_USER_WIDTH ( AxiUserWidth     ),
+//      .axi_req_t ( axi_slave_req_t ),
+//      .axi_rsp_t ( axi_slave_resp_t )
+//  ) i_keccak_slv (
+//    .clk_i      ( clk        ),
+//    .rst_ni     ( ndmreset_n   ),
+//    //.test_i     ( test_en      ),
+//    .axi_req_i  ( keccak_req  ),
+//    .axi_rsp_o  ( keccak_resp ),
+//    //.axi_slave  ( master[ariane_soc::Keccak] )`
+//    .keccak_intr_o (keccak_irq)
+//  );
 
 /// Ascon AXI Accellerator
 logic ascon_irq;
