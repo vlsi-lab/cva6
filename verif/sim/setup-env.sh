@@ -17,9 +17,17 @@ export TESTS_PATH="$ROOT_PROJECT/verif/tests"
 export RISCV_DV_ROOT="$ROOT_PROJECT/verif/sim/dv"
 export CVA6_DV_ROOT="$ROOT_PROJECT/verif/env/corev-dv"
 
+# Caps parallelism for `make verilate` (re-triggered on every veri-testharness
+# run). Left unset, the Makefile's `-j${NUM_JOBS}` becomes bare `make -j`
+# (unbounded), which has repeatedly OOM'd/hung this WSL2 VM.
+if [ -z "$NUM_JOBS" ]; then
+  export NUM_JOBS=8
+fi
+
 
 # Set RISCV toolchain-related variables
-export RISCV="/software/riscv/riscv64-cva6"                           ##@VLSI-Lab Server
+#export RISCV="/software/riscv/riscv64-cva6"                           ##@VLSI-Lab Server
+export RISCV="/home/aledolme/tools/riscv64"
 if [ -z "$RISCV" ]; then
   echo "Error: RISCV variable undefined."
   return
@@ -61,10 +69,12 @@ fi
 # export SPIKE_INSTALL_DIR="$ROOT_PROJECT"/tools/spike
 # export SPIKE_PATH="$SPIKE_INSTALL_DIR"/bin
 
-export VERILATOR_INSTALL_DIR="/software/cva6/verilator-v5.008"        ##@VLSI-Lab Server
-export SPIKE_SRC_DIR="/software/cva6/riscv-isa-sim"                   ##@VLSI-Lab Server
-export SPIKE_INSTALL_DIR="/software/spike/spike"                      ##@VLSI-Lab Server
-export SPIKE_PATH="$SPIKE_INSTALL_DIR/bin"            
+#export VERILATOR_INSTALL_DIR="/software/cva6/verilator-v5.008"        ##@VLSI-Lab Server
+#export SPIKE_SRC_DIR="/software/cva6/riscv-isa-sim"                   ##@VLSI-Lab Server
+#export SPIKE_INSTALL_DIR="/software/spike/spike"                      ##@VLSI-Lab Server
+export VERILATOR_INSTALL_DIR="/home/aledolme/tools/verilator-v5.008"
+export SPIKE_INSTALL_DIR="/home/aledolme/tools/spike"
+export SPIKE_PATH="$SPIKE_INSTALL_DIR/bin"
 
 # Update the PATH to add all the tools
 export PATH="$VERILATOR_INSTALL_DIR/bin:$RISCV/bin:$PATH"

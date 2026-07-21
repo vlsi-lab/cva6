@@ -393,6 +393,80 @@ module ariane_testharness #(
     .slv_resp_o ( gpio_resp )
   );
 
+  logic keccak_irq;
+  ariane_axi_soc::req_slv_t  keccak_req;
+  ariane_axi_soc::resp_slv_t keccak_resp;
+  `AXI_ASSIGN_TO_REQ(keccak_req, master[ariane_soc::Keccak])
+  `AXI_ASSIGN_FROM_RESP(master[ariane_soc::Keccak], keccak_resp)
+  logic                          keccak_dma_req;
+  logic [AXI_ADDRESS_WIDTH-1:0]  keccak_dma_addr;
+  logic                          keccak_dma_we;
+  logic [AXI_DATA_WIDTH-1:0]     keccak_dma_wdata;
+  logic [AXI_DATA_WIDTH/8-1:0]   keccak_dma_be;
+  logic                          keccak_dma_gnt;
+  logic                          keccak_dma_r_valid;
+  logic [AXI_DATA_WIDTH-1:0]     keccak_dma_r_rdata;
+
+  ariane_axi::req_t              keccak_dma_axi_m_req;
+  ariane_axi::resp_t             keccak_dma_axi_m_resp;
+
+  keccak_axi_top #(
+    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH            ),
+    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH               ),
+    .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
+    .AXI_USER_WIDTH ( AXI_USER_WIDTH               ),
+    .axi_req_t      ( ariane_axi_soc::req_slv_t    ),
+    .axi_rsp_t      ( ariane_axi_soc::resp_slv_t   )
+  ) i_keccak_slv (
+    .clk_i         ( clk_i               ),
+    .rst_ni        ( ndmreset_n          ),
+    .test_mode_i   ( test_en             ),
+    .axi_req_i     ( keccak_req          ),
+    .axi_rsp_o     ( keccak_resp         ),
+    .keccak_intr_o ( keccak_irq          ),
+    .dma_req_o     ( keccak_dma_req      ),
+    .dma_addr_o    ( keccak_dma_addr     ),
+    .dma_we_o      ( keccak_dma_we       ),
+    .dma_wdata_o   ( keccak_dma_wdata    ),
+    .dma_be_o      ( keccak_dma_be       ),
+    .dma_gnt_i     ( keccak_dma_gnt      ),
+    .dma_valid_i   ( keccak_dma_r_valid  ),
+    .dma_rdata_i   ( keccak_dma_r_rdata  )
+  );
+
+  // Keccak DMA master: same simple-interface-to-AXI4 pattern as the debug
+  // module's System Bus Access unit (i_dm_axi_master above) so the Keccak
+  // peripheral can absorb/squeeze directly from/to CVA6 memory instead of
+  // round-tripping every word through the CPU.
+  `AXI_ASSIGN_FROM_REQ(slave[2], keccak_dma_axi_m_req)
+  `AXI_ASSIGN_TO_RESP(keccak_dma_axi_m_resp, slave[2])
+
+  axi_adapter #(
+    .CVA6Cfg               ( CVA6Cfg                   ),
+    .DATA_WIDTH            ( AXI_DATA_WIDTH            ),
+    .axi_req_t             ( ariane_axi::req_t         ),
+    .axi_rsp_t             ( ariane_axi::resp_t        )
+  ) i_keccak_dma_axi_master (
+    .clk_i                 ( clk_i                     ),
+    .rst_ni                ( ndmreset_n                ),
+    .req_i                 ( keccak_dma_req            ),
+    .type_i                ( ariane_pkg::SINGLE_REQ    ),
+    .amo_i                 ( ariane_pkg::AMO_NONE      ),
+    .gnt_o                 ( keccak_dma_gnt            ),
+    .addr_i                ( keccak_dma_addr           ),
+    .we_i                  ( keccak_dma_we             ),
+    .wdata_i               ( keccak_dma_wdata          ),
+    .be_i                  ( keccak_dma_be             ),
+    .size_i                ( 2'b11                     ), // always do 64bit here and use byte enables to gate
+    .id_i                  ( '0                        ),
+    .valid_o               ( keccak_dma_r_valid        ),
+    .rdata_o               ( keccak_dma_r_rdata        ),
+    .id_o                  (                           ),
+    .critical_word_o       (                           ),
+    .critical_word_valid_o (                           ),
+    .axi_req_o             ( keccak_dma_axi_m_req      ),
+    .axi_resp_i            ( keccak_dma_axi_m_resp     )
+  );
 
   // ------------------------------
   // Memory + Exclusive Access
@@ -508,7 +582,9 @@ module ariane_testharness #(
     '{ idx: ariane_soc::SPI,      start_addr: ariane_soc::SPIBase,      end_addr: ariane_soc::SPIBase + ariane_soc::SPILength           },
     '{ idx: ariane_soc::Ethernet, start_addr: ariane_soc::EthernetBase, end_addr: ariane_soc::EthernetBase + ariane_soc::EthernetLength },
     '{ idx: ariane_soc::GPIO,     start_addr: ariane_soc::GPIOBase,     end_addr: ariane_soc::GPIOBase + ariane_soc::GPIOLength         },
-    '{ idx: ariane_soc::DRAM,     start_addr: ariane_soc::DRAMBase,     end_addr: ariane_soc::DRAMBase + ariane_soc::DRAMLength         }
+    '{ idx: ariane_soc::DRAM,     start_addr: ariane_soc::DRAMBase,     end_addr: ariane_soc::DRAMBase + ariane_soc::DRAMLength         },
+    '{ idx: ariane_soc::HPS,      start_addr: ariane_soc::HPSBase,      end_addr: ariane_soc::HPSBase + ariane_soc::HPSLength           },
+    '{ idx: ariane_soc::Keccak,   start_addr: ariane_soc::KeccakBase,   end_addr: ariane_soc::KeccakBase + ariane_soc::KeccakLength     }
   };
 
   localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{

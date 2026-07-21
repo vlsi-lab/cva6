@@ -185,4 +185,3 @@ static uint32_t read_uint32_from_uart() {
         sprintf(text, __VA_ARGS__); \
         print_uart(text); \
 } while (0)
-

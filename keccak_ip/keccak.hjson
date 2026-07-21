@@ -1,0 +1,163 @@
+// Keccak Accelerator IP - Loosely
+// Register definition for reggen.py 
+// Author: Federico Runco
+
+{
+  name: "keccak",
+  clock_primary: "clk_i",
+  reset_primary: "rst_ni",
+  bus_interfaces: [
+    {
+      protocol: "reg_iface", 
+      direction: "device" 
+    }
+  ],
+  regwidth: "64",
+  registers: [
+    {
+      multireg: {
+        name: "DATA",
+        desc: "I/O cryptographic state register of the Keccak AXI Accellerator",
+        count: "25",
+        cname: "data",
+        swaccess: "rw",
+        hwaccess: "hrw",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      name: "CSREG",
+      desc: "Control and status register for Keccak AXI Accellerator",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "0",
+          name: "START",
+          desc: "Start the permutation"
+        },
+        {
+          bits: "1",
+          name: "DONE",
+          desc: "Asserted if permutation is done"
+        }
+      ]
+    },
+    {
+      name: "JOB_SRC_ADDR",
+      desc: "Physical address of raw input bytes for the DMA-driven absorb job",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "63:0" } ]
+    },
+    {
+      name: "JOB_SRC_LEN",
+      desc: "Number of bytes to DMA-absorb from JOB_SRC_ADDR",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "31:0" } ]
+    },
+    {
+      name: "JOB_DST_ADDR",
+      desc: "Physical address to DMA-squeeze output bytes into",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "63:0" } ]
+    },
+    {
+      name: "JOB_DST_LEN",
+      desc: "Number of bytes to DMA-squeeze into JOB_DST_ADDR",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "31:0" } ]
+    },
+    {
+      name: "JOBCTRL",
+      desc: "DMA job descriptor control and status",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "0",
+          name: "GO",
+          desc: "Start the DMA job"
+        },
+        {
+          bits: "1",
+          name: "FRESH",
+          desc: "State starts from all-zero rather than XOR onto resident state"
+        },
+        {
+          bits: "2",
+          name: "FLIP",
+          desc: "Apply SHAKE pad10*1 after the absorb portion of the job"
+        },
+        {
+          bits: "3",
+          name: "DONE",
+          desc: "Asserted if the DMA job is done"
+        },
+        {
+          bits: "11:4",
+          name: "DPTR",
+          desc: "Byte offset within the current rate block where this job's absorb begins (mirrors the caller's shake_context.dptr)"
+        }
+      ]
+    },
+    {
+      name: "SAMP_T_ADDR",
+      desc: "Physical base address of the HAWK sig_gauss() parity byte array t[] (t0 followed immediately by t1)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "63:0" } ]
+    },
+    {
+      name: "SAMP_X_ADDR",
+      desc: "Physical address of the first output sample byte for this job (caller's x + 4*j)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "63:0" } ]
+    },
+    {
+      name: "SAMP_BITBASE",
+      desc: "Constant added to the per-block sample index before indexing t[] (caller's 4*j)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "15:0" } ]
+    },
+    {
+      name: "SAMP_NBLOCKS",
+      desc: "Number of 16-sample/40-byte-squeeze blocks to generate for this job (n/8)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "15:0" } ]
+    },
+    {
+      name: "SAMP_CTRL",
+      desc: "HAWK sig_gauss() hardware CDT sampler job control and status. Requires the accelerator's DATA[] state to already be hardware-resident and shake_flip()-padded (not yet permuted) for the calling shake_context before GO is set.",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "0",
+          name: "GO",
+          desc: "Start the sampler job"
+        },
+        {
+          bits: "1",
+          name: "DONE",
+          desc: "Asserted if the sampler job is done"
+        }
+      ]
+    },
+    {
+      name: "SAMP_SN",
+      desc: "Accumulated squared norm (sum of r*r) over this job's samples, valid once SAMP_CTRL.DONE is set",
+      swaccess: "ro",
+      hwaccess: "hrw",
+      fields: [ { bits: "31:0" } ]
+    }
+  ]
+}

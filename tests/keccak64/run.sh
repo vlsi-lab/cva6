@@ -4,10 +4,11 @@
 source ./verif/sim/setup-env.sh
 
 # Simulation options
-export DV_OPTS="$DV_OPTS --issrun_opts=+time_out=100000000000"
+export DV_OPTS="$DV_OPTS"
 DV_TARGET=cv64a6_imac_crypto
 export DV_SIMULATORS=veri-testharness
 unset TRACE_FAST
+#export TRACE_FAST=1
 
 #make clean
 #make -C verif/sim clean_all
@@ -70,6 +71,7 @@ cflags=(
     -I../tests/custom/env
     -I../tests/custom/common
 	-I../../tests/keccak64/include
+	-I../../keccak_ip/sw
 )
 
 python3 cva6.py \
@@ -79,7 +81,6 @@ python3 cva6.py \
     --c_tests "$src_main" \
     --sv_seed 1 \
     --gcc_opts "${src_incs[*]} ${src_common[*]} ${cflags[*]}" \
-    --iss_timeout 1000000 \
 	--linker=../tests/custom/common/test.ld \
     $DV_OPTS
 

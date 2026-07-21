@@ -1,3 +1,8 @@
+// Keccak Accelerator IP - Loosely
+// C baseline for Keccak-F permutation 
+// Author: Federico Runco
+// Partly based on https://github.com/riscv/riscv-crypto/blob/main/benchmarks/sha3/zscrypto_rv64/Keccak.c
+
 #include "inc/uart.h"
 #include "encoding.h"
 

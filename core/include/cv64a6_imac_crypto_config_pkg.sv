@@ -105,7 +105,7 @@ package cva6_config_pkg;
       RVZCMP: bit'(CVA6ConfigZcmpExtEn),
       XFVec: bit'(CVA6ConfigFVecEn),
       CvxifEn: bit'(CVA6ConfigCvxifEn),
-      CoproType: config_pkg::COPRO_KECCAK,
+      CoproType: config_pkg::COPRO_NONE,
       RVZiCond: bit'(CVA6ConfigRVZiCond),
       RVZicntr: bit'(1),
       RVZihpm: bit'(1),
@@ -137,9 +137,16 @@ package cva6_config_pkg;
       NrExecuteRegionRules: unsigned'(3),
       ExecuteRegionAddrBase: 1024'({64'h8000_0000, 64'h1_0000, 64'h0}),
       ExecuteRegionLength: 1024'({64'h40000000, 64'h10000, 64'h1000}),
+      // Cached region is shrunk to leave 0x80F0_0000-0xC000_0000
+      // uncached (still within the simulated ~16.7MB DRAM backing, well
+      // above any realistic test program/stack footprint) -- used as a
+      // dedicated scratch window so peripheral-writes-to-CPU-memory
+      // (e.g. the Keccak gauss_sampler) never race the CPU's own D$
+      // without needing a global, all-fences-flush-the-whole-cache
+      // policy (see GAUSS_HW_SCRATCH_ADDR in hawk_sign.c).
       NrCachedRegionRules: unsigned'(1),
       CachedRegionAddrBase: 1024'({64'h8000_0000}),
-      CachedRegionLength: 1024'({64'h40000000}),
+      CachedRegionLength: 1024'({64'h00F0_0000}),
       MaxOutstandingStores: unsigned'(7),
       DebugEn: bit'(1),
       SDTRIG: bit'(0),

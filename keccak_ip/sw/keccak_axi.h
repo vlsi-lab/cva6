@@ -1,0 +1,172 @@
+// Generated register defines for keccak
+
+#ifndef _KECCAK_REG_DEFS_
+#define _KECCAK_REG_DEFS_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+// Register width
+#define KECCAK_PARAM_REG_WIDTH 64
+
+// I/O cryptographic state register of the Keccak AXI Accellerator (common
+// parameters)
+#define KECCAK_DATA_DATA_FIELD_WIDTH 64
+#define KECCAK_DATA_DATA_FIELDS_PER_REG 1
+#define KECCAK_DATA_MULTIREG_COUNT 25
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_0_REG_OFFSET 0x0
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_1_REG_OFFSET 0x8
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_2_REG_OFFSET 0x10
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_3_REG_OFFSET 0x18
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_4_REG_OFFSET 0x20
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_5_REG_OFFSET 0x28
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_6_REG_OFFSET 0x30
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_7_REG_OFFSET 0x38
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_8_REG_OFFSET 0x40
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_9_REG_OFFSET 0x48
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_10_REG_OFFSET 0x50
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_11_REG_OFFSET 0x58
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_12_REG_OFFSET 0x60
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_13_REG_OFFSET 0x68
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_14_REG_OFFSET 0x70
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_15_REG_OFFSET 0x78
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_16_REG_OFFSET 0x80
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_17_REG_OFFSET 0x88
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_18_REG_OFFSET 0x90
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_19_REG_OFFSET 0x98
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_20_REG_OFFSET 0xa0
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_21_REG_OFFSET 0xa8
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_22_REG_OFFSET 0xb0
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_23_REG_OFFSET 0xb8
+
+// I/O cryptographic state register of the Keccak AXI Accellerator
+#define KECCAK_DATA_24_REG_OFFSET 0xc0
+
+// Control and status register for Keccak AXI Accellerator
+#define KECCAK_CSREG_REG_OFFSET 0xc8
+#define KECCAK_CSREG_START_BIT 0
+#define KECCAK_CSREG_DONE_BIT 1
+
+// Physical address of raw input bytes for the DMA-driven absorb job
+#define KECCAK_JOB_SRC_ADDR_REG_OFFSET 0xd0
+
+// Number of bytes to DMA-absorb from JOB_SRC_ADDR
+#define KECCAK_JOB_SRC_LEN_REG_OFFSET 0xd8
+#define KECCAK_JOB_SRC_LEN_JOB_SRC_LEN_MASK 0xffffffff
+#define KECCAK_JOB_SRC_LEN_JOB_SRC_LEN_OFFSET 0
+#define KECCAK_JOB_SRC_LEN_JOB_SRC_LEN_FIELD \
+  ((bitfield_field32_t) { .mask = KECCAK_JOB_SRC_LEN_JOB_SRC_LEN_MASK, .index = KECCAK_JOB_SRC_LEN_JOB_SRC_LEN_OFFSET })
+
+// Physical address to DMA-squeeze output bytes into
+#define KECCAK_JOB_DST_ADDR_REG_OFFSET 0xe0
+
+// Number of bytes to DMA-squeeze into JOB_DST_ADDR
+#define KECCAK_JOB_DST_LEN_REG_OFFSET 0xe8
+#define KECCAK_JOB_DST_LEN_JOB_DST_LEN_MASK 0xffffffff
+#define KECCAK_JOB_DST_LEN_JOB_DST_LEN_OFFSET 0
+#define KECCAK_JOB_DST_LEN_JOB_DST_LEN_FIELD \
+  ((bitfield_field32_t) { .mask = KECCAK_JOB_DST_LEN_JOB_DST_LEN_MASK, .index = KECCAK_JOB_DST_LEN_JOB_DST_LEN_OFFSET })
+
+// DMA job descriptor control and status
+#define KECCAK_JOBCTRL_REG_OFFSET 0xf0
+#define KECCAK_JOBCTRL_GO_BIT 0
+#define KECCAK_JOBCTRL_FRESH_BIT 1
+#define KECCAK_JOBCTRL_FLIP_BIT 2
+#define KECCAK_JOBCTRL_DONE_BIT 3
+#define KECCAK_JOBCTRL_DPTR_MASK 0xff
+#define KECCAK_JOBCTRL_DPTR_OFFSET 4
+#define KECCAK_JOBCTRL_DPTR_FIELD \
+  ((bitfield_field32_t) { .mask = KECCAK_JOBCTRL_DPTR_MASK, .index = KECCAK_JOBCTRL_DPTR_OFFSET })
+
+// Physical base address of the HAWK sig_gauss() parity byte array t[] (t0
+// followed immediately by t1)
+#define KECCAK_SAMP_T_ADDR_REG_OFFSET 0xf8
+
+// Physical address of the first output sample byte for this job (caller's x
+// + 4*j)
+#define KECCAK_SAMP_X_ADDR_REG_OFFSET 0x100
+
+// Constant added to the per-block sample index before indexing t[] (caller's
+// 4*j)
+#define KECCAK_SAMP_BITBASE_REG_OFFSET 0x108
+#define KECCAK_SAMP_BITBASE_SAMP_BITBASE_MASK 0xffff
+#define KECCAK_SAMP_BITBASE_SAMP_BITBASE_OFFSET 0
+#define KECCAK_SAMP_BITBASE_SAMP_BITBASE_FIELD \
+  ((bitfield_field32_t) { .mask = KECCAK_SAMP_BITBASE_SAMP_BITBASE_MASK, .index = KECCAK_SAMP_BITBASE_SAMP_BITBASE_OFFSET })
+
+// Number of 16-sample/40-byte-squeeze blocks to generate for this job (n/8)
+#define KECCAK_SAMP_NBLOCKS_REG_OFFSET 0x110
+#define KECCAK_SAMP_NBLOCKS_SAMP_NBLOCKS_MASK 0xffff
+#define KECCAK_SAMP_NBLOCKS_SAMP_NBLOCKS_OFFSET 0
+#define KECCAK_SAMP_NBLOCKS_SAMP_NBLOCKS_FIELD \
+  ((bitfield_field32_t) { .mask = KECCAK_SAMP_NBLOCKS_SAMP_NBLOCKS_MASK, .index = KECCAK_SAMP_NBLOCKS_SAMP_NBLOCKS_OFFSET })
+
+// HAWK sig_gauss() hardware CDT sampler job control and status. Requires the
+// accelerator's DATA[] state to already be hardware-resident and
+// shake_flip()-padded (not yet permuted) for the calling shake_context
+// before GO is set.
+#define KECCAK_SAMP_CTRL_REG_OFFSET 0x118
+#define KECCAK_SAMP_CTRL_GO_BIT 0
+#define KECCAK_SAMP_CTRL_DONE_BIT 1
+
+// Accumulated squared norm (sum of r*r) over this job's samples, valid once
+// SAMP_CTRL.DONE is set
+#define KECCAK_SAMP_SN_REG_OFFSET 0x120
+#define KECCAK_SAMP_SN_SAMP_SN_MASK 0xffffffff
+#define KECCAK_SAMP_SN_SAMP_SN_OFFSET 0
+#define KECCAK_SAMP_SN_SAMP_SN_FIELD \
+  ((bitfield_field32_t) { .mask = KECCAK_SAMP_SN_SAMP_SN_MASK, .index = KECCAK_SAMP_SN_SAMP_SN_OFFSET })
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+#endif  // _KECCAK_REG_DEFS_
+// End generated register defines for keccak
