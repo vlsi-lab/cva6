@@ -245,11 +245,51 @@ module keccak_axi_top
 	assign ip_to_reg_file.samp_sn.d         = samp_sn;
 	assign ip_to_reg_file.samp_sn.de        = samp_done;
 
-	assign dma_req_o   = samp_busy ? samp_mem_req   : dma_mem_req;
-	assign dma_addr_o  = samp_busy ? samp_mem_addr  : dma_mem_addr;
-	assign dma_we_o    = samp_busy ? samp_mem_we    : dma_mem_we;
-	assign dma_wdata_o = samp_busy ? samp_mem_wdata : dma_mem_wdata;
-	assign dma_be_o    = samp_busy ? samp_mem_be    : dma_mem_be;
+	// mp_NTT()/mp_iNTT() hardware accelerator (see ntt_engine.sv header for
+	// scope/assumptions). Like the Gaussian sampler, it never runs at the
+	// same time as the DMA absorb engine or the sampler itself (software
+	// drives one job at a time), so it is muxed onto the same single mem
+	// master port. It no longer touches the shared DATA[] array at all:
+	// batch staging is dedicated registers inside ntt_engine.sv itself.
+	logic                        ntt_done, ntt_busy;
+	logic                        ntt_mem_req, ntt_mem_we;
+	logic [AXI_ADDR_WIDTH-1:0]   ntt_mem_addr;
+	logic [AXI_DATA_WIDTH-1:0]   ntt_mem_wdata;
+	logic [AXI_DATA_WIDTH/8-1:0] ntt_mem_be;
+
+	ntt_engine #(
+		.AXI_ADDR_WIDTH(AXI_ADDR_WIDTH),
+		.AXI_DATA_WIDTH(AXI_DATA_WIDTH)
+	) i_ntt_engine (
+		.clk_i           (clk_i),
+		.rst_ni          (rst_ni),
+		.job_go_i        (reg_file_to_ip.ntt_ctrl.go.q),
+		.job_a_addr_i    (reg_file_to_ip.ntt_a_addr.q),
+		.job_gm_addr_i   (reg_file_to_ip.ntt_gm_addr.q),
+		.job_logn_i      (reg_file_to_ip.ntt_logn.q),
+		.job_p_val_i     (reg_file_to_ip.ntt_p_val.q),
+		.job_p0i_val_i   (reg_file_to_ip.ntt_p0i_val.q),
+		.job_mode_i      (reg_file_to_ip.ntt_ctrl.mode.q),
+		.job_done_o      (ntt_done),
+		.mem_req_o       (ntt_mem_req),
+		.mem_addr_o      (ntt_mem_addr),
+		.mem_we_o        (ntt_mem_we),
+		.mem_wdata_o     (ntt_mem_wdata),
+		.mem_be_o        (ntt_mem_be),
+		.mem_gnt_i       (dma_gnt_i),
+		.mem_valid_i     (dma_valid_i),
+		.mem_rdata_i     (dma_rdata_i),
+		.busy_o          (ntt_busy)
+	);
+
+	assign ip_to_reg_file.ntt_ctrl.done.d  = ntt_done;
+	assign ip_to_reg_file.ntt_ctrl.done.de = ntt_done;
+
+	assign dma_req_o   = ntt_busy ? ntt_mem_req   : (samp_busy ? samp_mem_req   : dma_mem_req);
+	assign dma_addr_o  = ntt_busy ? ntt_mem_addr  : (samp_busy ? samp_mem_addr  : dma_mem_addr);
+	assign dma_we_o    = ntt_busy ? ntt_mem_we    : (samp_busy ? samp_mem_we    : dma_mem_we);
+	assign dma_wdata_o = ntt_busy ? ntt_mem_wdata : (samp_busy ? samp_mem_wdata : dma_mem_wdata);
+	assign dma_be_o    = ntt_busy ? ntt_mem_be    : (samp_busy ? samp_mem_be    : dma_mem_be);
 
 	genvar i;
 	generate

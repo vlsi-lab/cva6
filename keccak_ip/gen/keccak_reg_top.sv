@@ -195,6 +195,30 @@ module keccak_reg_top #(
   logic samp_ctrl_done_wd;
   logic samp_ctrl_done_we;
   logic [31:0] samp_sn_qs;
+  logic [63:0] ntt_a_addr_qs;
+  logic [63:0] ntt_a_addr_wd;
+  logic ntt_a_addr_we;
+  logic [63:0] ntt_gm_addr_qs;
+  logic [63:0] ntt_gm_addr_wd;
+  logic ntt_gm_addr_we;
+  logic [4:0] ntt_logn_qs;
+  logic [4:0] ntt_logn_wd;
+  logic ntt_logn_we;
+  logic [31:0] ntt_p_val_qs;
+  logic [31:0] ntt_p_val_wd;
+  logic ntt_p_val_we;
+  logic [31:0] ntt_p0i_val_qs;
+  logic [31:0] ntt_p0i_val_wd;
+  logic ntt_p0i_val_we;
+  logic ntt_ctrl_go_qs;
+  logic ntt_ctrl_go_wd;
+  logic ntt_ctrl_go_we;
+  logic ntt_ctrl_done_qs;
+  logic ntt_ctrl_done_wd;
+  logic ntt_ctrl_done_we;
+  logic [2:0] ntt_ctrl_mode_qs;
+  logic [2:0] ntt_ctrl_mode_wd;
+  logic ntt_ctrl_mode_we;
 
   // Register instances
 
@@ -1356,9 +1380,224 @@ module keccak_reg_top #(
   );
 
 
+  // R[ntt_a_addr]: V(False)
+
+  prim_subreg #(
+    .DW      (64),
+    .SWACCESS("RW"),
+    .RESVAL  (64'h0)
+  ) u_ntt_a_addr (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (ntt_a_addr_we),
+    .wd     (ntt_a_addr_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.ntt_a_addr.q ),
+
+    // to register interface (read)
+    .qs     (ntt_a_addr_qs)
+  );
 
 
-  logic [36:0] addr_hit;
+  // R[ntt_gm_addr]: V(False)
+
+  prim_subreg #(
+    .DW      (64),
+    .SWACCESS("RW"),
+    .RESVAL  (64'h0)
+  ) u_ntt_gm_addr (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (ntt_gm_addr_we),
+    .wd     (ntt_gm_addr_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.ntt_gm_addr.q ),
+
+    // to register interface (read)
+    .qs     (ntt_gm_addr_qs)
+  );
+
+
+  // R[ntt_logn]: V(False)
+
+  prim_subreg #(
+    .DW      (5),
+    .SWACCESS("RW"),
+    .RESVAL  (5'h0)
+  ) u_ntt_logn (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (ntt_logn_we),
+    .wd     (ntt_logn_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.ntt_logn.q ),
+
+    // to register interface (read)
+    .qs     (ntt_logn_qs)
+  );
+
+
+  // R[ntt_p_val]: V(False)
+
+  prim_subreg #(
+    .DW      (32),
+    .SWACCESS("RW"),
+    .RESVAL  (32'h0)
+  ) u_ntt_p_val (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (ntt_p_val_we),
+    .wd     (ntt_p_val_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.ntt_p_val.q ),
+
+    // to register interface (read)
+    .qs     (ntt_p_val_qs)
+  );
+
+
+  // R[ntt_p0i_val]: V(False)
+
+  prim_subreg #(
+    .DW      (32),
+    .SWACCESS("RW"),
+    .RESVAL  (32'h0)
+  ) u_ntt_p0i_val (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (ntt_p0i_val_we),
+    .wd     (ntt_p0i_val_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.ntt_p0i_val.q ),
+
+    // to register interface (read)
+    .qs     (ntt_p0i_val_qs)
+  );
+
+
+  // R[ntt_ctrl]: V(False)
+
+  //   F[go]: 0:0
+  prim_subreg #(
+    .DW      (1),
+    .SWACCESS("RW"),
+    .RESVAL  (1'h0)
+  ) u_ntt_ctrl_go (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (ntt_ctrl_go_we),
+    .wd     (ntt_ctrl_go_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.ntt_ctrl.go.q ),
+
+    // to register interface (read)
+    .qs     (ntt_ctrl_go_qs)
+  );
+
+
+  //   F[done]: 1:1
+  prim_subreg #(
+    .DW      (1),
+    .SWACCESS("RW"),
+    .RESVAL  (1'h0)
+  ) u_ntt_ctrl_done (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (ntt_ctrl_done_we),
+    .wd     (ntt_ctrl_done_wd),
+
+    // from internal hardware
+    .de     (hw2reg.ntt_ctrl.done.de),
+    .d      (hw2reg.ntt_ctrl.done.d ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.ntt_ctrl.done.q ),
+
+    // to register interface (read)
+    .qs     (ntt_ctrl_done_qs)
+  );
+
+
+  //   F[mode]: 4:2
+  prim_subreg #(
+    .DW      (3),
+    .SWACCESS("RW"),
+    .RESVAL  (3'h0)
+  ) u_ntt_ctrl_mode (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (ntt_ctrl_mode_we),
+    .wd     (ntt_ctrl_mode_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.ntt_ctrl.mode.q ),
+
+    // to register interface (read)
+    .qs     (ntt_ctrl_mode_qs)
+  );
+
+
+
+
+  logic [42:0] addr_hit;
   always_comb begin
     addr_hit = '0;
     addr_hit[ 0] = (reg_addr == KECCAK_DATA_0_OFFSET);
@@ -1398,6 +1637,12 @@ module keccak_reg_top #(
     addr_hit[34] = (reg_addr == KECCAK_SAMP_NBLOCKS_OFFSET);
     addr_hit[35] = (reg_addr == KECCAK_SAMP_CTRL_OFFSET);
     addr_hit[36] = (reg_addr == KECCAK_SAMP_SN_OFFSET);
+    addr_hit[37] = (reg_addr == KECCAK_NTT_A_ADDR_OFFSET);
+    addr_hit[38] = (reg_addr == KECCAK_NTT_GM_ADDR_OFFSET);
+    addr_hit[39] = (reg_addr == KECCAK_NTT_LOGN_OFFSET);
+    addr_hit[40] = (reg_addr == KECCAK_NTT_P_VAL_OFFSET);
+    addr_hit[41] = (reg_addr == KECCAK_NTT_P0I_VAL_OFFSET);
+    addr_hit[42] = (reg_addr == KECCAK_NTT_CTRL_OFFSET);
   end
 
   assign addrmiss = (reg_re || reg_we) ? ~|addr_hit : 1'b0 ;
@@ -1441,7 +1686,13 @@ module keccak_reg_top #(
                (addr_hit[33] & (|(KECCAK_PERMIT[33] & ~reg_be))) |
                (addr_hit[34] & (|(KECCAK_PERMIT[34] & ~reg_be))) |
                (addr_hit[35] & (|(KECCAK_PERMIT[35] & ~reg_be))) |
-               (addr_hit[36] & (|(KECCAK_PERMIT[36] & ~reg_be)))));
+               (addr_hit[36] & (|(KECCAK_PERMIT[36] & ~reg_be))) |
+               (addr_hit[37] & (|(KECCAK_PERMIT[37] & ~reg_be))) |
+               (addr_hit[38] & (|(KECCAK_PERMIT[38] & ~reg_be))) |
+               (addr_hit[39] & (|(KECCAK_PERMIT[39] & ~reg_be))) |
+               (addr_hit[40] & (|(KECCAK_PERMIT[40] & ~reg_be))) |
+               (addr_hit[41] & (|(KECCAK_PERMIT[41] & ~reg_be))) |
+               (addr_hit[42] & (|(KECCAK_PERMIT[42] & ~reg_be)))));
   end
 
   assign data_0_we = addr_hit[0] & reg_we & !reg_error;
@@ -1569,6 +1820,30 @@ module keccak_reg_top #(
 
   assign samp_ctrl_done_we = addr_hit[35] & reg_we & !reg_error;
   assign samp_ctrl_done_wd = reg_wdata[1];
+
+  assign ntt_a_addr_we = addr_hit[37] & reg_we & !reg_error;
+  assign ntt_a_addr_wd = reg_wdata[63:0];
+
+  assign ntt_gm_addr_we = addr_hit[38] & reg_we & !reg_error;
+  assign ntt_gm_addr_wd = reg_wdata[63:0];
+
+  assign ntt_logn_we = addr_hit[39] & reg_we & !reg_error;
+  assign ntt_logn_wd = reg_wdata[4:0];
+
+  assign ntt_p_val_we = addr_hit[40] & reg_we & !reg_error;
+  assign ntt_p_val_wd = reg_wdata[31:0];
+
+  assign ntt_p0i_val_we = addr_hit[41] & reg_we & !reg_error;
+  assign ntt_p0i_val_wd = reg_wdata[31:0];
+
+  assign ntt_ctrl_go_we = addr_hit[42] & reg_we & !reg_error;
+  assign ntt_ctrl_go_wd = reg_wdata[0];
+
+  assign ntt_ctrl_done_we = addr_hit[42] & reg_we & !reg_error;
+  assign ntt_ctrl_done_wd = reg_wdata[1];
+
+  assign ntt_ctrl_mode_we = addr_hit[42] & reg_we & !reg_error;
+  assign ntt_ctrl_mode_wd = reg_wdata[4:2];
 
   // Read data return
   always_comb begin
@@ -1726,6 +2001,32 @@ module keccak_reg_top #(
 
       addr_hit[36]: begin
         reg_rdata_next[31:0] = samp_sn_qs;
+      end
+
+      addr_hit[37]: begin
+        reg_rdata_next[63:0] = ntt_a_addr_qs;
+      end
+
+      addr_hit[38]: begin
+        reg_rdata_next[63:0] = ntt_gm_addr_qs;
+      end
+
+      addr_hit[39]: begin
+        reg_rdata_next[4:0] = ntt_logn_qs;
+      end
+
+      addr_hit[40]: begin
+        reg_rdata_next[31:0] = ntt_p_val_qs;
+      end
+
+      addr_hit[41]: begin
+        reg_rdata_next[31:0] = ntt_p0i_val_qs;
+      end
+
+      addr_hit[42]: begin
+        reg_rdata_next[0] = ntt_ctrl_go_qs;
+        reg_rdata_next[1] = ntt_ctrl_done_qs;
+        reg_rdata_next[4:2] = ntt_ctrl_mode_qs;
       end
 
       default: begin

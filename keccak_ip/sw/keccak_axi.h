@@ -165,6 +165,49 @@ extern "C" {
 #define KECCAK_SAMP_SN_SAMP_SN_FIELD \
   ((bitfield_field32_t) { .mask = KECCAK_SAMP_SN_SAMP_SN_MASK, .index = KECCAK_SAMP_SN_SAMP_SN_OFFSET })
 
+// Physical base address of the uint32_t polynomial array a[] (mp_NTT/mp_iNTT
+// operand, updated in place)
+#define KECCAK_NTT_A_ADDR_REG_OFFSET 0x128
+
+// Physical base address of the uint32_t twiddle table (gm[] for forward
+// NTT_CTRL.MODE=0, igm[] for inverse NTT_CTRL.MODE=1 -- caller points this
+// at whichever mp_mkgm/mp_mkigm table the job needs)
+#define KECCAK_NTT_GM_ADDR_REG_OFFSET 0x130
+
+// Degree parameter (log2 n; matches mp_NTT/mp_iNTT's logn argument, n = 1 <<
+// logn)
+#define KECCAK_NTT_LOGN_REG_OFFSET 0x138
+#define KECCAK_NTT_LOGN_NTT_LOGN_MASK 0x1f
+#define KECCAK_NTT_LOGN_NTT_LOGN_OFFSET 0
+#define KECCAK_NTT_LOGN_NTT_LOGN_FIELD \
+  ((bitfield_field32_t) { .mask = KECCAK_NTT_LOGN_NTT_LOGN_MASK, .index = KECCAK_NTT_LOGN_NTT_LOGN_OFFSET })
+
+// Modulus p for this job (any HAWK-usable prime -- software supplies it
+// directly, matching mp_NTT/mp_iNTT's own p argument, instead of the
+// accelerator hardcoding a fixed prime table)
+#define KECCAK_NTT_P_VAL_REG_OFFSET 0x140
+#define KECCAK_NTT_P_VAL_NTT_P_VAL_MASK 0xffffffff
+#define KECCAK_NTT_P_VAL_NTT_P_VAL_OFFSET 0
+#define KECCAK_NTT_P_VAL_NTT_P_VAL_FIELD \
+  ((bitfield_field32_t) { .mask = KECCAK_NTT_P_VAL_NTT_P_VAL_MASK, .index = KECCAK_NTT_P_VAL_NTT_P_VAL_OFFSET })
+
+// p0i = -1/p mod 2^32 for this job, software-precomputed exactly as
+// mp_NTT/mp_iNTT's own p0i argument (e.g. from the PRIMES[] table)
+#define KECCAK_NTT_P0I_VAL_REG_OFFSET 0x148
+#define KECCAK_NTT_P0I_VAL_NTT_P0I_VAL_MASK 0xffffffff
+#define KECCAK_NTT_P0I_VAL_NTT_P0I_VAL_OFFSET 0
+#define KECCAK_NTT_P0I_VAL_NTT_P0I_VAL_FIELD \
+  ((bitfield_field32_t) { .mask = KECCAK_NTT_P0I_VAL_NTT_P0I_VAL_MASK, .index = KECCAK_NTT_P0I_VAL_NTT_P0I_VAL_OFFSET })
+
+// NTT/iNTT accelerator job control and status
+#define KECCAK_NTT_CTRL_REG_OFFSET 0x150
+#define KECCAK_NTT_CTRL_GO_BIT 0
+#define KECCAK_NTT_CTRL_DONE_BIT 1
+#define KECCAK_NTT_CTRL_MODE_MASK 0x7
+#define KECCAK_NTT_CTRL_MODE_OFFSET 2
+#define KECCAK_NTT_CTRL_MODE_FIELD \
+  ((bitfield_field32_t) { .mask = KECCAK_NTT_CTRL_MODE_MASK, .index = KECCAK_NTT_CTRL_MODE_OFFSET })
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif
