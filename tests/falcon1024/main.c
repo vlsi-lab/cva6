@@ -16,9 +16,22 @@
 #include "encoding.h"   /* read_csr / write_csr / clear_csr for mcycle         */
 #include "uart.h"       /* print_uart, print_uart_dec (replaces printf on CVA6) */
 
+/* Each phase can be disabled individually via -DRUN_KEYGEN=0 / -DRUN_SIGN=0 /
+ * -DRUN_VERIFY=0 (see run.sh's keygen/sign/verify arguments) to isolate its
+ * cycle count. A disabled phase is skipped entirely (not even untimed) --
+ * crypto_sign_keypair()/crypto_sign() take their randomness as an explicit
+ * per-KAT-vector argument here (TVEC_KEYPAIR_RND/TVEC_SIGN_RND), not from a
+ * persistent DRBG, so there is no state to advance by calling them; the
+ * KAT's own pk/sk/sm values are loaded directly instead. */
+#ifndef RUN_KEYGEN
 #define RUN_KEYGEN  1
+#endif
+#ifndef RUN_SIGN
 #define RUN_SIGN    1
+#endif
+#ifndef RUN_VERIFY
 #define RUN_VERIFY  1
+#endif
 
 static void print_cycles(const char *label, unsigned int cyc)
 {

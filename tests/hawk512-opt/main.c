@@ -66,6 +66,8 @@ extern uint64_t fft_dispatch_cycles;
 extern uint64_t fft_dispatch_calls;
 extern uint64_t vrfy_ntt_dispatch_cycles;
 extern uint64_t vrfy_ntt_dispatch_calls;
+extern uint64_t twiddle_gen_cycles;
+extern uint64_t twiddle_gen_calls;
 
 static void print_ntt_stats_lbl(const char *label, const char *call_label,
     unsigned int phase_cycles, uint64_t ntt_cycles, uint64_t ntt_calls)
@@ -153,6 +155,8 @@ int main(void)
         ntt_dispatch_calls  = 0;
         fft_dispatch_cycles = 0;
         fft_dispatch_calls  = 0;
+        twiddle_gen_cycles  = 0;
+        twiddle_gen_calls   = 0;
         write_csr(mcycle, 0);
         r = crypto_sign_keypair(pk, sk);
         cycles = (unsigned int)read_csr(mcycle);
@@ -165,6 +169,7 @@ int main(void)
         print_uart("Keygen OK\n");
         print_ntt_stats("KeyGen", cycles, ntt_dispatch_cycles, ntt_dispatch_calls);
         print_ntt_stats_lbl("KeyGen (FFT)", "vect_FFT/vect_iFFT", cycles, fft_dispatch_cycles, fft_dispatch_calls);
+        print_ntt_stats_lbl("KeyGen (twiddle-gen)", "mp_mkgm/mp_mkigm/mp_mkgmigm", cycles, twiddle_gen_cycles, twiddle_gen_calls);
 #else
         r = crypto_sign_keypair(pk, sk);   /* advance DRBG – result discarded */
         if (r != 0) { print_uart("ERROR: crypto_sign_keypair\n"); return -1; }

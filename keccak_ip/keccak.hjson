@@ -218,6 +218,42 @@
           hwaccess: "hro"
         }
       ]
+    },
+    {
+      name: "REJ_X_ADDR",
+      desc: "Physical base address of the uint16_t output sample array for the rejection-sampler job (Falcon's Zf(hash_to_point_vartime), common.c)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "63:0" } ]
+    },
+    {
+      name: "REJ_PARAMS",
+      desc: "Rejection-sampler job parameters, packed to keep the register count small: Q (modulus, bits 15:0), THRESH (rejection bound, bits 31:16), N (accepted-sample target, bits 63:32)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [
+        { bits: "15:0", name: "Q", desc: "Modulus for the conditional-subtract reduction (Falcon: 12289)" },
+        { bits: "31:16", name: "THRESH", desc: "Reject if the squeezed 16-bit word is >= this (Falcon: 61445 = 5*12289)" },
+        { bits: "63:32", name: "N", desc: "Number of accepted samples to produce" }
+      ]
+    },
+    {
+      name: "REJ_CTRL",
+      desc: "Rejection-sampler job control and status. Requires the accelerator's DATA[] state to already be hardware-resident and shake_flip()-padded (not yet permuted) for the calling shake context before GO is set -- same precondition as SAMP_CTRL.",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "0",
+          name: "GO",
+          desc: "Start the rejection-sampler job"
+        },
+        {
+          bits: "1",
+          name: "DONE",
+          desc: "Asserted if the rejection-sampler job is done"
+        }
+      ]
     }
   ]
 }

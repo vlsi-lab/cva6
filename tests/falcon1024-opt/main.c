@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 // Bare-metal CVA6 adaptation of the auto-generated static (no file I/O) KAT test for
-// falcon-512 (tools/gen_static_test.py output). stdio's printf replaced with the
-// simulated UART (print_uart/print_uart_dec, same helpers used by tests/hawk512's
+// falcon-1024 (tools/gen_static_test.py output). stdio's printf replaced with the
+// simulated UART (print_uart/print_uart_dec, same helpers used by tests/hawk1024's
 // main.c); cycle counting filled in via the RISC-V mcycle CSR (encoding.h), same
 // read_csr(mcycle)/write_csr(mcycle,0) pattern as every other test in this repo.
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -11,7 +11,7 @@
 #include <string.h>
 
 #include "api.h"
-#include "test_vectors_512.h"
+#include "test_vectors_1024.h"
 
 #include "encoding.h"   /* read_csr / write_csr / clear_csr for mcycle         */
 #include "uart.h"       /* print_uart, print_uart_dec (replaces printf on CVA6) */
@@ -40,6 +40,46 @@ static void print_cycles(const char *label, unsigned int cyc)
     print_uart("]: ");
     print_uart_dec(cyc);
     print_uart("\n");
+}
+
+/*
+ * Hardware-dispatch cycle accounting (vrfy.c's mq_NTT_hw()/mq_iNTT_hw()) --
+ * answers "how much of Verify is actually NTT/iNTT hardware-call time",
+ * same pattern as tests/hawk1024-opt/main.c's ntt_dispatch_cycles.
+ */
+extern uint64_t falcon_ntt_dispatch_cycles;
+extern uint64_t falcon_ntt_dispatch_calls;
+
+/*
+ * Same accounting for Zf(hash_to_point_vartime)()/Zf(is_short)() (common.c)
+ * -- isolates the rejection-sampling loop's and the norm-bound check's
+ * share of Verify, i.e. the two functions HAWK_FALCON_VERIFY_HW_ACCELERATION.md
+ * checklist items #4/#5 propose dedicated hardware for.
+ */
+extern uint64_t falcon_hash_to_point_cycles;
+extern uint64_t falcon_hash_to_point_calls;
+extern uint64_t falcon_is_short_cycles;
+extern uint64_t falcon_is_short_calls;
+
+static void print_ntt_stats(const char *label, const char *unit,
+    unsigned int phase_cycles, uint64_t sub_cycles, uint64_t sub_calls)
+{
+    unsigned int pct_x10 = phase_cycles
+        ? (unsigned int)((sub_cycles * 1000ULL) / phase_cycles) : 0;
+
+    print_uart("  ");
+    print_uart(label);
+    print_uart(": ");
+    print_uart_dec((int)sub_calls);
+    print_uart(" ");
+    print_uart(unit);
+    print_uart(" calls, ");
+    print_uart_dec((int)sub_cycles);
+    print_uart(" cycles (");
+    print_uart_dec((int)(pct_x10 / 10));
+    print_uart(".");
+    print_uart_dec((int)(pct_x10 % 10));
+    print_uart("% of phase)\n");
 }
 
 int main(void)
@@ -99,10 +139,22 @@ int main(void)
 #endif /* RUN_SIGN */
 
 #if RUN_VERIFY
+        falcon_ntt_dispatch_cycles   = 0;
+        falcon_ntt_dispatch_calls    = 0;
+        falcon_hash_to_point_cycles  = 0;
+        falcon_hash_to_point_calls   = 0;
+        falcon_is_short_cycles       = 0;
+        falcon_is_short_calls        = 0;
         write_csr(mcycle, 0);
         crypto_sign_open(m1, &mlen1, sm, smlen, pk);
         cycles = (unsigned int)read_csr(mcycle);
         print_cycles("verify", cycles);
+        print_ntt_stats("Verify NTT/iNTT", "mq_NTT_hw/mq_iNTT_hw",
+            cycles, falcon_ntt_dispatch_cycles, falcon_ntt_dispatch_calls);
+        print_ntt_stats("Verify hash-to-point", "hash_to_point_vartime",
+            cycles, falcon_hash_to_point_cycles, falcon_hash_to_point_calls);
+        print_ntt_stats("Verify is_short", "is_short",
+            cycles, falcon_is_short_cycles, falcon_is_short_calls);
 
         if (mlen1 != MLEN_KAT || memcmp(m1, TVEC_IN_M_SIGN[i], MLEN_KAT)) {
             print_uart("["); print_uart_dec(i); print_uart("] ERROR: M mismatch\n");

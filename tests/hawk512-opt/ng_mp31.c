@@ -14,6 +14,20 @@
 uint64_t ntt_dispatch_cycles = 0;
 uint64_t ntt_dispatch_calls  = 0;
 
+/*
+ * Cycle accounting for mp_mkgm()/mp_mkigm()/mp_mkgmigm()/mp_mkgm7() --
+ * added to measure the twiddle-table-generation cost sitting entirely in
+ * software, outside ntt_dispatch_cycles above (these build gm[]/igm[]
+ * *before* mp_NTT/mp_iNTT are ever called, not inside them). See
+ * NTT_ACCEL_DESIGN.md's PQNTRU cross-analysis (2026-07-26) and
+ * TWIDDLE_GEN_ANALYSIS.md for why this was worth isolating: confirmed
+ * absent from both HAWK and Falcon verify paths (KeyGen-only), so this
+ * measurement is what decides whether accelerating it is worthwhile for
+ * a future KeyGen pass.
+ */
+uint64_t twiddle_gen_cycles = 0;
+uint64_t twiddle_gen_calls  = 0;
+
 /* see ng_inner.h */
 uint32_t
 mp_div(uint32_t x, uint32_t y, uint32_t p)
@@ -175,6 +189,7 @@ void
 mp_mkgmigm(unsigned logn, uint32_t *restrict gm, uint32_t *restrict igm,
 	uint32_t g, uint32_t ig, uint32_t p, uint32_t p0i)
 {
+	uint64_t _prof_c0 = read_csr(mcycle);
 	size_t n = (size_t)1 << logn;
 
 	/*
@@ -276,6 +291,8 @@ mp_mkgmigm(unsigned logn, uint32_t *restrict gm, uint32_t *restrict igm,
 		x2 = mp_montymul(x2, ig, p, p0i);
 	}
 #endif // NTRUGEN_AVX2
+	twiddle_gen_cycles += read_csr(mcycle) - _prof_c0;
+	twiddle_gen_calls++;
 }
 
 /* see ng_inner.h */
@@ -284,6 +301,7 @@ void
 mp_mkgm(unsigned logn, uint32_t *restrict gm,
 	uint32_t g, uint32_t p, uint32_t p0i)
 {
+	uint64_t _prof_c0 = read_csr(mcycle);
 	size_t n = (size_t)1 << logn;
 
 	for (unsigned j = logn; j < 10; j ++) {
@@ -350,6 +368,8 @@ mp_mkgm(unsigned logn, uint32_t *restrict gm,
 		x1 = mp_montymul(x1, g, p, p0i);
 	}
 #endif // NTRUGEN_AVX2
+	twiddle_gen_cycles += read_csr(mcycle) - _prof_c0;
+	twiddle_gen_calls++;
 }
 
 /* see ng_inner.h */
@@ -372,6 +392,7 @@ void
 mp_mkigm(unsigned logn, uint32_t *restrict igm,
 	uint32_t ig, uint32_t p, uint32_t p0i)
 {
+	uint64_t _prof_c0 = read_csr(mcycle);
 	size_t n = (size_t)1 << logn;
 
 	for (unsigned j = logn; j < 10; j ++) {
@@ -438,6 +459,8 @@ mp_mkigm(unsigned logn, uint32_t *restrict igm,
 		x2 = mp_montymul(x2, ig, p, p0i);
 	}
 #endif // NTRUGEN_AVX2
+	twiddle_gen_cycles += read_csr(mcycle) - _prof_c0;
+	twiddle_gen_calls++;
 }
 
 #if NTRUGEN_AVX2

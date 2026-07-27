@@ -92,6 +92,7 @@ module keccak_axi_top
 	logic csreg_start_old, keccak_start, keccak_done;
 	logic dma_perm_start;
 	logic samp_perm_start;
+	logic rej_perm_start;
 
 	always_ff @(posedge clk_i or negedge rst_ni) begin
 		if (!rst_ni) begin
@@ -103,11 +104,12 @@ module keccak_axi_top
 	logic csreg_start_rise;
 	assign csreg_start_rise = reg_file_to_ip.csreg.start.q & ~csreg_start_old;
 
-	// three independent triggers share the permutation core: software polling
+	// four independent triggers share the permutation core: software polling
 	// CSREG directly (legacy raw-permute path), the DMA job engine chaining
-	// permutations autonomously as it fills rate blocks, and the Gaussian
-	// sampler job chaining permutations as it squeezes rate blocks
-	assign keccak_start = csreg_start_rise | dma_perm_start | samp_perm_start;
+	// permutations autonomously as it fills rate blocks, the Gaussian
+	// sampler job chaining permutations as it squeezes rate blocks, and the
+	// rejection sampler job doing the same for its own squeeze loop
+	assign keccak_start = csreg_start_rise | dma_perm_start | samp_perm_start | rej_perm_start;
 
 	// csreg.done must only latch when THIS permutation was actually
 	// triggered via CSREG.START -- keccak_done also pulses for
@@ -285,11 +287,51 @@ module keccak_axi_top
 	assign ip_to_reg_file.ntt_ctrl.done.d  = ntt_done;
 	assign ip_to_reg_file.ntt_ctrl.done.de = ntt_done;
 
-	assign dma_req_o   = ntt_busy ? ntt_mem_req   : (samp_busy ? samp_mem_req   : dma_mem_req);
-	assign dma_addr_o  = ntt_busy ? ntt_mem_addr  : (samp_busy ? samp_mem_addr  : dma_mem_addr);
-	assign dma_we_o    = ntt_busy ? ntt_mem_we    : (samp_busy ? samp_mem_we    : dma_mem_we);
-	assign dma_wdata_o = ntt_busy ? ntt_mem_wdata : (samp_busy ? samp_mem_wdata : dma_mem_wdata);
-	assign dma_be_o    = ntt_busy ? ntt_mem_be    : (samp_busy ? samp_mem_be    : dma_mem_be);
+	// Falcon Zf(hash_to_point_vartime)() rejection-sampler job (see
+	// rej_sampler.sv header for scope/assumptions). Like the Gaussian
+	// sampler and the NTT engine, it never runs at the same time as the
+	// other jobs (software drives one job at a time), so it shares the
+	// same single mem master port and permutation trigger.
+	logic                        rej_done, rej_busy;
+	logic                        rej_mem_req, rej_mem_we;
+	logic [AXI_ADDR_WIDTH-1:0]   rej_mem_addr;
+	logic [AXI_DATA_WIDTH-1:0]   rej_mem_wdata;
+	logic [AXI_DATA_WIDTH/8-1:0] rej_mem_be;
+
+	rej_sampler #(
+		.AXI_ADDR_WIDTH(AXI_ADDR_WIDTH),
+		.AXI_DATA_WIDTH(AXI_DATA_WIDTH)
+	) i_rej_sampler (
+		.clk_i          (clk_i),
+		.rst_ni         (rst_ni),
+		.job_go_i       (reg_file_to_ip.rej_ctrl.go.q),
+		.job_x_addr_i   (reg_file_to_ip.rej_x_addr.q),
+		.job_q_i        (reg_file_to_ip.rej_params.q.q),
+		.job_thresh_i   (reg_file_to_ip.rej_params.thresh.q),
+		.job_n_i        (reg_file_to_ip.rej_params.n.q),
+		.job_done_o     (rej_done),
+		.word_rd_data_i (dma_word_rd_data),
+		.perm_start_o   (rej_perm_start),
+		.perm_done_i    (keccak_done),
+		.mem_req_o      (rej_mem_req),
+		.mem_addr_o     (rej_mem_addr),
+		.mem_we_o       (rej_mem_we),
+		.mem_wdata_o    (rej_mem_wdata),
+		.mem_be_o       (rej_mem_be),
+		.mem_gnt_i      (dma_gnt_i),
+		.mem_valid_i    (dma_valid_i),
+		.mem_rdata_i    (dma_rdata_i),
+		.busy_o         (rej_busy)
+	);
+
+	assign ip_to_reg_file.rej_ctrl.done.d  = rej_done;
+	assign ip_to_reg_file.rej_ctrl.done.de = rej_done;
+
+	assign dma_req_o   = ntt_busy ? ntt_mem_req   : (samp_busy ? samp_mem_req   : (rej_busy ? rej_mem_req   : dma_mem_req));
+	assign dma_addr_o  = ntt_busy ? ntt_mem_addr  : (samp_busy ? samp_mem_addr  : (rej_busy ? rej_mem_addr  : dma_mem_addr));
+	assign dma_we_o    = ntt_busy ? ntt_mem_we    : (samp_busy ? samp_mem_we    : (rej_busy ? rej_mem_we    : dma_mem_we));
+	assign dma_wdata_o = ntt_busy ? ntt_mem_wdata : (samp_busy ? samp_mem_wdata : (rej_busy ? rej_mem_wdata : dma_mem_wdata));
+	assign dma_be_o    = ntt_busy ? ntt_mem_be    : (samp_busy ? samp_mem_be    : (rej_busy ? rej_mem_be    : dma_mem_be));
 
 	genvar i;
 	generate

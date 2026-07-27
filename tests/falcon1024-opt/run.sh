@@ -1,23 +1,25 @@
 #!/bin/bash
 # ****************************************************************************
 #
-# Desc: Run Falcon-512 static KAT + cycle profiling on the CVA6 simulator.
+# Desc: Run Falcon-1024 static KAT + cycle profiling on the CVA6 simulator.
 #       Measures clock cycles for keygen, sign and verify using the
 #       RISC-V mcycle CSR. Results are printed via the simulated UART.
-#       Source: reference PQClean-style Falcon-512 implementation
-#       (codec.c/common.c/fft.c/fpr.c/keygen.c/nist.c/rng.c/shake.c/sign.c/
-#       vrfy.c, unmodified -- no malloc/file I/O/stdio dependencies) plus a
+#       Source: reference PQClean-style Falcon-1024 implementation
+#       (codec.c/common.c/fft.c/fpr.c/keygen.c/nist.c/rng.c/sign.c/vrfy.c,
+#       unmodified -- no malloc/file I/O/stdio dependencies) plus a
 #       bare-metal-adapted main.c (tools/gen_static_test.py's auto-generated
 #       driver, with printf swapped for the simulated UART and mcycle-based
-#       cycle counting added, same pattern as tests/hawk512/main.c).
+#       cycle counting added, same pattern as tests/hawk1024/main.c).
+#       SHA-3/SHAKE256 permutations (shake.c) are offloaded to the same
+#       loosely-coupled Keccak AXI accelerator used by tests/hawk1024-opt.
 #
 # Usage:
 #   ./run.sh                - run keygen + sign + verify, cycle count for each
 #   ./run.sh keygen         - keygen only (sign/verify skipped entirely)
 #   ./run.sh sign           - sign only (keygen skipped; KAT pk/sk loaded directly)
 #   ./run.sh verify         - verify only (keygen+sign skipped; KAT pk/sk/sm loaded
-#                              directly) -- use this to collect the reference
-#                              software-only verify cycle count in isolation.
+#                              directly) -- use this to isolate the
+#                              Keccak-accelerated verify cycle count.
 #   ./run.sh all            - explicit alias for the no-argument default
 #
 # ****************************************************************************
@@ -44,20 +46,21 @@ case "$1" in
 esac
 
 # ---- Source files -------------------------------------------------------
-src_main=../../tests/falcon512/main.c
+src_main=../../tests/falcon1024-opt/main.c
 
 src_incs=(
-    # Falcon-512 reference implementation
-    ../../tests/falcon512/codec.c
-    ../../tests/falcon512/common.c
-    ../../tests/falcon512/fft.c
-    ../../tests/falcon512/fpr.c
-    ../../tests/falcon512/keygen.c
-    ../../tests/falcon512/nist.c
-    ../../tests/falcon512/rng.c
-    ../../tests/falcon512/shake.c
-    ../../tests/falcon512/sign.c
-    ../../tests/falcon512/vrfy.c
+    # Falcon-1024 reference implementation
+    ../../tests/falcon1024-opt/codec.c
+    ../../tests/falcon1024-opt/common.c
+    ../../tests/falcon1024-opt/fft.c
+    ../../tests/falcon1024-opt/fpr.c
+    ../../tests/falcon1024-opt/keygen.c
+    ../../tests/falcon1024-opt/nist.c
+    ../../tests/falcon1024-opt/rng.c
+    # SHA-3 / SHAKE256 (process_block offloaded to the Keccak AXI accelerator)
+    ../../tests/falcon1024-opt/shake.c
+    ../../tests/falcon1024-opt/sign.c
+    ../../tests/falcon1024-opt/vrfy.c
 )
 
 src_common=(
@@ -86,7 +89,8 @@ cflags=(
     "${cflags_opt[@]}"
     -I../tests/custom/env       # encoding.h  (CSR macros)
     -I../tests/custom/common    # util.h
-    -I../../tests/falcon512     # api.h, uart.h, test_vectors_512.h, inner.h, fpr.h
+    -I../../tests/falcon1024-opt # api.h, uart.h, test_vectors_1024.h, inner.h, fpr.h
+    -I../../keccak_ip/sw        # keccak_axi.h (register offsets for the AXI accelerator)
 )
 
 # ---- Launch simulation --------------------------------------------------

@@ -11,6 +11,15 @@
 #       driver, with printf swapped for the simulated UART and mcycle-based
 #       cycle counting added, same pattern as tests/hawk1024/main.c).
 #
+# Usage:
+#   ./run.sh                - run keygen + sign + verify, cycle count for each
+#   ./run.sh keygen         - keygen only (sign/verify skipped entirely)
+#   ./run.sh sign           - sign only (keygen skipped; KAT pk/sk loaded directly)
+#   ./run.sh verify         - verify only (keygen+sign skipped; KAT pk/sk/sm loaded
+#                              directly) -- use this to collect the reference
+#                              software-only verify cycle count in isolation.
+#   ./run.sh all            - explicit alias for the no-argument default
+#
 # ****************************************************************************
 
 # Must be run from the CVA6 repository root
@@ -21,6 +30,18 @@ export DV_OPTS="$DV_OPTS --issrun_opts=+time_out=100000000000"
 DV_TARGET=cv64a6_imac_crypto
 export DV_SIMULATORS=veri-testharness
 unset TRACE_FAST
+
+# ---- Phase selection ------------------------------------------------------
+RUN_KEYGEN=1
+RUN_SIGN=1
+RUN_VERIFY=1
+case "$1" in
+    keygen) RUN_SIGN=0;    RUN_VERIFY=0 ;;
+    sign)   RUN_KEYGEN=0;  RUN_VERIFY=0 ;;
+    verify) RUN_KEYGEN=0;  RUN_SIGN=0   ;;
+    all|"") ;;
+    *) echo "Usage: $0 [keygen|sign|verify|all]" >&2; exit 1 ;;
+esac
 
 # ---- Source files -------------------------------------------------------
 src_main=../../tests/falcon1024/main.c
@@ -56,6 +77,9 @@ cflags_opt=(
     -funroll-all-loops
     -finline-functions
     -Wl,-gc-sections
+    -DRUN_KEYGEN=$RUN_KEYGEN
+    -DRUN_SIGN=$RUN_SIGN
+    -DRUN_VERIFY=$RUN_VERIFY
 )
 
 cflags=(

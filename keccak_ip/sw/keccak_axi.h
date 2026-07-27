@@ -208,6 +208,35 @@ extern "C" {
 #define KECCAK_NTT_CTRL_MODE_FIELD \
   ((bitfield_field32_t) { .mask = KECCAK_NTT_CTRL_MODE_MASK, .index = KECCAK_NTT_CTRL_MODE_OFFSET })
 
+// Physical base address of the uint16_t output sample array for the
+// rejection-sampler job (Falcon's Zf(hash_to_point_vartime), common.c)
+#define KECCAK_REJ_X_ADDR_REG_OFFSET 0x158
+
+// Rejection-sampler job parameters, packed to keep the register count small:
+// Q (modulus, bits 15:0), THRESH (rejection bound, bits 31:16), N (accepted-
+// sample target, bits 63:32)
+#define KECCAK_REJ_PARAMS_REG_OFFSET 0x160
+#define KECCAK_REJ_PARAMS_Q_MASK 0xffff
+#define KECCAK_REJ_PARAMS_Q_OFFSET 0
+#define KECCAK_REJ_PARAMS_Q_FIELD \
+  ((bitfield_field32_t) { .mask = KECCAK_REJ_PARAMS_Q_MASK, .index = KECCAK_REJ_PARAMS_Q_OFFSET })
+#define KECCAK_REJ_PARAMS_THRESH_MASK 0xffff
+#define KECCAK_REJ_PARAMS_THRESH_OFFSET 16
+#define KECCAK_REJ_PARAMS_THRESH_FIELD \
+  ((bitfield_field32_t) { .mask = KECCAK_REJ_PARAMS_THRESH_MASK, .index = KECCAK_REJ_PARAMS_THRESH_OFFSET })
+#define KECCAK_REJ_PARAMS_N_MASK 0xffffffff
+#define KECCAK_REJ_PARAMS_N_OFFSET 32
+#define KECCAK_REJ_PARAMS_N_FIELD \
+  ((bitfield_field32_t) { .mask = KECCAK_REJ_PARAMS_N_MASK, .index = KECCAK_REJ_PARAMS_N_OFFSET })
+
+// Rejection-sampler job control and status. Requires the accelerator's
+// DATA[] state to already be hardware-resident and shake_flip()-padded (not
+// yet permuted) for the calling shake context before GO is set -- same
+// precondition as SAMP_CTRL.
+#define KECCAK_REJ_CTRL_REG_OFFSET 0x168
+#define KECCAK_REJ_CTRL_GO_BIT 0
+#define KECCAK_REJ_CTRL_DONE_BIT 1
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

@@ -122,6 +122,31 @@ package keccak_reg_pkg;
   } keccak_reg2hw_ntt_ctrl_reg_t;
 
   typedef struct packed {
+    logic [63:0] q;
+  } keccak_reg2hw_rej_x_addr_reg_t;
+
+  typedef struct packed {
+    struct packed {
+      logic [15:0] q;
+    } q;
+    struct packed {
+      logic [15:0] q;
+    } thresh;
+    struct packed {
+      logic [31:0] q;
+    } n;
+  } keccak_reg2hw_rej_params_reg_t;
+
+  typedef struct packed {
+    struct packed {
+      logic        q;
+    } go;
+    struct packed {
+      logic        q;
+    } done;
+  } keccak_reg2hw_rej_ctrl_reg_t;
+
+  typedef struct packed {
     logic [63:0] d;
     logic        de;
   } keccak_hw2reg_data_mreg_t;
@@ -183,37 +208,52 @@ package keccak_reg_pkg;
     } done;
   } keccak_hw2reg_ntt_ctrl_reg_t;
 
+  typedef struct packed {
+    struct packed {
+      logic        d;
+      logic        de;
+    } go;
+    struct packed {
+      logic        d;
+      logic        de;
+    } done;
+  } keccak_hw2reg_rej_ctrl_reg_t;
+
   // Register -> HW type
   typedef struct packed {
-    keccak_reg2hw_data_mreg_t [24:0] data; // [2201:602]
-    keccak_reg2hw_csreg_reg_t csreg; // [601:600]
-    keccak_reg2hw_job_src_addr_reg_t job_src_addr; // [599:536]
-    keccak_reg2hw_job_src_len_reg_t job_src_len; // [535:504]
-    keccak_reg2hw_job_dst_addr_reg_t job_dst_addr; // [503:440]
-    keccak_reg2hw_job_dst_len_reg_t job_dst_len; // [439:408]
-    keccak_reg2hw_jobctrl_reg_t jobctrl; // [407:396]
-    keccak_reg2hw_samp_t_addr_reg_t samp_t_addr; // [395:332]
-    keccak_reg2hw_samp_x_addr_reg_t samp_x_addr; // [331:268]
-    keccak_reg2hw_samp_bitbase_reg_t samp_bitbase; // [267:252]
-    keccak_reg2hw_samp_nblocks_reg_t samp_nblocks; // [251:236]
-    keccak_reg2hw_samp_ctrl_reg_t samp_ctrl; // [235:234]
-    keccak_reg2hw_samp_sn_reg_t samp_sn; // [233:202]
-    keccak_reg2hw_ntt_a_addr_reg_t ntt_a_addr; // [201:138]
-    keccak_reg2hw_ntt_gm_addr_reg_t ntt_gm_addr; // [137:74]
-    keccak_reg2hw_ntt_logn_reg_t ntt_logn; // [73:69]
-    keccak_reg2hw_ntt_p_val_reg_t ntt_p_val; // [68:37]
-    keccak_reg2hw_ntt_p0i_val_reg_t ntt_p0i_val; // [36:5]
-    keccak_reg2hw_ntt_ctrl_reg_t ntt_ctrl; // [4:0]
+    keccak_reg2hw_data_mreg_t [24:0] data; // [2331:732]
+    keccak_reg2hw_csreg_reg_t csreg; // [731:730]
+    keccak_reg2hw_job_src_addr_reg_t job_src_addr; // [729:666]
+    keccak_reg2hw_job_src_len_reg_t job_src_len; // [665:634]
+    keccak_reg2hw_job_dst_addr_reg_t job_dst_addr; // [633:570]
+    keccak_reg2hw_job_dst_len_reg_t job_dst_len; // [569:538]
+    keccak_reg2hw_jobctrl_reg_t jobctrl; // [537:526]
+    keccak_reg2hw_samp_t_addr_reg_t samp_t_addr; // [525:462]
+    keccak_reg2hw_samp_x_addr_reg_t samp_x_addr; // [461:398]
+    keccak_reg2hw_samp_bitbase_reg_t samp_bitbase; // [397:382]
+    keccak_reg2hw_samp_nblocks_reg_t samp_nblocks; // [381:366]
+    keccak_reg2hw_samp_ctrl_reg_t samp_ctrl; // [365:364]
+    keccak_reg2hw_samp_sn_reg_t samp_sn; // [363:332]
+    keccak_reg2hw_ntt_a_addr_reg_t ntt_a_addr; // [331:268]
+    keccak_reg2hw_ntt_gm_addr_reg_t ntt_gm_addr; // [267:204]
+    keccak_reg2hw_ntt_logn_reg_t ntt_logn; // [203:199]
+    keccak_reg2hw_ntt_p_val_reg_t ntt_p_val; // [198:167]
+    keccak_reg2hw_ntt_p0i_val_reg_t ntt_p0i_val; // [166:135]
+    keccak_reg2hw_ntt_ctrl_reg_t ntt_ctrl; // [134:130]
+    keccak_reg2hw_rej_x_addr_reg_t rej_x_addr; // [129:66]
+    keccak_reg2hw_rej_params_reg_t rej_params; // [65:2]
+    keccak_reg2hw_rej_ctrl_reg_t rej_ctrl; // [1:0]
   } keccak_reg2hw_t;
 
   // HW -> register type
   typedef struct packed {
-    keccak_hw2reg_data_mreg_t [24:0] data; // [1684:60]
-    keccak_hw2reg_csreg_reg_t csreg; // [59:56]
-    keccak_hw2reg_jobctrl_reg_t jobctrl; // [55:39]
-    keccak_hw2reg_samp_ctrl_reg_t samp_ctrl; // [38:35]
-    keccak_hw2reg_samp_sn_reg_t samp_sn; // [34:2]
-    keccak_hw2reg_ntt_ctrl_reg_t ntt_ctrl; // [1:0]
+    keccak_hw2reg_data_mreg_t [24:0] data; // [1688:64]
+    keccak_hw2reg_csreg_reg_t csreg; // [63:60]
+    keccak_hw2reg_jobctrl_reg_t jobctrl; // [59:43]
+    keccak_hw2reg_samp_ctrl_reg_t samp_ctrl; // [42:39]
+    keccak_hw2reg_samp_sn_reg_t samp_sn; // [38:6]
+    keccak_hw2reg_ntt_ctrl_reg_t ntt_ctrl; // [5:4]
+    keccak_hw2reg_rej_ctrl_reg_t rej_ctrl; // [3:0]
   } keccak_hw2reg_t;
 
   // Register offsets
@@ -260,6 +300,9 @@ package keccak_reg_pkg;
   parameter logic [BlockAw-1:0] KECCAK_NTT_P_VAL_OFFSET = 9'h 140;
   parameter logic [BlockAw-1:0] KECCAK_NTT_P0I_VAL_OFFSET = 9'h 148;
   parameter logic [BlockAw-1:0] KECCAK_NTT_CTRL_OFFSET = 9'h 150;
+  parameter logic [BlockAw-1:0] KECCAK_REJ_X_ADDR_OFFSET = 9'h 158;
+  parameter logic [BlockAw-1:0] KECCAK_REJ_PARAMS_OFFSET = 9'h 160;
+  parameter logic [BlockAw-1:0] KECCAK_REJ_CTRL_OFFSET = 9'h 168;
 
   // Register index
   typedef enum int {
@@ -305,11 +348,14 @@ package keccak_reg_pkg;
     KECCAK_NTT_LOGN,
     KECCAK_NTT_P_VAL,
     KECCAK_NTT_P0I_VAL,
-    KECCAK_NTT_CTRL
+    KECCAK_NTT_CTRL,
+    KECCAK_REJ_X_ADDR,
+    KECCAK_REJ_PARAMS,
+    KECCAK_REJ_CTRL
   } keccak_id_e;
 
   // Register width information to check illegal writes
-  parameter logic [3:0] KECCAK_PERMIT [43] = '{
+  parameter logic [3:0] KECCAK_PERMIT [46] = '{
     4'b 1111, // index[ 0] KECCAK_DATA_0
     4'b 1111, // index[ 1] KECCAK_DATA_1
     4'b 1111, // index[ 2] KECCAK_DATA_2
@@ -352,7 +398,10 @@ package keccak_reg_pkg;
     4'b 0001, // index[39] KECCAK_NTT_LOGN
     4'b 1111, // index[40] KECCAK_NTT_P_VAL
     4'b 1111, // index[41] KECCAK_NTT_P0I_VAL
-    4'b 0001  // index[42] KECCAK_NTT_CTRL
+    4'b 0001, // index[42] KECCAK_NTT_CTRL
+    4'b 1111, // index[43] KECCAK_REJ_X_ADDR
+    4'b 1111, // index[44] KECCAK_REJ_PARAMS
+    4'b 0001  // index[45] KECCAK_REJ_CTRL
   };
 
 endpackage

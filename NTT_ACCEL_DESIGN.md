@@ -1001,3 +1001,174 @@ dispatch-cycle breakdowns tables above are drawn from):
 ```
 bash tests/hawk-256-keccak/run.sh   # ~9-10 min
 ```
+
+## PQNTRU paper cross-analysis: SIMD/dual-issue parallelism, shuffling, and twiddle generation (2026-07-26)
+
+Cross-checked against `2024-1754.pdf` ("PQNTRU: Acceleration of NTRU-based
+Schemes via Customized Post-Quantum Processor") at the user's request, to
+see which of their techniques (a tightly-coupled RISC-V core with a
+custom 8/10-lane SIMD ALU and dual-issue pipeline) transfer to our
+architecture (a single-issue CVA6 host dispatching jobs to a
+loosely-coupled MMIO peripheral, `ntt_engine.sv`, with its own AXI
+master). Every claim below was checked against our actual RTL/C sources,
+not assumed by analogy to the paper.
+
+**Verify-relevance triage** (the user's current priority is accelerated
+HAWK/Falcon *verification*, not KeyGen): items #1 and #2 below apply
+directly to the NTT/iNTT calls already on the verify critical path (in
+both `falcon512-opt`/`falcon1024-opt`'s `mq_NTT_hw`/`mq_iNTT_hw` calls,
+currently 61.7%/63.8% of verify per `results.md`, and HAWK verify's own
+`mp_NTT_hw`/`mp_iNTT_hw` calls) — high priority. Item #3 (twiddle
+generation) is confirmed **not** on either verify path (see its section
+below) — KeyGen-only, deliberately deferred; see
+`tests/hawk512-opt/TWIDDLE_GEN_ANALYSIS.md` for that analysis (cycle-cost
+instrumentation is in place but not yet run — deferred along with the
+rest of this item), kept separate so it doesn't clutter this
+verify-focused document.
+
+### 1. Their SIMD/dual-issue parallelism vs. "parallelize via DMA"
+
+The paper's 8/10 concurrent lanes (§3.1.3) are **not** a DMA or bus
+phenomenon: they execute inside the CPU's EX stage on data already
+resident in a tightly-coupled 5×16×64-bit SIMD register file, loaded
+there by ordinary 64/128-bit SIMD load/store instructions issued by the
+core itself. There is no AXI transaction, no external master, for the
+actual butterfly math. We have no analog to that register file or ALU
+replication — replicating it would mean widening CVA6's own pipeline (a
+different, much larger project) or replicating N full butterfly
+datapaths inside `ntt_engine.sv`, each needing its own operand traffic.
+
+The proposal to get similar parallelism by "moving more data via DMA"
+was checked directly against `axi_adapter.sv` (not assumed) and hits two
+separate walls, both inside that shared CVA6 core-cache-subsystem file
+(not our peripheral):
+
+- **Burst (multi-beat) transfers**: already tried and reverted in
+  Revision 1→2 of this engine (see "Batched twiddle reuse and the
+  abandoned burst-DMA attempt" above) — `axi_adapter.sv` zeroes the low
+  `CACHELINE_BYTE_OFFSET` address bits for any non-`SINGLE_REQ`
+  transaction type (built for CVA6's own cache-line-aligned fetches),
+  which silently corrupted our non-cache-aligned batch addresses.
+  Confirmed on real RTL simulation before reverting, not assumed.
+- **Pipelined single-beat transfers** (multiple outstanding `SINGLE_REQ`
+  reads, no burst — a genuinely different mechanism from the above,
+  checked specifically for this analysis since it seemed like it might
+  sidestep the cache-line bug): also blocked, but for a different
+  reason. `axi_adapter.sv` only tracks outstanding **write** count
+  (`outstanding_aw_cnt_q`); the read path sends `SINGLE_REQ` to
+  `WAIT_R_VALID` (singular) and won't accept a new address phase until
+  that one read's data returns. Reads are single-outstanding by
+  construction, burst or not.
+
+Both walls sit in shared, correctness-critical core RTL used by the
+CPU's own LSU — reopening either is the same cost/risk tradeoff that
+motivated abandoning burst DMA the first time, and is not recommended.
+
+**What *is* directly achievable, and matches the paper's actual named
+goal for this problem (§4.2.2, "layer merging" — not SIMD width) is
+purely internal to `ntt_engine.sv`'s own FSM, no bus changes needed.**
+Their baseline problem: writing back every NTT layer to memory and
+reloading for the next layer is wasteful; they keep 2-3 consecutive
+layers' operands resident in registers and write back only once per
+merged group (their Tables 3-6, ~66-78% memory-access reduction). We do
+the same wasteful thing today: `BATCH_ADVANCE` (`ntt_engine.sv`) writes
+every batch back to DRAM at the end of *each* stage, and the next
+stage's `BATCH_INIT`/`LOAD_K1_REQ` reloads everything from scratch — for
+`n=1024` that's 10 full read+write passes over the array per NTT call.
+`k1_batch_q`/`k2_batch_q[0:15]` already hold up to 16 operands on-chip;
+we're discarding that residency at exactly the point (every stage
+boundary) where the paper keeps it. This is real, sizeable, and would
+directly reduce NTT/iNTT's share of verify (currently the single largest
+cost in both Falcon variants). **Not a small tweak, though**: our current
+batch-selection strategy ("16 consecutive `v` for one `u`," chosen for
+twiddle reuse within a single stage) is a different address pattern from
+the paper's cross-stage-valid selection (their Table 3's
+`0, N/8, 2N/8, ..., 7N/8`) and would need its own re-derivation for
+cross-stage validity, not a relabeling of the existing one. This is the
+top candidate from this analysis for a next implementation pass.
+
+### 2. Their shuffling mechanism (§3.1.3, Table 1)
+
+Their shuffle ops solve a problem specific to *their* representation:
+8 coefficients are bit-packed as lanes inside one 320-bit register, and
+when the butterfly distance shrinks below 8 (their Table 4's "last 3
+layers"), the two operands can land in the same physical register at
+different bit offsets, or need realigning across two registers — hence
+`input shuffling`/`output shuffling`/`reverse shuffling` to permute
+lanes before the ALU can act on the correct pairs.
+
+We don't have that problem: `k1_batch_q[0:15]`/`k2_batch_q[0:15]` are
+already an **array of 16 separately-addressed registers**, not packed
+lanes in one word — `triple_idx_q` already does, for free, exactly what
+their shuffle op does at instruction cost: pick which stored element
+pairs with which. A literal "shuffle unit" would be new hardware solving
+a problem this architecture doesn't have, so it is **not** recommended
+for porting as-is.
+
+The underlying *indexing* problem their Table 1/4 encode — "which
+pairing of resident operands is correct changes as you move to the next
+merged layer, and that remapping isn't a simple stride" — **is** real
+and directly relevant if item #1 (layer merging) is pursued: it would
+show up as more complex index arithmetic in `BATCH_INIT`/`MM_STEP`
+(which batch slot pairs with which, per sub-layer, within a merged
+group), not as a new ALU primitive. Their Table 3/4 are worth keeping as
+a reference derivation for that indexing work, even though the
+implementation mechanism differs (index arithmetic vs. bit-permute op).
+
+### 3. Twiddle-factor generation from a primary root (§4.2.3) — confirmed KeyGen-only, not verify
+
+The paper's insight: rather than pre-computing and storing every
+twiddle factor (impractical for HAWK KeyGen's many RNS moduli), store
+just the primary root `ω1` and derive `ω2, ω3, ...` from it via repeated
+modular multiplication, accelerated with SIMD.
+
+Checked directly against our own sources (not assumed):
+
+- **`PRIMES[]`** (`ng_inner.h`/`ng_mp31.c`, 324 entries) already stores
+  exactly the "primary root" the paper describes, as a compile-time
+  constant: `{p, p0i, R2, g, ig, s}` per modulus — `g`/`ig` are
+  precomputed generators. Half of the paper's precondition is already
+  true in our codebase.
+- **The "derive the rest by multiplication" step is already exactly
+  what our software does, entirely unaccelerated.** `mp_mkgm()`'s
+  non-AVX2 path (the one CVA6 actually compiles) is a plain sequential
+  loop: `x1 = mp_montymul(x1, g, p, p0i)` repeated `n` times, storing
+  each result to `gm[REV10[u<<k]]`. `REV10[]`'s actual values were
+  checked (`REV10[1]=512, REV10[2]=256, REV10[3]=768, ...`) — a plain
+  10-bit bit-reversal, which is a free wire permutation in hardware
+  (no ROM needed), not a lookup table.
+- **Confirmed via grep: `mp_mkgm`/`mp_mkgmigm`/`mp_mkigm` are called
+  from 18+ sites across `ng_hawk.c`, `ng_ntru.c`, `ng_poly.c`**, many
+  inside `PRIMES[u]` RNS-prime loops, rebuilding the table from scratch
+  per prime — not a rare cold path within KeyGen.
+- **Confirmed absent from both verify paths**, directly by grep, not
+  inference: `hawk_vrfy.c` has zero calls to `mp_mkgm`/`mp_mkgmigm`.
+  Falcon's `vrfy.c` GM32[]/iGM32[] (the twiddle tables `mq_NTT_hw`/
+  `mq_iNTT_hw` use) are `static const` arrays baked in at build time
+  (generated once, offline, by a one-time call to `mp_mkgmigm()` during
+  development — see `vrfy.c`'s own header comment) — not regenerated at
+  verify runtime either. Neither verify path pays any twiddle-generation
+  cost today.
+
+Because this only matters for KeyGen — outside the user's current
+verify-focused priority — the concrete hardware proposal (a new
+`ntt_engine.sv` job mode reusing the existing multiplier to run this
+same sequential chain and write `gm[]`/`igm[]` to DRAM) is written up
+separately in `tests/hawk512-opt/TWIDDLE_GEN_ANALYSIS.md` (cycle-cost
+instrumentation is in place there but not yet run — a full KeyGen KAT
+run is ~2+ hours of Verilator wall-clock time and was deprioritized
+twice by unrelated environment interruptions), to be picked up in a
+future HAWK-only KeyGen acceleration pass rather than folded into this
+verify-focused document.
+
+### Recommendation
+
+Ranked by the user's stated verify-focused priority: **layer merging
+(#1)** is the strongest candidate for a next pass — real, sizeable
+(paper reports 66-78% memory-access reduction on the analogous problem),
+purely internal to `ntt_engine.sv`, and directly attacks NTT/iNTT's
+currently-dominant share of verify cost, but requires a genuine
+address-generator redesign (not incremental). **Shuffling (#2)** isn't
+something to port as new hardware; its lesson folds into #1's indexing
+work if pursued. **Twiddle generation (#3)** is confirmed KeyGen-only
+and deferred — see the separate README.
