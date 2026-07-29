@@ -1,0 +1,7 @@
+=== KAT 1/1 ===
+-- keygen --
+Cycles: 19438174
+-- sign --
+Cycles: 28900224
+-- verify --
+Cycles: 18030555

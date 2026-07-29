@@ -125,11 +125,15 @@ _start:
   li a1, 1
 1:bgeu a0, a1, 1b
 
-  # give each core 128KB of stack + TLS
+  # give each core 8MB of stack + TLS
+  # modified to 8MB    (23) -- MAYO's opt keygen keeps a single ~840KB
+  #                            scratch buffer (P1+P2+P3 limbs) on the
+  #                            stack for MAYO_5; 128KB overflowed into
+  #                            adjacent .bss/.data and corrupted state.
   # modified to 1MB    (20)
   # modified to 256KB  (18)
   # original was 128KB (17)
-#define STKSHIFT 17 
+#define STKSHIFT 23
   add sp, a0, 1
   sll sp, sp, STKSHIFT
   add sp, sp, tp

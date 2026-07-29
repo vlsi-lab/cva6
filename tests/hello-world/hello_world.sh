@@ -10,7 +10,7 @@ DV_TARGET=cv64a6_imafdc_sv39
 
 export DV_SIMULATORS=veri-testharness
 # export DV_SIMULATORS=spike
-export TRACE_FAST=1
+#export TRACE_FAST=1
 
 cd ./verif/sim
 

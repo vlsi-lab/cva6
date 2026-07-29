@@ -19,7 +19,7 @@ export CVA6_DV_ROOT="$ROOT_PROJECT/verif/env/corev-dv"
 
 
 # Set RISCV toolchain-related variables
-export RISCV="/software/riscv/riscv64-cva6"                           ##@VLSI-Lab Server
+export RISCV="/home/aledolme/tools/riscv64"                           ##@Local
 if [ -z "$RISCV" ]; then
   echo "Error: RISCV variable undefined."
   return
@@ -30,18 +30,11 @@ export LD_LIBRARY_PATH="$RISCV/lib:$LD_LIBRARY_PATH"
 export C_INCLUDE_PATH="$RISCV/include"
 export CPLUS_INCLUDE_PATH="$RISCV/include"
 
-# Auto-detect RISC-V tool name prefix if not explicitly given.
-if [ -z "$CV_SW_PREFIX" ]; then
-    export CV_SW_PREFIX="$(ls -1 $RISCV/bin/riscv* | head -n 1 | rev | cut -d '/' -f 1 | cut -d '-' -f 2- | rev)-"
-fi
-# Default to auto-detected CC name if not explicitly given.
-if [ -z "$RISCV_CC" ]; then
-    export RISCV_CC="$RISCV/bin/${CV_SW_PREFIX}gcc"
-fi
-# Default to auto-detected OBJCOPY name if not explicitly given.
-if [ -z "$RISCV_OBJCOPY" ]; then
-    export RISCV_OBJCOPY="$RISCV/bin/${CV_SW_PREFIX}objcopy"
-fi
+# Always re-derive prefix and tool paths from $RISCV so stale env vars never
+# survive across re-sources with a different RISCV path.
+export CV_SW_PREFIX="$(ls -1 $RISCV/bin/riscv* | head -n 1 | rev | cut -d '/' -f 1 | cut -d '-' -f 2- | rev)-"
+export RISCV_CC="$RISCV/bin/${CV_SW_PREFIX}gcc"
+export RISCV_OBJCOPY="$RISCV/bin/${CV_SW_PREFIX}objcopy"
 
 # Set verilator and spike related variables
 #if [ -z "$VERILATOR_INSTALL_DIR" ]; then
@@ -61,10 +54,10 @@ fi
 # export SPIKE_INSTALL_DIR="$ROOT_PROJECT"/tools/spike
 # export SPIKE_PATH="$SPIKE_INSTALL_DIR"/bin
 
-export VERILATOR_INSTALL_DIR="/software/cva6/verilator-v5.008"        ##@VLSI-Lab Server
-export SPIKE_SRC_DIR="/software/cva6/riscv-isa-sim"                   ##@VLSI-Lab Server
-export SPIKE_INSTALL_DIR="/software/spike/spike"                      ##@VLSI-Lab Server
-export SPIKE_PATH="$SPIKE_INSTALL_DIR/bin"            
+export VERILATOR_INSTALL_DIR="/home/aledolme/tools/verilator-v5.008"  ##@Local
+export SPIKE_SRC_DIR="$ROOT_PROJECT/verif/core-v-verif/vendor/riscv/riscv-isa-sim"
+export SPIKE_INSTALL_DIR="/home/aledolme/tools/spike"                 ##@Local
+export SPIKE_PATH="$SPIKE_INSTALL_DIR/bin"
 
 # Update the PATH to add all the tools
 export PATH="$VERILATOR_INSTALL_DIR/bin:$RISCV/bin:$PATH"

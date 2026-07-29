@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <limits.h>
 #include <sys/signal.h>
 #include "util.h"
@@ -82,6 +83,31 @@ uintptr_t getStats(int counterid)
   return counters[counterid];
 }
 
+// newlib's malloc() calls _sbrk() to grow the heap. Nothing in this bare-metal
+// environment provided one before, so newlib fell back to its default riscv
+// _sbrk, which issues a raw ecall (Linux brk convention) -- unhandled here,
+// it hits the generic trap handler and aborts the test. Back the heap with a
+// static array (placed in .bss, entirely below the runtime stack region that
+// crt.S carves out starting at _end) so malloc/free work standalone.
+//
+// This never reclaims on free() (plain bump allocator), so total usage is
+// the SUM of every malloc'd byte across a whole keygen+sign+verify run, not
+// just the high-water mark. Sized for FAEST's BAVC/VOLE tree allocations
+// (proportional to L, tau; ~1-2MB for FAEST_256F) with generous headroom.
+#define HEAP_SIZE (64 * 1024 * 1024)
+static char heap[HEAP_SIZE] __attribute__((aligned(16)));
+static char *heap_ptr = heap;
+
+void *_sbrk(ptrdiff_t incr)
+{
+  char *prev = heap_ptr;
+  if (heap_ptr + incr > heap + HEAP_SIZE || heap_ptr + incr < heap) {
+    return (void *) -1;
+  }
+  heap_ptr += incr;
+  return prev;
+}
+
 void __attribute__((noreturn)) tohost_exit(uintptr_t code)
 {
   // Simply write PASS/FAIL result into 'tohost'.
@@ -98,8 +124,31 @@ void __attribute__((noreturn)) tohost_exit(uintptr_t code)
   while (1);
 }
 
+static const char *mcause_name(uintptr_t cause)
+{
+  switch (cause) {
+    case 0:  return "instruction address misaligned";
+    case 1:  return "instruction access fault";
+    case 2:  return "illegal instruction";
+    case 3:  return "breakpoint";
+    case 4:  return "load address misaligned";
+    case 5:  return "load access fault";
+    case 6:  return "store/AMO address misaligned";
+    case 7:  return "store/AMO access fault";
+    case 8:  return "ecall from U-mode";
+    case 11: return "ecall from M-mode";
+    case 12: return "instruction page fault";
+    case 13: return "load page fault";
+    case 15: return "store/AMO page fault";
+    default: return "unknown";
+  }
+}
+
 uintptr_t __attribute__((weak)) handle_trap(uintptr_t cause, uintptr_t epc, uintptr_t regs[32])
 {
+  printf("FATAL: unhandled trap: mcause=0x%lx (%s) mepc=0x%lx ra=0x%lx sp=0x%lx\n",
+         (unsigned long) cause, mcause_name(cause), (unsigned long) epc,
+         (unsigned long) regs[1], (unsigned long) regs[2]);
   tohost_exit(1337);
 }
 
