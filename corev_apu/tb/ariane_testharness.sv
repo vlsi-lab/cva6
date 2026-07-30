@@ -414,7 +414,51 @@ module ariane_testharness #(
     //.axi_slave  ( master[ariane_soc::Keccak] )`
     .keccak_intr_o (keccak_irq)
   );
-  
+
+  // FAEST accelerators, ported from cwrash's pug_rv32 SoC (aes_ip/gf2_ip),
+  // same AXI/reggen MMIO peripheral pattern as Keccak above.
+
+  logic aes_irq;
+  ariane_axi_soc::req_slv_t  aes_req;
+  ariane_axi_soc::resp_slv_t aes_resp;
+  `AXI_ASSIGN_TO_REQ(aes_req, master[ariane_soc::Aes])
+  `AXI_ASSIGN_FROM_RESP(master[ariane_soc::Aes], aes_resp)
+  aes_axi_top #(
+      .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH            ),
+      .AXI_DATA_WIDTH ( AXI_DATA_WIDTH               ),
+      .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
+      .AXI_USER_WIDTH ( AXI_USER_WIDTH               ),
+      .axi_req_t ( ariane_axi_soc::req_slv_t ),
+      .axi_rsp_t ( ariane_axi_soc::resp_slv_t )
+  ) i_aes_slv (
+    .clk_i      ( clk_i      ),
+    .rst_ni     ( ndmreset_n ),
+    .test_mode_i( test_en    ),
+    .axi_req_i  ( aes_req    ),
+    .axi_rsp_o  ( aes_resp   ),
+    .aes_intr_o ( aes_irq    )
+  );
+
+  logic gf2_irq;
+  ariane_axi_soc::req_slv_t  gf2_req;
+  ariane_axi_soc::resp_slv_t gf2_resp;
+  `AXI_ASSIGN_TO_REQ(gf2_req, master[ariane_soc::Gf2])
+  `AXI_ASSIGN_FROM_RESP(master[ariane_soc::Gf2], gf2_resp)
+  gf2_axi_top #(
+      .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH            ),
+      .AXI_DATA_WIDTH ( AXI_DATA_WIDTH               ),
+      .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
+      .AXI_USER_WIDTH ( AXI_USER_WIDTH               ),
+      .axi_req_t ( ariane_axi_soc::req_slv_t ),
+      .axi_rsp_t ( ariane_axi_soc::resp_slv_t )
+  ) i_gf2_slv (
+    .clk_i      ( clk_i      ),
+    .rst_ni     ( ndmreset_n ),
+    .test_mode_i( test_en    ),
+    .axi_req_i  ( gf2_req    ),
+    .axi_rsp_o  ( gf2_resp   ),
+    .gf2_intr_o ( gf2_irq    )
+  );
 
 
   // ------------------------------
@@ -532,7 +576,9 @@ module ariane_testharness #(
     '{ idx: ariane_soc::Ethernet, start_addr: ariane_soc::EthernetBase, end_addr: ariane_soc::EthernetBase + ariane_soc::EthernetLength },
     '{ idx: ariane_soc::GPIO,     start_addr: ariane_soc::GPIOBase,     end_addr: ariane_soc::GPIOBase + ariane_soc::GPIOLength         },
     '{ idx: ariane_soc::DRAM,     start_addr: ariane_soc::DRAMBase,     end_addr: ariane_soc::DRAMBase + ariane_soc::DRAMLength         },
-    '{ idx: ariane_soc::Keccak,   start_addr: ariane_soc::KeccakBase,   end_addr: ariane_soc::KeccakBase + ariane_soc::KeccakLength     }
+    '{ idx: ariane_soc::Keccak,   start_addr: ariane_soc::KeccakBase,   end_addr: ariane_soc::KeccakBase + ariane_soc::KeccakLength     },
+    '{ idx: ariane_soc::Aes,      start_addr: ariane_soc::AesBase,      end_addr: ariane_soc::AesBase + ariane_soc::AesLength           },
+    '{ idx: ariane_soc::Gf2,      start_addr: ariane_soc::Gf2Base,      end_addr: ariane_soc::Gf2Base + ariane_soc::Gf2Length           }
   };
 
   localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{

@@ -58,6 +58,21 @@ ${CVA6_REPO_DIR}/corev_apu/register_interface/src/axi_lite_to_reg.sv
 ${CVA6_REPO_DIR}/corev_apu/register_interface/src/axi_to_reg.sv
 ${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_axi_top.sv
 
+// AES-128 forward-encrypt-only IP, and GF(2) multiply-reduce IP -- ported
+// from cwrash's pug_rv32 SoC (aes_enc128_core.v/gf2_mul_core.v), same
+// AXI/reggen MMIO peripheral pattern as Keccak above.
+${CVA6_REPO_DIR}/aes_ip/gen/aes_reg_pkg.sv
+${CVA6_REPO_DIR}/aes_ip/gen/aes_reg_top.sv
+${CVA6_REPO_DIR}/aes_ip/rtl/aes_sbox.v
+${CVA6_REPO_DIR}/aes_ip/rtl/aes_encipher_block.v
+${CVA6_REPO_DIR}/aes_ip/rtl/aes_key_mem_enc128.v
+${CVA6_REPO_DIR}/aes_ip/rtl/aes_enc128_core.v
+${CVA6_REPO_DIR}/aes_ip/rtl/aes_axi_top.sv
+${CVA6_REPO_DIR}/gf2_ip/gen/gf2_reg_pkg.sv
+${CVA6_REPO_DIR}/gf2_ip/gen/gf2_reg_top.sv
+${CVA6_REPO_DIR}/gf2_ip/rtl/gf2_mul_core.v
+${CVA6_REPO_DIR}/gf2_ip/rtl/gf2_axi_top.sv
+
 // Floating point unit
 ${CVA6_REPO_DIR}/core/cvfpu/src/fpnew_pkg.sv
 ${CVA6_REPO_DIR}/core/cvfpu/src/fpnew_cast_multi.sv

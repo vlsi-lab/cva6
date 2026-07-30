@@ -1,0 +1,101 @@
+// AES-128 forward-encrypt-only Accelerator IP
+// Register definition for reggen.py -- mirrors keccak_ip/keccak.hjson's
+// structure/conventions (same reg_iface bus, same regwidth=64, same
+// explicit sw-set/sw-clear CTRL bit convention as keccak's START/DONE).
+// Wraps aes_enc128_core (ported from cwrash/rtl/aes_enc128_core.v -- AES-128
+// only, no decrypt, no 192/256; see that file's header for the scoping
+// rationale, unchanged here).
+{
+  name: "aes",
+  clock_primary: "clk_i",
+  reset_primary: "rst_ni",
+  bus_interfaces: [
+    {
+      protocol: "reg_iface",
+      direction: "device"
+    }
+  ],
+  regwidth: "64",
+  registers: [
+    {
+      multireg: {
+        name: "KEY",
+        desc: "128-bit AES-128 key, word 0 = bytes[0:7] big-endian (MSB-first), word 1 = bytes[8:15] big-endian",
+        count: "2",
+        cname: "key",
+        swaccess: "rw",
+        hwaccess: "hro",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      multireg: {
+        name: "BLOCK",
+        desc: "128-bit input block, word 0 = bytes[0:7] big-endian (MSB-first), word 1 = bytes[8:15] big-endian",
+        count: "2",
+        cname: "block",
+        swaccess: "rw",
+        hwaccess: "hrw",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      multireg: {
+        name: "RESULT",
+        desc: "128-bit result (read-only), word 0 = bytes[0:7] big-endian (MSB-first), word 1 = bytes[8:15] big-endian",
+        count: "2",
+        cname: "result",
+        swaccess: "ro",
+        hwaccess: "hrw",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      name: "CTRL",
+      desc: "Control register -- sw sets a bit to pulse the corresponding operation, then clears it (same explicit set/poll/clear convention as keccak_ip's CSREG.START)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [
+        {
+          bits: "0",
+          name: "INIT",
+          desc: "Pulse: load KEY into the round-key schedule"
+        },
+        {
+          bits: "1",
+          name: "NEXT",
+          desc: "Pulse: encrypt BLOCK under the current schedule"
+        },
+        {
+          bits: "2",
+          name: "CTR_INC",
+          desc: "Paired with NEXT: auto-increment BLOCK[word0]'s low 32 bits (CTR mode, 32-bit little-endian +1) once this encrypt completes, in hardware"
+        }
+      ]
+    },
+    {
+      name: "STATUS",
+      desc: "Status register, hardware-driven, read-only from software",
+      swaccess: "ro",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "0",
+          name: "READY",
+          desc: "Core idle / operation complete"
+        },
+        {
+          bits: "1",
+          name: "VALID",
+          desc: "RESULT holds a freshly-computed value"
+        }
+      ]
+    }
+  ]
+}

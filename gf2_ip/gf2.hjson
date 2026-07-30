@@ -1,0 +1,125 @@
+// GF(2) multiply-reduce Accelerator IP
+// Register definition for reggen.py -- mirrors keccak_ip/keccak.hjson's
+// structure/conventions. Wraps gf2_mul_core (ported from cwrash/rtl/
+// gf2_mul_core.v), instantiated twice (ACC_WIDTH=128 for bf128_mul(), 384
+// for bf384_mul_128_inplace()) same as cwrash/rtl/gf2_mmio.v.
+//
+// regwidth=64 lets each register hold exactly one bf128_t/bf384_t limb
+// (already a uint64_t in software, see fields.h's BF_VALUE/BF384_WORD) --
+// simpler than the original 32-bit-register design in cwrash, which needed
+// two registers per limb.
+{
+  name: "gf2",
+  clock_primary: "clk_i",
+  reset_primary: "rst_ni",
+  bus_interfaces: [
+    {
+      protocol: "reg_iface",
+      direction: "device"
+    }
+  ],
+  regwidth: "64",
+  registers: [
+    {
+      multireg: {
+        name: "LHS128",
+        desc: "128-bit multiplicand for the ACC_WIDTH=128 op (bf128_mul()), one 64-bit limb per word, word 0 = low limb",
+        count: "2",
+        cname: "lhs128",
+        swaccess: "rw",
+        hwaccess: "hro",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      multireg: {
+        name: "LHS384",
+        desc: "384-bit multiplicand for the ACC_WIDTH=384 op (bf384_mul_128_inplace()), one 64-bit limb per word, word 0 = low limb",
+        count: "6",
+        cname: "lhs384",
+        swaccess: "rw",
+        hwaccess: "hro",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      multireg: {
+        name: "RHS",
+        desc: "128-bit multiplier, shared by both ops, one 64-bit limb per word, word 0 = low limb",
+        count: "2",
+        cname: "rhs",
+        swaccess: "rw",
+        hwaccess: "hro",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      multireg: {
+        name: "RES128",
+        desc: "128-bit result (read-only), valid after a mode=0 op, one 64-bit limb per word",
+        count: "2",
+        cname: "res128",
+        swaccess: "ro",
+        hwaccess: "hrw",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      multireg: {
+        name: "RES384",
+        desc: "384-bit result (read-only), valid after a mode=1 op, one 64-bit limb per word",
+        count: "6",
+        cname: "res384",
+        swaccess: "ro",
+        hwaccess: "hrw",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      name: "CTRL",
+      desc: "Control register -- sw sets NEXT to pulse a multiply, then clears it (same explicit set/poll/clear convention as keccak_ip's CSREG.START)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [
+        {
+          bits: "0",
+          name: "NEXT",
+          desc: "Pulse: start a multiply"
+        },
+        {
+          bits: "1",
+          name: "MODE384",
+          desc: "0 = 128x128->128 op (LHS128/RES128), 1 = 384x128->384 op (LHS384/RES384)"
+        }
+      ]
+    },
+    {
+      name: "STATUS",
+      desc: "Status register, hardware-driven, read-only from software",
+      swaccess: "ro",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "0",
+          name: "READY",
+          desc: "Core idle / operation complete"
+        },
+        {
+          bits: "1",
+          name: "VALID",
+          desc: "RES128/RES384 holds a freshly-computed value"
+        }
+      ]
+    }
+  ]
+}
