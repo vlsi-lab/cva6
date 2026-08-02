@@ -68,6 +68,12 @@ module keccak_reg_top #(
   // Define SW related signals
   // Format: <reg>_<field>_{wd|we|qs}
   //        or <reg>_{wd|we|qs} if field == 1 or 0
+  logic ctrl_start_qs;
+  logic ctrl_start_wd;
+  logic ctrl_start_we;
+  logic ctrl_done_qs;
+  logic ctrl_done_wd;
+  logic ctrl_done_we;
   logic [63:0] data_0_qs;
   logic [63:0] data_0_wd;
   logic data_0_we;
@@ -143,14 +149,62 @@ module keccak_reg_top #(
   logic [63:0] data_24_qs;
   logic [63:0] data_24_wd;
   logic data_24_we;
-  logic csreg_start_qs;
-  logic csreg_start_wd;
-  logic csreg_start_we;
-  logic csreg_done_qs;
-  logic csreg_done_wd;
-  logic csreg_done_we;
 
   // Register instances
+  // R[ctrl]: V(False)
+
+  //   F[start]: 0:0
+  prim_subreg #(
+    .DW      (1),
+    .SWACCESS("RW"),
+    .RESVAL  (1'h0)
+  ) u_ctrl_start (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (ctrl_start_we),
+    .wd     (ctrl_start_wd),
+
+    // from internal hardware
+    .de     (hw2reg.ctrl.start.de),
+    .d      (hw2reg.ctrl.start.d ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.ctrl.start.q ),
+
+    // to register interface (read)
+    .qs     (ctrl_start_qs)
+  );
+
+
+  //   F[done]: 1:1
+  prim_subreg #(
+    .DW      (1),
+    .SWACCESS("RW"),
+    .RESVAL  (1'h0)
+  ) u_ctrl_done (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (ctrl_done_we),
+    .wd     (ctrl_done_wd),
+
+    // from internal hardware
+    .de     (hw2reg.ctrl.done.de),
+    .d      (hw2reg.ctrl.done.d ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.ctrl.done.q ),
+
+    // to register interface (read)
+    .qs     (ctrl_done_qs)
+  );
+
+
 
   // Subregister 0 of Multireg data
   // R[data_0]: V(False)
@@ -828,91 +882,37 @@ module keccak_reg_top #(
   );
 
 
-  // R[csreg]: V(False)
-
-  //   F[start]: 0:0
-  prim_subreg #(
-    .DW      (1),
-    .SWACCESS("RW"),
-    .RESVAL  (1'h0)
-  ) u_csreg_start (
-    .clk_i   (clk_i    ),
-    .rst_ni  (rst_ni  ),
-
-    // from register interface
-    .we     (csreg_start_we),
-    .wd     (csreg_start_wd),
-
-    // from internal hardware
-    .de     (hw2reg.csreg.start.de),
-    .d      (hw2reg.csreg.start.d ),
-
-    // to internal hardware
-    .qe     (),
-    .q      (reg2hw.csreg.start.q ),
-
-    // to register interface (read)
-    .qs     (csreg_start_qs)
-  );
-
-
-  //   F[done]: 1:1
-  prim_subreg #(
-    .DW      (1),
-    .SWACCESS("RW"),
-    .RESVAL  (1'h0)
-  ) u_csreg_done (
-    .clk_i   (clk_i    ),
-    .rst_ni  (rst_ni  ),
-
-    // from register interface
-    .we     (csreg_done_we),
-    .wd     (csreg_done_wd),
-
-    // from internal hardware
-    .de     (hw2reg.csreg.done.de),
-    .d      (hw2reg.csreg.done.d ),
-
-    // to internal hardware
-    .qe     (),
-    .q      (reg2hw.csreg.done.q ),
-
-    // to register interface (read)
-    .qs     (csreg_done_qs)
-  );
-
-
 
 
   logic [25:0] addr_hit;
   always_comb begin
     addr_hit = '0;
-    addr_hit[ 0] = (reg_addr == KECCAK_DATA_0_OFFSET);
-    addr_hit[ 1] = (reg_addr == KECCAK_DATA_1_OFFSET);
-    addr_hit[ 2] = (reg_addr == KECCAK_DATA_2_OFFSET);
-    addr_hit[ 3] = (reg_addr == KECCAK_DATA_3_OFFSET);
-    addr_hit[ 4] = (reg_addr == KECCAK_DATA_4_OFFSET);
-    addr_hit[ 5] = (reg_addr == KECCAK_DATA_5_OFFSET);
-    addr_hit[ 6] = (reg_addr == KECCAK_DATA_6_OFFSET);
-    addr_hit[ 7] = (reg_addr == KECCAK_DATA_7_OFFSET);
-    addr_hit[ 8] = (reg_addr == KECCAK_DATA_8_OFFSET);
-    addr_hit[ 9] = (reg_addr == KECCAK_DATA_9_OFFSET);
-    addr_hit[10] = (reg_addr == KECCAK_DATA_10_OFFSET);
-    addr_hit[11] = (reg_addr == KECCAK_DATA_11_OFFSET);
-    addr_hit[12] = (reg_addr == KECCAK_DATA_12_OFFSET);
-    addr_hit[13] = (reg_addr == KECCAK_DATA_13_OFFSET);
-    addr_hit[14] = (reg_addr == KECCAK_DATA_14_OFFSET);
-    addr_hit[15] = (reg_addr == KECCAK_DATA_15_OFFSET);
-    addr_hit[16] = (reg_addr == KECCAK_DATA_16_OFFSET);
-    addr_hit[17] = (reg_addr == KECCAK_DATA_17_OFFSET);
-    addr_hit[18] = (reg_addr == KECCAK_DATA_18_OFFSET);
-    addr_hit[19] = (reg_addr == KECCAK_DATA_19_OFFSET);
-    addr_hit[20] = (reg_addr == KECCAK_DATA_20_OFFSET);
-    addr_hit[21] = (reg_addr == KECCAK_DATA_21_OFFSET);
-    addr_hit[22] = (reg_addr == KECCAK_DATA_22_OFFSET);
-    addr_hit[23] = (reg_addr == KECCAK_DATA_23_OFFSET);
-    addr_hit[24] = (reg_addr == KECCAK_DATA_24_OFFSET);
-    addr_hit[25] = (reg_addr == KECCAK_CSREG_OFFSET);
+    addr_hit[ 0] = (reg_addr == KECCAK_CTRL_OFFSET);
+    addr_hit[ 1] = (reg_addr == KECCAK_DATA_0_OFFSET);
+    addr_hit[ 2] = (reg_addr == KECCAK_DATA_1_OFFSET);
+    addr_hit[ 3] = (reg_addr == KECCAK_DATA_2_OFFSET);
+    addr_hit[ 4] = (reg_addr == KECCAK_DATA_3_OFFSET);
+    addr_hit[ 5] = (reg_addr == KECCAK_DATA_4_OFFSET);
+    addr_hit[ 6] = (reg_addr == KECCAK_DATA_5_OFFSET);
+    addr_hit[ 7] = (reg_addr == KECCAK_DATA_6_OFFSET);
+    addr_hit[ 8] = (reg_addr == KECCAK_DATA_7_OFFSET);
+    addr_hit[ 9] = (reg_addr == KECCAK_DATA_8_OFFSET);
+    addr_hit[10] = (reg_addr == KECCAK_DATA_9_OFFSET);
+    addr_hit[11] = (reg_addr == KECCAK_DATA_10_OFFSET);
+    addr_hit[12] = (reg_addr == KECCAK_DATA_11_OFFSET);
+    addr_hit[13] = (reg_addr == KECCAK_DATA_12_OFFSET);
+    addr_hit[14] = (reg_addr == KECCAK_DATA_13_OFFSET);
+    addr_hit[15] = (reg_addr == KECCAK_DATA_14_OFFSET);
+    addr_hit[16] = (reg_addr == KECCAK_DATA_15_OFFSET);
+    addr_hit[17] = (reg_addr == KECCAK_DATA_16_OFFSET);
+    addr_hit[18] = (reg_addr == KECCAK_DATA_17_OFFSET);
+    addr_hit[19] = (reg_addr == KECCAK_DATA_18_OFFSET);
+    addr_hit[20] = (reg_addr == KECCAK_DATA_19_OFFSET);
+    addr_hit[21] = (reg_addr == KECCAK_DATA_20_OFFSET);
+    addr_hit[22] = (reg_addr == KECCAK_DATA_21_OFFSET);
+    addr_hit[23] = (reg_addr == KECCAK_DATA_22_OFFSET);
+    addr_hit[24] = (reg_addr == KECCAK_DATA_23_OFFSET);
+    addr_hit[25] = (reg_addr == KECCAK_DATA_24_OFFSET);
   end
 
   assign addrmiss = (reg_re || reg_we) ? ~|addr_hit : 1'b0 ;
@@ -948,194 +948,194 @@ module keccak_reg_top #(
                (addr_hit[25] & (|(KECCAK_PERMIT[25] & ~reg_be)))));
   end
 
-  assign data_0_we = addr_hit[0] & reg_we & !reg_error;
+  assign ctrl_start_we = addr_hit[0] & reg_we & !reg_error;
+  assign ctrl_start_wd = reg_wdata[0];
+
+  assign ctrl_done_we = addr_hit[0] & reg_we & !reg_error;
+  assign ctrl_done_wd = reg_wdata[1];
+
+  assign data_0_we = addr_hit[1] & reg_we & !reg_error;
   assign data_0_wd = reg_wdata[63:0];
 
-  assign data_1_we = addr_hit[1] & reg_we & !reg_error;
+  assign data_1_we = addr_hit[2] & reg_we & !reg_error;
   assign data_1_wd = reg_wdata[63:0];
 
-  assign data_2_we = addr_hit[2] & reg_we & !reg_error;
+  assign data_2_we = addr_hit[3] & reg_we & !reg_error;
   assign data_2_wd = reg_wdata[63:0];
 
-  assign data_3_we = addr_hit[3] & reg_we & !reg_error;
+  assign data_3_we = addr_hit[4] & reg_we & !reg_error;
   assign data_3_wd = reg_wdata[63:0];
 
-  assign data_4_we = addr_hit[4] & reg_we & !reg_error;
+  assign data_4_we = addr_hit[5] & reg_we & !reg_error;
   assign data_4_wd = reg_wdata[63:0];
 
-  assign data_5_we = addr_hit[5] & reg_we & !reg_error;
+  assign data_5_we = addr_hit[6] & reg_we & !reg_error;
   assign data_5_wd = reg_wdata[63:0];
 
-  assign data_6_we = addr_hit[6] & reg_we & !reg_error;
+  assign data_6_we = addr_hit[7] & reg_we & !reg_error;
   assign data_6_wd = reg_wdata[63:0];
 
-  assign data_7_we = addr_hit[7] & reg_we & !reg_error;
+  assign data_7_we = addr_hit[8] & reg_we & !reg_error;
   assign data_7_wd = reg_wdata[63:0];
 
-  assign data_8_we = addr_hit[8] & reg_we & !reg_error;
+  assign data_8_we = addr_hit[9] & reg_we & !reg_error;
   assign data_8_wd = reg_wdata[63:0];
 
-  assign data_9_we = addr_hit[9] & reg_we & !reg_error;
+  assign data_9_we = addr_hit[10] & reg_we & !reg_error;
   assign data_9_wd = reg_wdata[63:0];
 
-  assign data_10_we = addr_hit[10] & reg_we & !reg_error;
+  assign data_10_we = addr_hit[11] & reg_we & !reg_error;
   assign data_10_wd = reg_wdata[63:0];
 
-  assign data_11_we = addr_hit[11] & reg_we & !reg_error;
+  assign data_11_we = addr_hit[12] & reg_we & !reg_error;
   assign data_11_wd = reg_wdata[63:0];
 
-  assign data_12_we = addr_hit[12] & reg_we & !reg_error;
+  assign data_12_we = addr_hit[13] & reg_we & !reg_error;
   assign data_12_wd = reg_wdata[63:0];
 
-  assign data_13_we = addr_hit[13] & reg_we & !reg_error;
+  assign data_13_we = addr_hit[14] & reg_we & !reg_error;
   assign data_13_wd = reg_wdata[63:0];
 
-  assign data_14_we = addr_hit[14] & reg_we & !reg_error;
+  assign data_14_we = addr_hit[15] & reg_we & !reg_error;
   assign data_14_wd = reg_wdata[63:0];
 
-  assign data_15_we = addr_hit[15] & reg_we & !reg_error;
+  assign data_15_we = addr_hit[16] & reg_we & !reg_error;
   assign data_15_wd = reg_wdata[63:0];
 
-  assign data_16_we = addr_hit[16] & reg_we & !reg_error;
+  assign data_16_we = addr_hit[17] & reg_we & !reg_error;
   assign data_16_wd = reg_wdata[63:0];
 
-  assign data_17_we = addr_hit[17] & reg_we & !reg_error;
+  assign data_17_we = addr_hit[18] & reg_we & !reg_error;
   assign data_17_wd = reg_wdata[63:0];
 
-  assign data_18_we = addr_hit[18] & reg_we & !reg_error;
+  assign data_18_we = addr_hit[19] & reg_we & !reg_error;
   assign data_18_wd = reg_wdata[63:0];
 
-  assign data_19_we = addr_hit[19] & reg_we & !reg_error;
+  assign data_19_we = addr_hit[20] & reg_we & !reg_error;
   assign data_19_wd = reg_wdata[63:0];
 
-  assign data_20_we = addr_hit[20] & reg_we & !reg_error;
+  assign data_20_we = addr_hit[21] & reg_we & !reg_error;
   assign data_20_wd = reg_wdata[63:0];
 
-  assign data_21_we = addr_hit[21] & reg_we & !reg_error;
+  assign data_21_we = addr_hit[22] & reg_we & !reg_error;
   assign data_21_wd = reg_wdata[63:0];
 
-  assign data_22_we = addr_hit[22] & reg_we & !reg_error;
+  assign data_22_we = addr_hit[23] & reg_we & !reg_error;
   assign data_22_wd = reg_wdata[63:0];
 
-  assign data_23_we = addr_hit[23] & reg_we & !reg_error;
+  assign data_23_we = addr_hit[24] & reg_we & !reg_error;
   assign data_23_wd = reg_wdata[63:0];
 
-  assign data_24_we = addr_hit[24] & reg_we & !reg_error;
+  assign data_24_we = addr_hit[25] & reg_we & !reg_error;
   assign data_24_wd = reg_wdata[63:0];
-
-  assign csreg_start_we = addr_hit[25] & reg_we & !reg_error;
-  assign csreg_start_wd = reg_wdata[0];
-
-  assign csreg_done_we = addr_hit[25] & reg_we & !reg_error;
-  assign csreg_done_wd = reg_wdata[1];
 
   // Read data return
   always_comb begin
     reg_rdata_next = '0;
     unique case (1'b1)
       addr_hit[0]: begin
-        reg_rdata_next[63:0] = data_0_qs;
+        reg_rdata_next[0] = ctrl_start_qs;
+        reg_rdata_next[1] = ctrl_done_qs;
       end
 
       addr_hit[1]: begin
-        reg_rdata_next[63:0] = data_1_qs;
+        reg_rdata_next[63:0] = data_0_qs;
       end
 
       addr_hit[2]: begin
-        reg_rdata_next[63:0] = data_2_qs;
+        reg_rdata_next[63:0] = data_1_qs;
       end
 
       addr_hit[3]: begin
-        reg_rdata_next[63:0] = data_3_qs;
+        reg_rdata_next[63:0] = data_2_qs;
       end
 
       addr_hit[4]: begin
-        reg_rdata_next[63:0] = data_4_qs;
+        reg_rdata_next[63:0] = data_3_qs;
       end
 
       addr_hit[5]: begin
-        reg_rdata_next[63:0] = data_5_qs;
+        reg_rdata_next[63:0] = data_4_qs;
       end
 
       addr_hit[6]: begin
-        reg_rdata_next[63:0] = data_6_qs;
+        reg_rdata_next[63:0] = data_5_qs;
       end
 
       addr_hit[7]: begin
-        reg_rdata_next[63:0] = data_7_qs;
+        reg_rdata_next[63:0] = data_6_qs;
       end
 
       addr_hit[8]: begin
-        reg_rdata_next[63:0] = data_8_qs;
+        reg_rdata_next[63:0] = data_7_qs;
       end
 
       addr_hit[9]: begin
-        reg_rdata_next[63:0] = data_9_qs;
+        reg_rdata_next[63:0] = data_8_qs;
       end
 
       addr_hit[10]: begin
-        reg_rdata_next[63:0] = data_10_qs;
+        reg_rdata_next[63:0] = data_9_qs;
       end
 
       addr_hit[11]: begin
-        reg_rdata_next[63:0] = data_11_qs;
+        reg_rdata_next[63:0] = data_10_qs;
       end
 
       addr_hit[12]: begin
-        reg_rdata_next[63:0] = data_12_qs;
+        reg_rdata_next[63:0] = data_11_qs;
       end
 
       addr_hit[13]: begin
-        reg_rdata_next[63:0] = data_13_qs;
+        reg_rdata_next[63:0] = data_12_qs;
       end
 
       addr_hit[14]: begin
-        reg_rdata_next[63:0] = data_14_qs;
+        reg_rdata_next[63:0] = data_13_qs;
       end
 
       addr_hit[15]: begin
-        reg_rdata_next[63:0] = data_15_qs;
+        reg_rdata_next[63:0] = data_14_qs;
       end
 
       addr_hit[16]: begin
-        reg_rdata_next[63:0] = data_16_qs;
+        reg_rdata_next[63:0] = data_15_qs;
       end
 
       addr_hit[17]: begin
-        reg_rdata_next[63:0] = data_17_qs;
+        reg_rdata_next[63:0] = data_16_qs;
       end
 
       addr_hit[18]: begin
-        reg_rdata_next[63:0] = data_18_qs;
+        reg_rdata_next[63:0] = data_17_qs;
       end
 
       addr_hit[19]: begin
-        reg_rdata_next[63:0] = data_19_qs;
+        reg_rdata_next[63:0] = data_18_qs;
       end
 
       addr_hit[20]: begin
-        reg_rdata_next[63:0] = data_20_qs;
+        reg_rdata_next[63:0] = data_19_qs;
       end
 
       addr_hit[21]: begin
-        reg_rdata_next[63:0] = data_21_qs;
+        reg_rdata_next[63:0] = data_20_qs;
       end
 
       addr_hit[22]: begin
-        reg_rdata_next[63:0] = data_22_qs;
+        reg_rdata_next[63:0] = data_21_qs;
       end
 
       addr_hit[23]: begin
-        reg_rdata_next[63:0] = data_23_qs;
+        reg_rdata_next[63:0] = data_22_qs;
       end
 
       addr_hit[24]: begin
-        reg_rdata_next[63:0] = data_24_qs;
+        reg_rdata_next[63:0] = data_23_qs;
       end
 
       addr_hit[25]: begin
-        reg_rdata_next[0] = csreg_start_qs;
-        reg_rdata_next[1] = csreg_done_qs;
+        reg_rdata_next[63:0] = data_24_qs;
       end
 
       default: begin

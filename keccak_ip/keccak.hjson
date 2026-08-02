@@ -1,6 +1,20 @@
 // Keccak Accelerator IP - Loosely
-// Register definition for reggen.py 
+// Register definition for reggen.py
 // Author: Federico Runco
+//
+// The 1600-bit state lives in exactly one place: this register file's own
+// 25-word DATA multireg. There is no separate copy inside keccak_dp -- the
+// round datapath reads/drives these registers directly during compute
+// (hwaccess: hrw, the same mechanism already used for CTRL.START/DONE), so
+// software gets a plain, dependency-free bulk interface (25 independent
+// 64-bit registers, no indexed streaming, no per-word handshake) while the
+// state still exists in hardware exactly once.
+//
+// Contract: software must not write any DATA[i] register while a
+// permutation is in flight (between START and DONE). prim_subreg_arb's RW
+// arbitration lets a same-cycle software write win over hardware's -- same
+// "don't touch while busy" rule already implied for CTRL.START today,
+// extended to the data registers.
 
 {
   name: "keccak",
@@ -8,28 +22,15 @@
   reset_primary: "rst_ni",
   bus_interfaces: [
     {
-      protocol: "reg_iface", 
-      direction: "device" 
+      protocol: "reg_iface",
+      direction: "device"
     }
   ],
   regwidth: "64",
   registers: [
     {
-      multireg: {
-        name: "DATA",
-        desc: "I/O cryptographic state register of the Keccak AXI Accellerator",
-        count: "25",
-        cname: "data",
-        swaccess: "rw",
-        hwaccess: "hrw",
-        fields: [
-          { bits: "63:0" }
-        ]
-      }
-    },
-    {
-      name: "CSREG",
-      desc: "Control and status register for Keccak AXI Accellerator",
+      name: "CTRL",
+      desc: "Control register for the Keccak AXI Accellerator",
       swaccess: "rw",
       hwaccess: "hrw",
       fields: [
@@ -44,6 +45,18 @@
           desc: "Asserted if permutation is done"
         }
       ]
+    },
+    { multireg: {
+        name: "DATA",
+        desc: "Word i (0-24) of the 1600-bit Keccak state. This is the permutation engine's own working storage -- not a staging/mirror copy -- so it must not be written while a permutation is in flight (between START and DONE).",
+        count: "25",
+        cname: "KECCAK",
+        swaccess: "rw",
+        hwaccess: "hrw",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
     }
   ]
 }

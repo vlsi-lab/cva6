@@ -3,12 +3,15 @@
 // mattia.mirigaldi@polito.com
 
 
+import pkg_keccak::k_state;
+
 module keccak_f (
     input clk,
     input rst_n,  // asynchronous, active-low
     input start_i,
-    input [1599:0] Din, // rate input (XORed before round 0)
-    output [1599:0] Dout,  // full state after 24 rounds
+    input k_state state_i,    // current state, live from the register file
+    output k_state state_o,   // next state to commit into the register file
+    output state_we_o,        // asserted when state_o should be committed this cycle
     output status_d,
     output keccak_intr);
 
@@ -20,12 +23,13 @@ logic start_dp;
     //  Datapath – Keccak-f[1600] permutation
     // --------------------------------------------------------------------
     keccak_dp u_dp (
-        .clk      (clk),
-        .rst_n    (rst_n),
-        .start_i  (start_dp),          // driven by control unit
-        .Din      (Din),
-        .ready_o  (permutation_finish),
-        .Dout     (Dout)
+        .clk          (clk),
+        .rst_n        (rst_n),
+        .start_i      (start_dp),          // driven by control unit
+        .state_i      (state_i),
+        .state_o      (state_o),
+        .state_we_o   (state_we_o),
+        .ready_o      (permutation_finish)
     );
 
     // --------------------------------------------------------------------

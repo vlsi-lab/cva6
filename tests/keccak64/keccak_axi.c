@@ -9,71 +9,44 @@
 
 #define KECCAK_BASE_ADDR 0x50000000
 
+// RISC-V's memory model does not guarantee that MMIO writes/reads to
+// *different* addresses complete in program order without an explicit
+// fence. The 25 DATA[i] registers are mutually independent (no register
+// reads another's value), so writes/reads among them need no fence -- only
+// the two real dependencies (all state loaded before START reads it; the
+// permutation's result visible before it's read back) are fenced.
+#define MMIO_FENCE() asm volatile ("fence" ::: "memory")
+
+// Bulk driver: the register file's own 25 DATA[i] words are the permutation
+// engine's working storage (see keccak_ip/rtl/keccak_axi_top.sv) -- there is
+// no separate copy inside the IP, but each word is still independently
+// addressable, so the whole state can be loaded/read back with plain,
+// unordered 64-bit MMIO accesses. DATA[i] must not be written while a
+// permutation is in flight (between START and DONE).
 static void KeccakF1600_StatePermute(uint64_t *s)
 {
-    uint64_t volatile *cryptoState  = (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_DATA_0_REG_OFFSET);
-    uint64_t volatile *csreg        = (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_CSREG_REG_OFFSET);
+    uint64_t volatile *ctrl = (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_CTRL_REG_OFFSET);
+    uint64_t volatile *data = (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_DATA_0_REG_OFFSET);
 
-    // Copy crypto state to Keccak AXI accelerator
-    cryptoState[0] = s[0];
-    cryptoState[1] = s[1];
-    cryptoState[2] = s[2];
-    cryptoState[3] = s[3];
-    cryptoState[4] = s[4];
-    cryptoState[5] = s[5];
-    cryptoState[6] = s[6];
-    cryptoState[7] = s[7];
-    cryptoState[8] = s[8];
-    cryptoState[9] = s[9];
-    cryptoState[10] = s[10];
-    cryptoState[11] = s[11];
-    cryptoState[12] = s[12];
-    cryptoState[13] = s[13];
-    cryptoState[14] = s[14];
-    cryptoState[15] = s[15];
-    cryptoState[16] = s[16];
-    cryptoState[17] = s[17];
-    cryptoState[18] = s[18];
-    cryptoState[19] = s[19];
-    cryptoState[20] = s[20];
-    cryptoState[21] = s[21];
-    cryptoState[22] = s[22];
-    cryptoState[23] = s[23];
-    cryptoState[24] = s[24];
+    // Load the 25 words of state -- independent addresses, no fence needed.
+    for (int i = 0; i < 25; i++) {
+        data[i] = s[i];
+    }
+    MMIO_FENCE(); // all state must be visible before START triggers a read of it
 
     // Start permutation
-    *csreg |= 1 << KECCAK_CSREG_START_BIT;
+    *ctrl = 1 << KECCAK_CTRL_START_BIT;
+    MMIO_FENCE();
 
     // Wait for permutation and clear start bit at end
-    while (((*csreg) & (1 << KECCAK_CSREG_DONE_BIT)) == 0);
-    *csreg &= ~(1ULL << KECCAK_CSREG_START_BIT);
+    while (((*ctrl) & (1 << KECCAK_CTRL_DONE_BIT)) == 0);
+    *ctrl &= ~(1ULL << KECCAK_CTRL_START_BIT);
+    MMIO_FENCE(); // the permutation's result must be visible before it's read back
 
-    // Copy crypto state from Keccak AXI accellerator
-    s[0] = cryptoState[0];
-    s[1] = cryptoState[1];
-    s[2] = cryptoState[2];
-    s[3] = cryptoState[3];
-    s[4] = cryptoState[4];
-    s[5] = cryptoState[5];
-    s[6] = cryptoState[6];
-    s[7] = cryptoState[7];
-    s[8] = cryptoState[8];
-    s[9] = cryptoState[9];
-    s[10] = cryptoState[10];
-    s[11] = cryptoState[11];
-    s[12] = cryptoState[12];
-    s[13] = cryptoState[13];
-    s[14] = cryptoState[14];
-    s[15] = cryptoState[15];
-    s[16] = cryptoState[16];
-    s[17] = cryptoState[17];
-    s[18] = cryptoState[18];
-    s[19] = cryptoState[19];
-    s[20] = cryptoState[20];
-    s[21] = cryptoState[21];
-    s[22] = cryptoState[22];
-    s[23] = cryptoState[23];
-    s[24] = cryptoState[24];
+    // Read the 25 result words -- independent addresses, no fence needed.
+    for (int i = 0; i < 25; i++) {
+        s[i] = data[i];
+    }
 }
 
 int main(){

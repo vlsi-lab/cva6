@@ -1,6 +1,14 @@
 // Keccak Accelerator IP - Loosely
-// Top module description for the AXI accellerator 
+// Top module description for the AXI accellerator
 // Author: Federico Runco
+//
+// Bulk register interface: CTRL (start/done) + 25 independent DATA[i]
+// registers, one per 64-bit state word. The register file's own DATA
+// multireg *is* the permutation engine's working storage -- keccak_dp holds
+// no internal copy, it reads/drives these registers directly every round
+// via state_i/state_o/state_we_o. So there is still exactly one 1600-bit
+// storage location, while software gets a plain, dependency-free bulk
+// interface (no indexed streaming, no per-word handshake).
 
 `ifdef SYNTHESIS
 	`include "./register_interface/typedef.svh"
@@ -10,7 +18,7 @@
 	`include "/register_interface/assign.svh"
 `endif
 
-module keccak_axi_top 
+module keccak_axi_top
 	import pkg_keccak::*;
 #(
 	parameter int unsigned AXI_ADDR_WIDTH = 64,
@@ -56,12 +64,10 @@ module keccak_axi_top
 		.testmode_i(test_mode_i),
 		.axi_req_i(axi_req_i),
 		.axi_rsp_o(axi_rsp_o),
-		.reg_req_o(reg_req_i), 
+		.reg_req_o(reg_req_i),
 		.reg_rsp_i(reg_rsp_o)
 	);
 
-
-	logic[1599:0] keccak_din, keccak_dout;
 
 	keccak_reg_top # (
 		.reg_req_t(reg_req_t),
@@ -78,37 +84,47 @@ module keccak_axi_top
 
 	// Keccak-F CU issues a single clock pulse to signal completion of the permutation,
 	// to make it work during polling mode we need to latch the done signal until the start register bit is cleared
-	logic csreg_start_old, keccak_start, keccak_done;
+	logic ctrl_start_old, keccak_start, keccak_done;
 
 	always_ff @(posedge clk_i or negedge rst_ni) begin
 		if (!rst_ni) begin
-			csreg_start_old <= 1'b0;
+			ctrl_start_old <= 1'b0;
 		end else begin
-			csreg_start_old <= reg_file_to_ip.csreg.start.q;
+			ctrl_start_old <= reg_file_to_ip.ctrl.start.q;
 		end
 	end
-	assign keccak_start = reg_file_to_ip.csreg.start.q & ~csreg_start_old;
-	assign ip_to_reg_file.csreg.done.d = keccak_done;
-	assign ip_to_reg_file.csreg.done.de = keccak_done;
+	assign keccak_start = reg_file_to_ip.ctrl.start.q & ~ctrl_start_old;
+	assign ip_to_reg_file.ctrl.done.d = keccak_done;
+	assign ip_to_reg_file.ctrl.done.de = keccak_done;
 
-	keccak_f i_keccak (
-		.clk(clk_i),
-		.rst_n(rst_ni),
-		.start_i(keccak_start),
-		.Din(keccak_din),
-		.Dout(keccak_dout),
-		.status_d(keccak_done),
-		.keccak_intr(keccak_intr_o)
-	);
+	// START is software-owned only -- hardware never writes it back.
+	assign ip_to_reg_file.ctrl.start.d = 1'b0;
+	assign ip_to_reg_file.ctrl.start.de = 1'b0;
 
-	assign keccak_din = reg_file_to_ip.data;
+	// Pack/unpack between the register file's 25 independent DATA[i] words
+	// and keccak_dp's k_state view, using the same w -> (y,x) = (w/5, w%5)
+	// convention the old Dout flatten used.
+	k_state state_i, state_o;
+	logic state_we;
 
-	genvar i;
-	generate 
-		for (i=0; i < 25; i++) begin 
-			assign ip_to_reg_file.data[i].d = keccak_dout[(i+1)*64-1 -: 64];
-			assign ip_to_reg_file.data[i].de = keccak_done;
+	genvar gw;
+	generate
+		for (gw = 0; gw < 25; gw++) begin : g_word
+			assign state_i[gw/5][gw%5] = reg_file_to_ip.data[gw].q;
+			assign ip_to_reg_file.data[gw].d  = state_o[gw/5][gw%5];
+			assign ip_to_reg_file.data[gw].de = state_we;
 		end
 	endgenerate
+
+	keccak_f i_keccak (
+		.clk         (clk_i),
+		.rst_n       (rst_ni),
+		.start_i     (keccak_start),
+		.state_i     (state_i),
+		.state_o     (state_o),
+		.state_we_o  (state_we),
+		.status_d    (keccak_done),
+		.keccak_intr (keccak_intr_o)
+	);
 
 endmodule

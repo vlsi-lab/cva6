@@ -1,11 +1,14 @@
 // The Keccak sponge function, designed by Guido Bertoni, Joan Daemen,
-// Michal Peeters and Gilles Van Assche. 
+// Michal Peeters and Gilles Van Assche.
 //
-// keccak_datapath: datapath of keccak core.  
+// keccak_datapath: datapath of keccak core.
 // Designed by Mattia Mirigaldi
 // mattia.mirigaldi@polito.it
-// Keccak-f[1600] permutation datapath. 
-// When you assert start_i with a 1600-bit block on din, the entity runs all 24 rounds and raises ready_o once the permutation is finished.
+// Keccak-f[1600] permutation datapath.
+// No internal state register: state_i is read live from the bus-facing
+// register file (the only 1600-bit storage in the design) and state_o/
+// state_we_o drive it back every round. Asserting start_i runs 24 rounds
+// over whatever state_i currently holds and raises ready_o once finished.
 
 import pkg_keccak::k_state;
 import pkg_keccak::KEC_N;
@@ -15,18 +18,17 @@ import pkg_keccak::OUT_BUF_SIZE;
 module keccak_dp (
     input clk,
     input rst_n,  // asynchronous, active-low
-    input start_i,   // pulse: start a new permutation
-    input [1600-1:0] Din,
-    output ready_o,   // ’1’ when permutation finished
-    output [1600-1:0] Dout);
+    input start_i,   // pulse: start a new permutation over state_i
+    input k_state state_i,    // current state, live from the register file
+    output k_state state_o,   // next state to commit into the register file
+    output state_we_o,        // asserted when state_o should be committed this cycle
+    output ready_o);   // ’1’ when permutation finished / idle
 
 
     //--------------------------------------------------------------------
     //  Internal signals
     //--------------------------------------------------------------------
 
-    k_state               reg_data;       // state register
-    k_state               round_in;
     k_state               round_out;
 
     logic        [4:0]            counter_nr_rounds;
@@ -38,7 +40,7 @@ module keccak_dp (
     //  Sub-blocks
     //--------------------------------------------------------------------
     keccak_round round_map (
-        .Round_in              ( round_in              ),
+        .Round_in              ( state_i               ),
         .Round_constant_signal ( round_constant_signal ),
         .Round_out             ( round_out             )
     );
@@ -48,35 +50,22 @@ module keccak_dp (
         .round_constant_signal_out ( round_constant_signal )
     );
 
-    //--------------------------------------------------------------------
-    //  Flatten reg_data → Dout  (combinational)
-    //--------------------------------------------------------------------
-    genvar y, x, i;
-    generate
-        for (y = 0; y < 5; y++) begin : g_y
-            for (x = 0; x < 5; x++) begin : g_x
-                for (i = 0; i < 64; i++) begin : g_bit
-                    assign Dout[320*y + 64*x + i] = reg_data[y][x][i];
-                end
-            end
-        end
-    endgenerate
+    assign state_o = round_out;
 
     //--------------------------------------------------------------------
-    //  Main FSM / state register
+    //  Control FSM
     //--------------------------------------------------------------------
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             // asynchronous clear
-            reg_data              <= '0;
             counter_nr_rounds     <= '0;
             permutation_computed  <= 1'b1;
             compute_permutation   <= 1'b0;
         end
          else begin
             if (start_i) begin
-                // load zero state and arm the core
-                reg_data              <= '0;
+                // arm the core over state_i (whatever software last loaded
+                // into the register file)
                 counter_nr_rounds     <= '0;
                 compute_permutation   <= 1'b1;
                 permutation_computed  <= 1'b1;
@@ -87,12 +76,10 @@ module keccak_dp (
                     // start round 0
                     counter_nr_rounds      <= 5'b00001;
                     permutation_computed   <= 1'b0;
-                    reg_data               <= round_out;
                 end
                 else begin
                     if ((counter_nr_rounds < 24) && !permutation_computed) begin
                         counter_nr_rounds  <= counter_nr_rounds + 1'b1;
-                        reg_data           <= round_out;
                     end
                     if (counter_nr_rounds == 23) begin
                         permutation_computed <= 1'b1;   // done!
@@ -105,25 +92,13 @@ module keccak_dp (
     end
 
     //--------------------------------------------------------------------
-    //  Build round_in = current_state ⊕ Din  (only while idle)
-    //--------------------------------------------------------------------
-    generate
-        for (y = 0; y < 5; y++) begin : g_y2
-            for (x = 0; x < 5; x++) begin : g_x2
-                for (i = 0; i < 64; i++) begin : g_bit2
-                    // XOR the rate input *only* when permutation_computed == 1
-                    assign round_in[y][x][i] =
-                        reg_data[y][x][i] ^
-                        ( Din[320*y + 64*x + i] & permutation_computed );
-                end
-            end
-        end
-    endgenerate
-
-    //--------------------------------------------------------------------
-    //  Output flag
+    //  Output flags
     //--------------------------------------------------------------------
     assign ready_o = permutation_computed;
 
-endmodule
+    // Commit a round result exactly on the same two conditions that used
+    // to gate the internal reg_data <= round_out non-blocking assignment.
+    assign state_we_o = (compute_permutation && permutation_computed) ||
+                         ((counter_nr_rounds < 24) && !permutation_computed);
 
+endmodule
