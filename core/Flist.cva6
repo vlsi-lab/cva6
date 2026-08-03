@@ -116,9 +116,7 @@ ${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_round.sv
 ${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_dp.sv
 ${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_f.sv
 ${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_dma_ctrl.sv
-${CVA6_REPO_DIR}/keccak_ip/rtl/gauss_sampler.sv
 ${CVA6_REPO_DIR}/keccak_ip/rtl/rej_sampler.sv
-${CVA6_REPO_DIR}/keccak_ip/rtl/fft_gm_rom.sv
 ${CVA6_REPO_DIR}/keccak_ip/rtl/ntt_engine.sv
 +incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/include
 +incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/vendor/lowrisc_opentitan/src/

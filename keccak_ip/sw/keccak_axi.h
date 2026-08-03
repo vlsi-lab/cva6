@@ -126,66 +126,27 @@ extern "C" {
 #define KECCAK_JOBCTRL_DPTR_FIELD \
   ((bitfield_field32_t) { .mask = KECCAK_JOBCTRL_DPTR_MASK, .index = KECCAK_JOBCTRL_DPTR_OFFSET })
 
-// Physical base address of the HAWK sig_gauss() parity byte array t[] (t0
-// followed immediately by t1)
-#define KECCAK_SAMP_T_ADDR_REG_OFFSET 0xf8
-
-// Physical address of the first output sample byte for this job (caller's x
-// + 4*j)
-#define KECCAK_SAMP_X_ADDR_REG_OFFSET 0x100
-
-// Constant added to the per-block sample index before indexing t[] (caller's
-// 4*j)
-#define KECCAK_SAMP_BITBASE_REG_OFFSET 0x108
-#define KECCAK_SAMP_BITBASE_SAMP_BITBASE_MASK 0xffff
-#define KECCAK_SAMP_BITBASE_SAMP_BITBASE_OFFSET 0
-#define KECCAK_SAMP_BITBASE_SAMP_BITBASE_FIELD \
-  ((bitfield_field32_t) { .mask = KECCAK_SAMP_BITBASE_SAMP_BITBASE_MASK, .index = KECCAK_SAMP_BITBASE_SAMP_BITBASE_OFFSET })
-
-// Number of 16-sample/40-byte-squeeze blocks to generate for this job (n/8)
-#define KECCAK_SAMP_NBLOCKS_REG_OFFSET 0x110
-#define KECCAK_SAMP_NBLOCKS_SAMP_NBLOCKS_MASK 0xffff
-#define KECCAK_SAMP_NBLOCKS_SAMP_NBLOCKS_OFFSET 0
-#define KECCAK_SAMP_NBLOCKS_SAMP_NBLOCKS_FIELD \
-  ((bitfield_field32_t) { .mask = KECCAK_SAMP_NBLOCKS_SAMP_NBLOCKS_MASK, .index = KECCAK_SAMP_NBLOCKS_SAMP_NBLOCKS_OFFSET })
-
-// HAWK sig_gauss() hardware CDT sampler job control and status. Requires the
-// accelerator's DATA[] state to already be hardware-resident and
-// shake_flip()-padded (not yet permuted) for the calling shake_context
-// before GO is set.
-#define KECCAK_SAMP_CTRL_REG_OFFSET 0x118
-#define KECCAK_SAMP_CTRL_GO_BIT 0
-#define KECCAK_SAMP_CTRL_DONE_BIT 1
-
-// Accumulated squared norm (sum of r*r) over this job's samples, valid once
-// SAMP_CTRL.DONE is set
-#define KECCAK_SAMP_SN_REG_OFFSET 0x120
-#define KECCAK_SAMP_SN_SAMP_SN_MASK 0xffffffff
-#define KECCAK_SAMP_SN_SAMP_SN_OFFSET 0
-#define KECCAK_SAMP_SN_SAMP_SN_FIELD \
-  ((bitfield_field32_t) { .mask = KECCAK_SAMP_SN_SAMP_SN_MASK, .index = KECCAK_SAMP_SN_SAMP_SN_OFFSET })
-
 // Physical base address of the uint32_t polynomial array a[] (mp_NTT/mp_iNTT
 // operand, updated in place)
-#define KECCAK_NTT_A_ADDR_REG_OFFSET 0x128
+#define KECCAK_NTT_A_ADDR_REG_OFFSET 0xf8
 
 // Physical base address of the uint32_t twiddle table (gm[] for forward
 // NTT_CTRL.MODE=0, igm[] for inverse NTT_CTRL.MODE=1 -- caller points this
 // at whichever mp_mkgm/mp_mkigm table the job needs)
-#define KECCAK_NTT_GM_ADDR_REG_OFFSET 0x130
+#define KECCAK_NTT_GM_ADDR_REG_OFFSET 0x100
 
 // Degree parameter (log2 n; matches mp_NTT/mp_iNTT's logn argument, n = 1 <<
 // logn)
-#define KECCAK_NTT_LOGN_REG_OFFSET 0x138
+#define KECCAK_NTT_LOGN_REG_OFFSET 0x108
 #define KECCAK_NTT_LOGN_NTT_LOGN_MASK 0x1f
 #define KECCAK_NTT_LOGN_NTT_LOGN_OFFSET 0
 #define KECCAK_NTT_LOGN_NTT_LOGN_FIELD \
   ((bitfield_field32_t) { .mask = KECCAK_NTT_LOGN_NTT_LOGN_MASK, .index = KECCAK_NTT_LOGN_NTT_LOGN_OFFSET })
 
-// Modulus p for this job (any HAWK-usable prime -- software supplies it
-// directly, matching mp_NTT/mp_iNTT's own p argument, instead of the
-// accelerator hardcoding a fixed prime table)
-#define KECCAK_NTT_P_VAL_REG_OFFSET 0x140
+// Modulus p for this job (any usable prime -- software supplies it directly,
+// matching mp_NTT/mp_iNTT's own p argument, instead of the accelerator
+// hardcoding a fixed prime table)
+#define KECCAK_NTT_P_VAL_REG_OFFSET 0x110
 #define KECCAK_NTT_P_VAL_NTT_P_VAL_MASK 0xffffffff
 #define KECCAK_NTT_P_VAL_NTT_P_VAL_OFFSET 0
 #define KECCAK_NTT_P_VAL_NTT_P_VAL_FIELD \
@@ -193,29 +154,26 @@ extern "C" {
 
 // p0i = -1/p mod 2^32 for this job, software-precomputed exactly as
 // mp_NTT/mp_iNTT's own p0i argument (e.g. from the PRIMES[] table)
-#define KECCAK_NTT_P0I_VAL_REG_OFFSET 0x148
+#define KECCAK_NTT_P0I_VAL_REG_OFFSET 0x118
 #define KECCAK_NTT_P0I_VAL_NTT_P0I_VAL_MASK 0xffffffff
 #define KECCAK_NTT_P0I_VAL_NTT_P0I_VAL_OFFSET 0
 #define KECCAK_NTT_P0I_VAL_NTT_P0I_VAL_FIELD \
   ((bitfield_field32_t) { .mask = KECCAK_NTT_P0I_VAL_NTT_P0I_VAL_MASK, .index = KECCAK_NTT_P0I_VAL_NTT_P0I_VAL_OFFSET })
 
 // NTT/iNTT accelerator job control and status
-#define KECCAK_NTT_CTRL_REG_OFFSET 0x150
+#define KECCAK_NTT_CTRL_REG_OFFSET 0x120
 #define KECCAK_NTT_CTRL_GO_BIT 0
 #define KECCAK_NTT_CTRL_DONE_BIT 1
-#define KECCAK_NTT_CTRL_MODE_MASK 0x7
-#define KECCAK_NTT_CTRL_MODE_OFFSET 2
-#define KECCAK_NTT_CTRL_MODE_FIELD \
-  ((bitfield_field32_t) { .mask = KECCAK_NTT_CTRL_MODE_MASK, .index = KECCAK_NTT_CTRL_MODE_OFFSET })
+#define KECCAK_NTT_CTRL_MODE_BIT 2
 
 // Physical base address of the uint16_t output sample array for the
 // rejection-sampler job (Falcon's Zf(hash_to_point_vartime), common.c)
-#define KECCAK_REJ_X_ADDR_REG_OFFSET 0x158
+#define KECCAK_REJ_X_ADDR_REG_OFFSET 0x128
 
 // Rejection-sampler job parameters, packed to keep the register count small:
 // Q (modulus, bits 15:0), THRESH (rejection bound, bits 31:16), N (accepted-
 // sample target, bits 63:32)
-#define KECCAK_REJ_PARAMS_REG_OFFSET 0x160
+#define KECCAK_REJ_PARAMS_REG_OFFSET 0x130
 #define KECCAK_REJ_PARAMS_Q_MASK 0xffff
 #define KECCAK_REJ_PARAMS_Q_OFFSET 0
 #define KECCAK_REJ_PARAMS_Q_FIELD \
@@ -231,9 +189,8 @@ extern "C" {
 
 // Rejection-sampler job control and status. Requires the accelerator's
 // DATA[] state to already be hardware-resident and shake_flip()-padded (not
-// yet permuted) for the calling shake context before GO is set -- same
-// precondition as SAMP_CTRL.
-#define KECCAK_REJ_CTRL_REG_OFFSET 0x168
+// yet permuted) for the calling shake context before GO is set.
+#define KECCAK_REJ_CTRL_REG_OFFSET 0x138
 #define KECCAK_REJ_CTRL_GO_BIT 0
 #define KECCAK_REJ_CTRL_DONE_BIT 1
 

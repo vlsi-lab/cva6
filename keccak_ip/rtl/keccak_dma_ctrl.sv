@@ -14,8 +14,8 @@
 //
 // Absorption is byte-at-a-time by design, not word-at-a-time: JOB_SRC_ADDR
 // and JOB_DPTR (the starting offset within the current rate block) are
-// each independently arbitrary byte alignments in real HAWK call sites
-// (e.g. a single-byte counter variable), and a byte-wise engine sidesteps
+// each independently arbitrary byte alignments in real call sites (e.g. a
+// single-byte counter variable), and a byte-wise engine sidesteps
 // all cross-word realignment logic entirely -- simplicity over maximum
 // bus efficiency, so the sponge math stays trivially easy to verify
 // against the NIST reference bit-for-bit.
@@ -70,8 +70,8 @@ module keccak_dma_ctrl #(
     input  logic [AXI_DATA_WIDTH-1:0]   mem_rdata_i
 );
 
-  // SHAKE256 rate: 136 bytes = 17 words -- HAWK's only usage, hardcoded to
-  // keep the absorb engine simple (see keccak_ip design notes).
+  // SHAKE256 rate: 136 bytes = 17 words -- the only rate this IP targets,
+  // hardcoded to keep the absorb engine simple (see keccak_ip design notes).
   localparam int unsigned RateBytes   = 136;
   localparam logic [7:0]  RateBytesL  = 8'(RateBytes);
   localparam logic [4:0]  LastWordIdx = 5'((RateBytes - 1) >> 3);

@@ -107,59 +107,6 @@
       ]
     },
     {
-      name: "SAMP_T_ADDR",
-      desc: "Physical base address of the HAWK sig_gauss() parity byte array t[] (t0 followed immediately by t1)",
-      swaccess: "rw",
-      hwaccess: "hro",
-      fields: [ { bits: "63:0" } ]
-    },
-    {
-      name: "SAMP_X_ADDR",
-      desc: "Physical address of the first output sample byte for this job (caller's x + 4*j)",
-      swaccess: "rw",
-      hwaccess: "hro",
-      fields: [ { bits: "63:0" } ]
-    },
-    {
-      name: "SAMP_BITBASE",
-      desc: "Constant added to the per-block sample index before indexing t[] (caller's 4*j)",
-      swaccess: "rw",
-      hwaccess: "hro",
-      fields: [ { bits: "15:0" } ]
-    },
-    {
-      name: "SAMP_NBLOCKS",
-      desc: "Number of 16-sample/40-byte-squeeze blocks to generate for this job (n/8)",
-      swaccess: "rw",
-      hwaccess: "hro",
-      fields: [ { bits: "15:0" } ]
-    },
-    {
-      name: "SAMP_CTRL",
-      desc: "HAWK sig_gauss() hardware CDT sampler job control and status. Requires the accelerator's DATA[] state to already be hardware-resident and shake_flip()-padded (not yet permuted) for the calling shake_context before GO is set.",
-      swaccess: "rw",
-      hwaccess: "hrw",
-      fields: [
-        {
-          bits: "0",
-          name: "GO",
-          desc: "Start the sampler job"
-        },
-        {
-          bits: "1",
-          name: "DONE",
-          desc: "Asserted if the sampler job is done"
-        }
-      ]
-    },
-    {
-      name: "SAMP_SN",
-      desc: "Accumulated squared norm (sum of r*r) over this job's samples, valid once SAMP_CTRL.DONE is set",
-      swaccess: "ro",
-      hwaccess: "hrw",
-      fields: [ { bits: "31:0" } ]
-    },
-    {
       name: "NTT_A_ADDR",
       desc: "Physical base address of the uint32_t polynomial array a[] (mp_NTT/mp_iNTT operand, updated in place)",
       swaccess: "rw",
@@ -182,7 +129,7 @@
     },
     {
       name: "NTT_P_VAL",
-      desc: "Modulus p for this job (any HAWK-usable prime -- software supplies it directly, matching mp_NTT/mp_iNTT's own p argument, instead of the accelerator hardcoding a fixed prime table)",
+      desc: "Modulus p for this job (any usable prime -- software supplies it directly, matching mp_NTT/mp_iNTT's own p argument, instead of the accelerator hardcoding a fixed prime table)",
       swaccess: "rw",
       hwaccess: "hro",
       fields: [ { bits: "31:0" } ]
@@ -212,9 +159,9 @@
           desc: "Asserted if the job is done"
         },
         {
-          bits: "4:2",
+          bits: "2",
           name: "MODE",
-          desc: "bit0 (reg bit 2): direction, 0 = forward-shaped, 1 = inverse. bit1 (reg bit 3): NTT-family autoadj-reduced-phase variant (mp_NTT_autoadj's post-unfold butterfly stages), only meaningful when bit2=0 and bit0=0. bit2 (reg bit 4): family, 0 = NTT (modular arithmetic), 1 = fixed-point FFT (vect_FFT/vect_iFFT, ng_fxp.c -- shares this engine's address generator and multiplier, see NTT_ACCEL_DESIGN.md's Fixed-point FFT scoping section). Encoding: 000=mp_NTT, 001=mp_iNTT, 010=mp_NTT_autoadj reduced phase, 100=vect_FFT, 101=vect_iFFT.",
+          desc: "Direction: 0 = forward (mp_NTT), 1 = inverse (mp_iNTT).",
           hwaccess: "hro"
         }
       ]
@@ -239,7 +186,7 @@
     },
     {
       name: "REJ_CTRL",
-      desc: "Rejection-sampler job control and status. Requires the accelerator's DATA[] state to already be hardware-resident and shake_flip()-padded (not yet permuted) for the calling shake context before GO is set -- same precondition as SAMP_CTRL.",
+      desc: "Rejection-sampler job control and status. Requires the accelerator's DATA[] state to already be hardware-resident and shake_flip()-padded (not yet permuted) for the calling shake context before GO is set.",
       swaccess: "rw",
       hwaccess: "hrw",
       fields: [

@@ -2,13 +2,11 @@
 // rej_sampler: hardware offload of Falcon's Zf(hash_to_point_vartime)()
 // (common.c) rejection-sampling loop -- squeeze a 16-bit big-endian word,
 // reject if w >= 5*q, else reduce mod q via conditional subtraction, and
-// keep going until n accepted samples have been produced. HAWK has no
-// equivalent pattern anywhere in KeyGen/Sign/Verify (checked directly
-// against ng_mp31.c/ng_fxp.c/hawk_sign.c/hawk_vrfy.c) so this job is
+// keep going until n accepted samples have been produced. This job is
 // currently exercised by Falcon Verify only; the register interface is
 // generic (job_q_i/job_thresh_i are plain per-job values, not a hardwired
-// q=12289) so a future HAWK use is a software integration exercise, not
-// an RTL change.
+// q=12289) so a future scheme with the same rejection-sampling pattern
+// would be a software integration exercise, not an RTL change.
 //
 // This module implements ONLY the inner per-word loop:
 //
@@ -25,19 +23,19 @@
 // software, unchanged: this job assumes the accelerator's DATA[] state is
 // already hardware-resident for the caller's context, with SHAKE's
 // pad10*1 bits already XORed in by shake_flip() but NOT yet permuted
-// (dptr == rate) -- identical precondition to gauss_sampler's job, and to
-// every other resident-squeeze call site in shake.c/sha3.c.
+// (dptr == rate) -- same precondition as every other resident-squeeze
+// call site in shake.c/sha3.c.
 //
 // Squeeze bytes are served one at a time from the resident DATA[] word/
-// lane addressed by blk_off_q (same word_rd_data bus keccak_dma_ctrl and
-// gauss_sampler read), chaining a fresh permutation whenever a 2-byte draw
-// would cross the 136-byte SHAKE256 rate boundary -- this directly mirrors
-// gauss_sampler's BYTE_SERVE state, just with a 2-byte assembly buffer
-// instead of a 40-byte one.
+// lane addressed by blk_off_q (same word_rd_data bus keccak_dma_ctrl
+// reads), chaining a fresh permutation whenever a 2-byte draw would cross
+// the 136-byte SHAKE256 rate boundary -- a byte-serve pattern mirroring
+// keccak_dma_ctrl's own byte-at-a-time absorb engine, just with a 2-byte
+// assembly buffer instead of arbitrary-length absorb.
 //
 // Accepted samples are written one 16-bit halfword at a time to
 // job_x_addr_i + 2*n_done, over the same simple single-outstanding
-// req/gnt/valid memory port keccak_dma_ctrl/gauss_sampler use (never
+// req/gnt/valid memory port keccak_dma_ctrl and ntt_engine use (never
 // active at the same time, so all three are muxed onto one external port
 // in keccak_axi_top). job_x_addr_i is always caller-aligned to an even
 // byte (see the non-cacheable scratch-window convention in
@@ -84,14 +82,14 @@ module rej_sampler #(
     input  logic                        mem_gnt_i,
     input  logic                        mem_valid_i,
     /* verilator lint_off UNUSEDSIGNAL */
-    input  logic [AXI_DATA_WIDTH-1:0]   mem_rdata_i,  // job never reads memory; port kept for bus uniformity with ntt_engine/gauss_sampler in keccak_axi_top's shared mux
+    input  logic [AXI_DATA_WIDTH-1:0]   mem_rdata_i,  // job never reads memory; port kept for bus uniformity with ntt_engine in keccak_axi_top's shared mux
     /* verilator lint_on UNUSEDSIGNAL */
 
     // 1 whenever a job is in progress (for external mem-port arbitration)
     output logic                        busy_o
 );
 
-  // SHAKE256 rate, same as keccak_dma_ctrl/gauss_sampler.
+  // SHAKE256 rate, same as keccak_dma_ctrl.
   localparam int unsigned RateBytes  = 136;
   localparam logic [7:0]  RateBytesL = 8'(RateBytes);
 
@@ -118,10 +116,9 @@ module rej_sampler #(
   logic [7:0]                blk_off_q, blk_off_d;   // position within the current rate block
   logic [7:0]                blk_off_next;           // blk_off_q+1, precomputed for BYTE_SERVE
   // 0/1 = next slot to write (hi/lo); 2 = both slots written (sentinel,
-  // unreachable as a "next slot" value -- needed, exactly as in
-  // gauss_sampler's wider byte_idx_q, so PERM_WAIT can tell "wrapped after
-  // the hi byte, lo byte still needed" (byte_idx_q==1) apart from
-  // "wrapped right after the lo byte, draw already complete"
+  // unreachable as a "next slot" value -- needed so PERM_WAIT can tell
+  // "wrapped after the hi byte, lo byte still needed" (byte_idx_q==1)
+  // apart from "wrapped right after the lo byte, draw already complete"
   // (byte_idx_q==2) instead of both aliasing to the same 1-bit value.
   logic [1:0]                byte_idx_q, byte_idx_d;
   logic                      perm_initial_q, perm_initial_d;

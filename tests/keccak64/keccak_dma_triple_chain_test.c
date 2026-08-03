@@ -1,19 +1,18 @@
 // Keccak Accelerator IP - DMA job engine, multi-chain (>2 permutations)
 // absorb regression test.
 //
-// Bisected root cause of the HAWK-256 KAT "SK mismatch": encode_private()'s
-// SHAKE256(pub) hash (pub_len = 450 bytes = 3 full 136-byte rate blocks
-// plus a 42-byte remainder) came out wrong on hardware, while every other
-// intermediate KeyGen value (f, g, F, G, q00, q01, q11, pub itself) matched
-// the known-good pure-software build bit for bit. Every existing absorb
-// test (keccak_dma_absorb_test.c) only ever crosses ONE rate-block boundary
+// Bisected root cause of a SHAKE256(pub) hash mismatch on hardware
+// (pub_len = 450 bytes = 3 full 136-byte rate blocks plus a 42-byte
+// remainder), while every other intermediate value matched the known-good
+// pure-software build bit for bit. Every existing absorb test
+// (keccak_dma_absorb_test.c) only ever crosses ONE rate-block boundary
 // per job (<=200 bytes absorbed, at most one internal PERM_START/PERM_WAIT
 // chain) -- this reproduces the untested case: a SINGLE job descriptor
-// whose absorb spans three internal chained permutations, exactly as
-// shake_inject() issues it in one shot for a 450-byte input.
+// whose absorb spans three internal chained permutations, exactly as a
+// resident-state shake_inject() issues it in one shot for a 450-byte input.
 //
-// Uses the real 450-byte HAWK-256 public key bytes captured from the
-// failing KAT run, and the independently Python/hashlib-computed
+// Uses a real 450-byte public-key-shaped byte sequence captured from the
+// failing run, and the independently Python/hashlib-computed
 // SHAKE256(pub)[:16] as the reference.
 
 #include "inc/uart.h"
@@ -62,7 +61,7 @@ permute_resident(void)
 	*csreg = 0;
 }
 
-/* the actual 450-byte HAWK-256 public key captured from the failing run */
+/* the actual 450-byte public-key-shaped byte sequence captured from the failing run */
 static const uint8_t pub[450] = {
 	0x1a, 0xa4, 0xe9, 0x65, 0xf7, 0xfa, 0x0e, 0xce, 0x02, 0x90, 0x50, 0xe3,
 	0x24, 0xcc, 0xff, 0x5b, 0x64, 0xa8, 0x1a, 0x06, 0x2f, 0xd5, 0xf2, 0x00,

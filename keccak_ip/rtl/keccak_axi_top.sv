@@ -91,7 +91,6 @@ module keccak_axi_top
 	// to make it work during polling mode we need to latch the done signal until the start register bit is cleared
 	logic csreg_start_old, keccak_start, keccak_done;
 	logic dma_perm_start;
-	logic samp_perm_start;
 	logic rej_perm_start;
 
 	always_ff @(posedge clk_i or negedge rst_ni) begin
@@ -104,12 +103,11 @@ module keccak_axi_top
 	logic csreg_start_rise;
 	assign csreg_start_rise = reg_file_to_ip.csreg.start.q & ~csreg_start_old;
 
-	// four independent triggers share the permutation core: software polling
+	// three independent triggers share the permutation core: software polling
 	// CSREG directly (legacy raw-permute path), the DMA job engine chaining
-	// permutations autonomously as it fills rate blocks, the Gaussian
-	// sampler job chaining permutations as it squeezes rate blocks, and the
-	// rejection sampler job doing the same for its own squeeze loop
-	assign keccak_start = csreg_start_rise | dma_perm_start | samp_perm_start | rej_perm_start;
+	// permutations autonomously as it fills rate blocks, and the rejection
+	// sampler job doing the same for its own squeeze loop
+	assign keccak_start = csreg_start_rise | dma_perm_start | rej_perm_start;
 
 	// csreg.done must only latch when THIS permutation was actually
 	// triggered via CSREG.START -- keccak_done also pulses for
@@ -165,7 +163,7 @@ module keccak_axi_top
 	endgenerate
 
 	// mem master port is a single physical AXI master (wrapped one level up);
-	// the DMA absorb engine and the Gaussian sampler job never run at the
+	// the DMA absorb engine and the other accelerator jobs never run at the
 	// same time (software drives one job at a time), so they are muxed onto
 	// it below rather than needing a second master port through the xbar.
 	logic                        dma_mem_req, dma_mem_we;
@@ -206,53 +204,12 @@ module keccak_axi_top
 	assign ip_to_reg_file.jobctrl.done.d  = keccak_dma_done;
 	assign ip_to_reg_file.jobctrl.done.de = keccak_dma_done;
 
-	// HAWK sig_gauss() CDT hardware sampler job (HAWK-256 only -- see
-	// gauss_sampler.sv header for scope/assumptions).
-	logic                        samp_done, samp_busy;
-	logic [31:0]                 samp_sn;
-	logic                        samp_mem_req, samp_mem_we;
-	logic [AXI_ADDR_WIDTH-1:0]   samp_mem_addr;
-	logic [AXI_DATA_WIDTH-1:0]   samp_mem_wdata;
-	logic [AXI_DATA_WIDTH/8-1:0] samp_mem_be;
-
-	gauss_sampler #(
-		.AXI_ADDR_WIDTH(AXI_ADDR_WIDTH),
-		.AXI_DATA_WIDTH(AXI_DATA_WIDTH)
-	) i_gauss_sampler (
-		.clk_i          (clk_i),
-		.rst_ni         (rst_ni),
-		.job_go_i       (reg_file_to_ip.samp_ctrl.go.q),
-		.job_t_addr_i   (reg_file_to_ip.samp_t_addr.q),
-		.job_x_addr_i   (reg_file_to_ip.samp_x_addr.q),
-		.job_bitbase_i  (reg_file_to_ip.samp_bitbase.q),
-		.job_nblocks_i  (reg_file_to_ip.samp_nblocks.q),
-		.job_done_o     (samp_done),
-		.job_sn_o       (samp_sn),
-		.word_rd_data_i (dma_word_rd_data),
-		.perm_start_o   (samp_perm_start),
-		.perm_done_i    (keccak_done),
-		.mem_req_o      (samp_mem_req),
-		.mem_addr_o     (samp_mem_addr),
-		.mem_we_o       (samp_mem_we),
-		.mem_wdata_o    (samp_mem_wdata),
-		.mem_be_o       (samp_mem_be),
-		.mem_gnt_i      (dma_gnt_i),
-		.mem_valid_i    (dma_valid_i),
-		.mem_rdata_i    (dma_rdata_i),
-		.busy_o         (samp_busy)
-	);
-
-	assign ip_to_reg_file.samp_ctrl.done.d  = samp_done;
-	assign ip_to_reg_file.samp_ctrl.done.de = samp_done;
-	assign ip_to_reg_file.samp_sn.d         = samp_sn;
-	assign ip_to_reg_file.samp_sn.de        = samp_done;
-
 	// mp_NTT()/mp_iNTT() hardware accelerator (see ntt_engine.sv header for
-	// scope/assumptions). Like the Gaussian sampler, it never runs at the
-	// same time as the DMA absorb engine or the sampler itself (software
-	// drives one job at a time), so it is muxed onto the same single mem
-	// master port. It no longer touches the shared DATA[] array at all:
-	// batch staging is dedicated registers inside ntt_engine.sv itself.
+	// scope/assumptions). It never runs at the same time as the DMA absorb
+	// engine (software drives one job at a time), so it is muxed onto the
+	// same single mem master port. It no longer touches the shared DATA[]
+	// array at all: batch staging is dedicated registers inside
+	// ntt_engine.sv itself.
 	logic                        ntt_done, ntt_busy;
 	logic                        ntt_mem_req, ntt_mem_we;
 	logic [AXI_ADDR_WIDTH-1:0]   ntt_mem_addr;
@@ -288,10 +245,10 @@ module keccak_axi_top
 	assign ip_to_reg_file.ntt_ctrl.done.de = ntt_done;
 
 	// Falcon Zf(hash_to_point_vartime)() rejection-sampler job (see
-	// rej_sampler.sv header for scope/assumptions). Like the Gaussian
-	// sampler and the NTT engine, it never runs at the same time as the
-	// other jobs (software drives one job at a time), so it shares the
-	// same single mem master port and permutation trigger.
+	// rej_sampler.sv header for scope/assumptions). Like the NTT engine,
+	// it never runs at the same time as the other jobs (software drives
+	// one job at a time), so it shares the same single mem master port
+	// and permutation trigger.
 	logic                        rej_done, rej_busy;
 	logic                        rej_mem_req, rej_mem_we;
 	logic [AXI_ADDR_WIDTH-1:0]   rej_mem_addr;
@@ -327,11 +284,11 @@ module keccak_axi_top
 	assign ip_to_reg_file.rej_ctrl.done.d  = rej_done;
 	assign ip_to_reg_file.rej_ctrl.done.de = rej_done;
 
-	assign dma_req_o   = ntt_busy ? ntt_mem_req   : (samp_busy ? samp_mem_req   : (rej_busy ? rej_mem_req   : dma_mem_req));
-	assign dma_addr_o  = ntt_busy ? ntt_mem_addr  : (samp_busy ? samp_mem_addr  : (rej_busy ? rej_mem_addr  : dma_mem_addr));
-	assign dma_we_o    = ntt_busy ? ntt_mem_we    : (samp_busy ? samp_mem_we    : (rej_busy ? rej_mem_we    : dma_mem_we));
-	assign dma_wdata_o = ntt_busy ? ntt_mem_wdata : (samp_busy ? samp_mem_wdata : (rej_busy ? rej_mem_wdata : dma_mem_wdata));
-	assign dma_be_o    = ntt_busy ? ntt_mem_be    : (samp_busy ? samp_mem_be    : (rej_busy ? rej_mem_be    : dma_mem_be));
+	assign dma_req_o   = ntt_busy ? ntt_mem_req   : (rej_busy ? rej_mem_req   : dma_mem_req);
+	assign dma_addr_o  = ntt_busy ? ntt_mem_addr  : (rej_busy ? rej_mem_addr  : dma_mem_addr);
+	assign dma_we_o    = ntt_busy ? ntt_mem_we    : (rej_busy ? rej_mem_we    : dma_mem_we);
+	assign dma_wdata_o = ntt_busy ? ntt_mem_wdata : (rej_busy ? rej_mem_wdata : dma_mem_wdata);
+	assign dma_be_o    = ntt_busy ? ntt_mem_be    : (rej_busy ? rej_mem_be    : dma_mem_be);
 
 	genvar i;
 	generate

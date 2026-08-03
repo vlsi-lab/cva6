@@ -3,9 +3,10 @@
 // Exercises the real absorb engine (block chaining, hardware XOR-absorb,
 // pad10*1 padding, and dptr continuation across separate job calls) and
 // checks results against an independently computed Keccak-f1600/SHAKE256
-// reference (Python, validated against hashlib before use). No full HAWK
-// KAT run needed to catch register-map, addressing, or sponge-math bugs
-// here -- this is the fast register-level gate that must pass first.
+// reference (Python, validated against hashlib before use). No full
+// signature-scheme KAT run needed to catch register-map, addressing, or
+// sponge-math bugs here -- this is the fast register-level gate that must
+// pass first.
 
 #include "inc/uart.h"
 #include "encoding.h"
@@ -222,8 +223,8 @@ main()
 	// Test E: the same 136-byte message as Test B, but split across two
 	// separate jobs with dptr continuation (fresh 100 bytes, then a
 	// resumed 36-byte job at dptr=100) -- must reach the identical final
-	// state as the one-shot Test B absorb. This is exactly the pattern
-	// HAWK's real shake_inject call sequence exercises.
+	// state as the one-shot Test B absorb. This is exactly the pattern a
+	// real resident-state shake_inject call sequence exercises.
 	run_job(msg, 100, 1, 0, 0);
 	run_job(msg + 100, 36, 0, 0, 100);
 	for (int i = 0; i < 25; i++) {
@@ -267,9 +268,8 @@ main()
 	printf("Test G (multi-block absorb after simulated evict/restore) done\n");
 
 	// Test H: raw job calls reproducing the exact A1/B1/A2/B2/A3
-	// interleaving sequence used by the software-level interleave test
-	// (tests/hawk-256-keccak/keccak_interleave_test.c), including real
-	// intervening FRESH jobs for "B" that fully overwrite DATA[], with
+	// interleaving sequence used by a software-level interleave test,
+	// including real intervening FRESH jobs for "B" that fully overwrite DATA[], with
 	// explicit evict/restore round trips in between -- isolates whether
 	// this exact sequence is correct at the register level, independent
 	// of the shake_context driver.

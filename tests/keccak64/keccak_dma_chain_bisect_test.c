@@ -3,7 +3,7 @@
 // between them) the hardware can correctly handle: 1 (136 bytes, already
 // covered by keccak_dma_absorb_test.c's Test B), 2 (272 bytes), or 3
 // (450 bytes, known-bad per keccak_dma_triple_chain_test.c). Uses the same
-// 450-byte HAWK-256 public key prefix truncated to each length, with
+// 450-byte public-key-shaped prefix truncated to each length, with
 // independently Python/hashlib-computed SHAKE256(pub[:n])[:16] references.
 
 #include "inc/uart.h"
