@@ -1,0 +1,49 @@
+// SHA3-256 benchmark. Identical source on the software and tightly trees --
+// only the linked fips202.c (and, on tightly, keccak_permute.s) differs, per
+// run.sh. Expected digest computed independently via Python's hashlib.
+
+#include "uart.h"
+#include "encoding.h"
+#include "bench.h"
+#include "fips202.h"
+
+static const uint8_t MSG[43] = {
+    0x54, 0x68, 0x65, 0x20, 0x71, 0x75, 0x69, 0x63, 0x6b, 0x20, 0x62, 0x72,
+    0x6f, 0x77, 0x6e, 0x20, 0x66, 0x6f, 0x78, 0x20, 0x6a, 0x75, 0x6d, 0x70,
+    0x73, 0x20, 0x6f, 0x76, 0x65, 0x72, 0x20, 0x74, 0x68, 0x65, 0x20, 0x6c,
+    0x61, 0x7a, 0x79, 0x20, 0x64, 0x6f, 0x67,
+};
+
+static const uint8_t EXPECTED[32] = {
+    0x69, 0x07, 0x0d, 0xda, 0x01, 0x97, 0x5c, 0x8c, 0x12, 0x0c, 0x3a, 0xad,
+    0xa1, 0xb2, 0x82, 0x39, 0x4e, 0x7f, 0x03, 0x2f, 0xa9, 0xcf, 0x32, 0xf4,
+    0xcb, 0x22, 0x59, 0xa0, 0x89, 0x7d, 0xfc, 0x04,
+};
+
+int main()
+{
+  uint8_t digest[32];
+  int errors = 0;
+  unsigned long cycles, instrs;
+
+  printf("SHA3-256 Benchmark\n");
+
+  BENCH_ENABLE();
+  BENCH_START();
+  sha3_256(digest, MSG, sizeof(MSG));
+  BENCH_READ(cycles, instrs);
+
+  printf("cycles=%lu instrs=%lu\n", cycles, instrs);
+
+  for (int i = 0; i < 32; i++) {
+    if (digest[i] != EXPECTED[i]) {
+      printf("!!! Mismatch at byte %d: expected 0x%02x, got 0x%02x !!!\n", i, EXPECTED[i], digest[i]);
+      errors++;
+    }
+  }
+
+  if (errors == 0) printf("SHA3-256 Benchmark terminated with no errors.\n");
+  else              printf("SHA3-256 Benchmark terminated with %d errors\n", errors);
+
+  return errors;
+}

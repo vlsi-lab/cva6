@@ -69,7 +69,7 @@ set_option enableSV09 yes
 ######################################################################################################
 set_option incdir ../core/include
 set_option incdir ../common/local/util/
-set_option incdir ../keccak_ip/hw
+set_option incdir ../kecc_aes_k_xif/hw
 #~ set_option incdir ../common/local/util
 set_option incdir ../vendor/pulp-platform/axi/include
 set_option incdir ../vendor/pulp-platform/common_cells/src

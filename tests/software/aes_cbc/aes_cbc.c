@@ -1,0 +1,77 @@
+// AES-128-CBC benchmark, 3 blocks: encrypt then decrypt, checked against
+// both the independently-computed ciphertext (Python pycryptodome,
+// Crypto.Cipher.AES MODE_CBC) and the recovered original plaintext.
+// Identical source on the software and tightly trees -- only the linked
+// aes128_block.c implementation differs, per run.sh.
+
+#include <string.h>
+#include "uart.h"
+#include "encoding.h"
+#include "bench.h"
+#include "aes_cbc.h"
+
+static const uint8_t KEY[16] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
+    0x0c, 0x0d, 0x0e, 0x0f,
+};
+
+static const uint8_t IV[16] = {
+    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b,
+    0x0c, 0x0d, 0x0e, 0x0f,
+};
+
+static const uint8_t PT[48] = {
+    0x01, 0x04, 0x07, 0x0a, 0x0d, 0x10, 0x13, 0x16, 0x19, 0x1c, 0x1f, 0x22,
+    0x25, 0x28, 0x2b, 0x2e, 0x31, 0x34, 0x37, 0x3a, 0x3d, 0x40, 0x43, 0x46,
+    0x49, 0x4c, 0x4f, 0x52, 0x55, 0x58, 0x5b, 0x5e, 0x61, 0x64, 0x67, 0x6a,
+    0x6d, 0x70, 0x73, 0x76, 0x79, 0x7c, 0x7f, 0x82, 0x85, 0x88, 0x8b, 0x8e,
+};
+
+static const uint8_t EXPECTED_CT[48] = {
+    0x9a, 0xf2, 0x64, 0xf8, 0xe9, 0xb5, 0xb9, 0x8a, 0xc1, 0x44, 0xba, 0xe0,
+    0x01, 0x28, 0xba, 0x06, 0x28, 0x7f, 0x07, 0x3f, 0x47, 0x92, 0x2b, 0x15,
+    0x3d, 0x18, 0xe8, 0x4d, 0x08, 0x78, 0xda, 0xf8, 0xd7, 0x7a, 0x80, 0xd9,
+    0xb1, 0x2f, 0x26, 0xcc, 0x2f, 0x73, 0xcc, 0x7d, 0x2d, 0xde, 0x8c, 0xe4,
+};
+
+int main()
+{
+  static uint8_t buf[48];
+  int errors = 0;
+  unsigned long enc_cycles, enc_instrs, dec_cycles, dec_instrs;
+
+  printf("AES-128-CBC Benchmark - 3 blocks\n");
+
+  memcpy(buf, PT, sizeof(buf));
+
+  BENCH_ENABLE();
+  BENCH_START();
+  aes128_cbc_encrypt(KEY, IV, buf, 3);
+  BENCH_READ(enc_cycles, enc_instrs);
+
+  for (int i = 0; i < 48; i++) {
+    if (buf[i] != EXPECTED_CT[i]) {
+      printf("!!! Ciphertext mismatch at byte %d: expected 0x%02x, got 0x%02x !!!\n", i, EXPECTED_CT[i], buf[i]);
+      errors++;
+    }
+  }
+
+  BENCH_START();
+  aes128_cbc_decrypt(KEY, IV, buf, 3);
+  BENCH_READ(dec_cycles, dec_instrs);
+
+  for (int i = 0; i < 48; i++) {
+    if (buf[i] != PT[i]) {
+      printf("!!! Decrypted plaintext mismatch at byte %d: expected 0x%02x, got 0x%02x !!!\n", i, PT[i], buf[i]);
+      errors++;
+    }
+  }
+
+  printf("encrypt cycles=%lu instrs=%lu, decrypt cycles=%lu instrs=%lu\n",
+         enc_cycles, enc_instrs, dec_cycles, dec_instrs);
+
+  if (errors == 0) printf("AES-128-CBC Benchmark terminated with no errors.\n");
+  else              printf("AES-128-CBC Benchmark terminated with %d errors\n", errors);
+
+  return errors;
+}

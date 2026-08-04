@@ -92,6 +92,12 @@ module decoder
     output logic is_control_flow_instr_o,
     input debug_from_trigger_i
 );
+  // When the kecc_aes_k_xif coprocessor is configured, the 7 native AES64 decode arms below are
+  // disabled so those instructions fall through to illegal_instr and get offloaded via CV-X-IF
+  // to the coprocessor instead of executing on the native `aes` functional unit (core/aes.sv).
+  // The real Zknd/Zkne opcode encoding is unchanged either way -- only the dispatch target moves.
+  localparam bit AesNativeEn = CVA6Cfg.ZKN && (CVA6Cfg.CoproType != config_pkg::COPRO_KECC_AES_K);
+
   logic illegal_instr;
   logic illegal_instr_bm;
   logic illegal_instr_zic;
@@ -813,7 +819,8 @@ module decoder
                 {
                   7'b001_1001, 3'b000
                 } : begin
-                  if (CVA6Cfg.ZKN) begin
+                  // aes64es: native on the `aes` unit unless offloaded to kecc_aes_k_xif
+                  if (AesNativeEn) begin
                     instruction_o.op = ariane_pkg::AES64ES;  // aes64es
                     instruction_o.fu = AES;
                   end else illegal_instr_bm = 1'b1;
@@ -821,7 +828,8 @@ module decoder
                 {
                   7'b001_1011, 3'b000
                 } : begin
-                  if (CVA6Cfg.ZKN) begin
+                  // aes64esm: native on the `aes` unit unless offloaded to kecc_aes_k_xif
+                  if (AesNativeEn) begin
                     instruction_o.op = ariane_pkg::AES64ESM;  // aes64esm
                     instruction_o.fu = AES;
                   end else illegal_instr_bm = 1'b1;
@@ -829,7 +837,8 @@ module decoder
                 {
                   7'b011_1111, 3'b000
                 } : begin
-                  if (CVA6Cfg.ZKN) begin
+                  // aes64ks2: native on the `aes` unit unless offloaded to kecc_aes_k_xif
+                  if (AesNativeEn) begin
                     instruction_o.op = ariane_pkg::AES64KS2;  // aes64ks2
                     instruction_o.fu = AES;
                   end else illegal_instr_bm = 1'b1;
@@ -893,7 +902,8 @@ module decoder
                 {
                   7'b001_1101, 3'b000
                 } : begin
-                  if (CVA6Cfg.ZKN) begin
+                  // aes64ds: native on the `aes` unit unless offloaded to kecc_aes_k_xif
+                  if (AesNativeEn) begin
                     instruction_o.op = ariane_pkg::AES64DS;  // aes64ds
                     instruction_o.fu = AES;
                   end else illegal_instr_bm = 1'b1;
@@ -901,7 +911,8 @@ module decoder
                 {
                   7'b001_1111, 3'b000
                 } : begin
-                  if (CVA6Cfg.ZKN) begin
+                  // aes64dsm: native on the `aes` unit unless offloaded to kecc_aes_k_xif
+                  if (AesNativeEn) begin
                     instruction_o.op = ariane_pkg::AES64DSM;  // aes64dsm
                     instruction_o.fu = AES;
                   end else illegal_instr_bm = 1'b1;
@@ -1094,10 +1105,12 @@ module decoder
                   instruction_o.op = ariane_pkg::BSETI;
                 else if (CVA6Cfg.ZKN && instr.instr[31:20] == 12'b000010001111)
                   instruction_o.op = ariane_pkg::ZIP;
-                else if (CVA6Cfg.ZKN && instr.instr[31:24] == 8'b00110001) begin
+                else if (AesNativeEn && instr.instr[31:24] == 8'b00110001) begin
+                  // aes64ks1i: native on the `aes` unit unless offloaded to kecc_aes_k_xif
                   instruction_o.op = ariane_pkg::AES64KS1I;
                   instruction_o.fu = AES;
-                end else if (CVA6Cfg.ZKN && instr.instr[31:20] == 12'b001100000000) begin
+                end else if (AesNativeEn && instr.instr[31:20] == 12'b001100000000) begin
+                  // aes64im: native on the `aes` unit unless offloaded to kecc_aes_k_xif
                   instruction_o.op = ariane_pkg::AES64IM;
                   instruction_o.fu = AES;
                 end else if (CVA6Cfg.ZKN && instr.instr[31:20] == 12'b000100000010) begin

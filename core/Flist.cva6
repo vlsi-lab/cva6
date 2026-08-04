@@ -104,12 +104,14 @@ ${CVA6_REPO_DIR}/core/cvxif_compressed_if_driver.sv
 ${CVA6_REPO_DIR}/core/cvxif_issue_register_commit_if_driver.sv
 ${CVA6_REPO_DIR}/core/cvxif_fu.sv
 
-// KECCAK IP
-${CVA6_REPO_DIR}/keccak_ip/hw/include/keccak_xif_instr_pkg.sv
-${CVA6_REPO_DIR}/keccak_ip/hw/keccak_xif_cid.sv
-${CVA6_REPO_DIR}/keccak_ip/hw/keccak_xif_id.sv
-${CVA6_REPO_DIR}/keccak_ip/hw/keccak_xif_ex.sv
-${CVA6_REPO_DIR}/keccak_ip/hw/keccak_xif.sv
+// KECC_AES_K IP (Keccak + AES64)
+${CVA6_REPO_DIR}/kecc_aes_k_xif/hw/include/kecc_aes_k_xif_instr_pkg.sv
+${CVA6_REPO_DIR}/kecc_aes_k_xif/hw/kecc_aes_k_xif_aes_sboxes.sv
+${CVA6_REPO_DIR}/kecc_aes_k_xif/hw/kecc_aes_k_xif_aes_mixcolumns.sv
+${CVA6_REPO_DIR}/kecc_aes_k_xif/hw/kecc_aes_k_xif_aes64.sv
+${CVA6_REPO_DIR}/kecc_aes_k_xif/hw/kecc_aes_k_xif_id.sv
+${CVA6_REPO_DIR}/kecc_aes_k_xif/hw/kecc_aes_k_xif_ex.sv
+${CVA6_REPO_DIR}/kecc_aes_k_xif/hw/kecc_aes_k_xif.sv
 
 // Common Cells
 ${CVA6_REPO_DIR}/vendor/pulp-platform/common_cells/src/cf_math_pkg.sv

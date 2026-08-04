@@ -99,12 +99,14 @@ sources:
       - core/cvxif_issue_register_commit_if_driver.sv
       - core/cvxif_compressed_if_driver.sv
 
-      # Keccak IP
-      - keccak_ip/hw/include/keccak_xif_instr_pkg.sv
-      - keccak_ip/hw/keccak_xif_cid.sv
-      - keccak_ip/hw/keccak_xif_id.sv
-      - keccak_ip/hw/keccak_xif_ex.sv
-      - keccak_ip/hw/keccak_xif.sv
+      # Keccak + AES64 IP (kecc_aes_k_xif)
+      - kecc_aes_k_xif/hw/include/kecc_aes_k_xif_instr_pkg.sv
+      - kecc_aes_k_xif/hw/kecc_aes_k_xif_aes_sboxes.sv
+      - kecc_aes_k_xif/hw/kecc_aes_k_xif_aes_mixcolumns.sv
+      - kecc_aes_k_xif/hw/kecc_aes_k_xif_aes64.sv
+      - kecc_aes_k_xif/hw/kecc_aes_k_xif_id.sv
+      - kecc_aes_k_xif/hw/kecc_aes_k_xif_ex.sv
+      - kecc_aes_k_xif/hw/kecc_aes_k_xif.sv
 
 
       # Tracing
