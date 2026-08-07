@@ -115,6 +115,15 @@ ifndef TARGET_CFG
 	export TARGET_CFG = $(target)
 endif
 
+# Which kecc_aes_k_axi/hw/rtl/vN/ variant core/Flist.cva6 compiles in for the
+# loosely-coupled accelerator (always compiled, only instantiated when the
+# selected TARGET_CFG sets CVA6Cfg.LooseAesEn -- see scripts/select_aes_variant.sh
+# for the AES_VARIANT -> TARGET_CFG/AES_LOOSE_VERSION mapping). Must always resolve
+# to a real vendored directory even for sw/ise builds that never use it.
+ifndef AES_LOOSE_VERSION
+	export AES_LOOSE_VERSION = v2
+endif
+
 # HPDcache directory
 HPDCACHE_DIR ?= $(CVA6_REPO_DIR)/core/cache_subsystem/hpdcache
 export HPDCACHE_DIR
@@ -707,10 +716,26 @@ verilate_command := $(verilator) --no-timing verilator_config.vlt               
                     corev_apu/tb/dpi/remote_bitbang.cc corev_apu/tb/dpi/msim_helper.cc
 
 # User Verilator, at some point in the future this will be auto-generated
+#
+# verilate's actual RTL file set (core/Flist.cva6) is parameterized by
+# ${TARGET_CFG}/${AES_LOOSE_VERSION} env-var substitution done INSIDE Verilator's
+# own -f parsing -- Flist.cva6 itself never changes on disk, so Verilator/Make's
+# ordinary timestamp-based dependency tracking cannot tell that switching
+# TARGET_CFG or AES_LOOSE_VERSION between two invocations means the design
+# actually changed, and will silently reuse a stale $(ver-library)/Variane_testharness
+# built for the previous config. Track what it was last built for and force a
+# clean rebuild whenever that changes.
 verilate:
+	@current_cfg="$(TARGET_CFG)|$(AES_LOOSE_VERSION)"; \
+	stamp_file="$(ver-library)/.last_verilate_config"; \
+	if [ ! -f "$$stamp_file" ] || [ "$$(cat $$stamp_file 2>/dev/null)" != "$$current_cfg" ]; then \
+		echo "[Verilator] TARGET_CFG/AES_LOOSE_VERSION changed to $$current_cfg -- forcing clean rebuild"; \
+		rm -rf $(ver-library); \
+	fi
 	@echo "[Verilator] Building Model$(if $(PROFILE), for Profiling,)"
 	$(verilate_command)
 	cd $(ver-library) && $(MAKE) -j${NUM_JOBS} -f Variane_testharness.mk
+	@mkdir -p $(ver-library) && echo "$(TARGET_CFG)|$(AES_LOOSE_VERSION)" > $(ver-library)/.last_verilate_config
 
 sim-verilator: verilate
 	$(ver-library)/Variane_testharness $(elf_file)
@@ -796,6 +821,7 @@ src_flist = $(shell \
 	    CVA6_REPO_DIR=$(CVA6_REPO_DIR) \
 	    TARGET_CFG=$(TARGET_CFG) \
 	    HPDCACHE_DIR=$(HPDCACHE_DIR) \
+	    AES_LOOSE_VERSION=$(AES_LOOSE_VERSION) \
 	    python3 util/flist_flattener.py core/Flist.cva6)
 fpga_filter := $(addprefix $(root-dir), corev_apu/bootrom/bootrom.sv)
 fpga_filter += $(addprefix $(root-dir), core/include/instr_tracer_pkg.sv)

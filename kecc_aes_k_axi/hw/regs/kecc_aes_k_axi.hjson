@@ -1,0 +1,187 @@
+// kecc_aes_k_axi (v2) - Loosely coupled AXI wrapper for keccak_aes_k_top
+// Register definition for reggen.py
+//
+// keccak_aes_k_top (kecc_aes_k_axi/hw/rtl/v2/keccak_aes_k_top.sv) exposes a
+// two-phase native handshake:
+//   AES:    1. set sel/encdec/keylen, write key, pulse init, poll ready
+//           2. write block, pulse next, poll ready/result_valid, read result
+//   Keccak: 1. set sel, write keccak_din
+//           2. pulse next (init/encdec/keylen ignored), poll ready/keccak_done,
+//              read keccak_dout
+// CTRL.INIT and CTRL.NEXT map 1:1 onto the core's own init/next inputs
+// (rather than inventing a hidden start sequencer) so software's contract
+// stays as close as possible to the core's documented usage. Both are
+// software-owned, level-held bits: the wrapper edge-detects the 0->1
+// transition to produce the single-cycle pulse the core's FSM expects
+// (same "pulse-vs-level" mismatch and the same fix as the sibling
+// keccak-only IP's CTRL.START, see cva6-keccak-loosely/keccak_ip/keccak.hjson).
+//
+// ready/result_valid are level outputs on the core (they stay asserted
+// until the next operation starts), so STATUS.READY/RESULT_VALID are plain
+// hardware-driven mirrors (hwaccess: hwo, always updated) -- no latch
+// needed, software just polls them directly.
+//
+// keccak_done is documented by the core itself as "a genuine one-cycle
+// registered pulse" (see keccak_aes_k_top.sv's keccak_done_reg comment),
+// so STATUS.KECCAK_DONE follows the sibling IP's CTRL.DONE pattern
+// instead: hardware latches it to 1 on the pulse (hwaccess: hrw, de tied
+// to the core's keccak_done port), software clears it by writing 0 before
+// the next Keccak op (same idiom already used by
+// cva6-keccak-loosely/tests/keccak64/keccak_axi.c).
+//
+// KEY0-3 (256-bit key), BLOCK0-1 (128-bit block) are plain software-owned
+// staging registers (hwaccess: hro) -- the core reads them directly through
+// its own key/block input ports, no separate copy exists anywhere.
+//
+// RESULT0-1 (128-bit AES result) are hardware-owned (hwaccess: hwo);
+// they mirror the core's `result` output for as long as `result_valid`
+// is asserted (same "de = level signal" trick as READY/RESULT_VALID: the
+// core holds `result` stable and `result_valid` high across the whole
+// idle period after a block completes, so a continuous hardware write
+// gated by `result_valid` is sufficient, no extra edge-detect needed).
+//
+// KECCAK_DATA0-24 (1600-bit Keccak state, word i = bits [64*i +: 64] of
+// keccak_din/keccak_dout, matching the vendored core's own w=5*y+x lane
+// packing) is a SINGLE shared 25-word bank, not two separate 25-word banks
+// for keccak_din/keccak_dout. Grepping keccak_aes_k_top.sv confirms there
+// is exactly one 1600-bit storage location in the core (`state_reg`):
+//   - keccak_din is never stored internally by the core -- it is only
+//     read combinationally into `din_kstate` and loaded into `state_reg`
+//     on the single cycle `next` pulses (state_load_din), exactly like the
+//     sibling keccak-only core's state_i/state_we_o handshake.
+//   - keccak_dout is a pure continuous combinational mirror of the very
+//     same `state_reg` (`assign keccak_dout[...] = state_reg[gy][gx];`),
+//     not a separate register.
+// So, exactly as in the sibling keccak-only precedent, the register file's
+// own 25-word DATA bank *is* the one piece of storage software needs:
+// write it before pulsing NEXT (feeds keccak_din), and hardware overwrites
+// it with the final permuted state exactly on the keccak_done pulse
+// (captures keccak_dout at completion). Software must not write
+// KECCAK_DATA[i] while a Keccak op is in flight (between NEXT and
+// KECCAK_DONE) -- same rule as the sibling IP's DATA bank.
+
+{
+  name: "kecc_aes_k_axi",
+  clock_primary: "clk_i",
+  reset_primary: "rst_ni",
+  bus_interfaces: [
+    {
+      protocol: "reg_iface",
+      direction: "device"
+    }
+  ],
+  regwidth: "64",
+  registers: [
+    {
+      name: "CTRL",
+      desc: "Control register for the kecc_aes_k_axi (v2) accelerator wrapper",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [
+        {
+          bits: "0",
+          name: "ZEROIZE",
+          desc: "Level-held: scrub state + AES key schedule to 0 while asserted. Takes priority over any in-flight op. Software sets then clears it."
+        },
+        {
+          bits: "1",
+          name: "SEL",
+          desc: "0 = keccak, 1 = aes. Held stable by software across an operation."
+        },
+        {
+          bits: "2",
+          name: "ENCDEC",
+          desc: "AES only: 1 = encrypt, 0 = decrypt. Held stable by software across an operation."
+        },
+        {
+          bits: "3",
+          name: "KEYLEN",
+          desc: "AES only: 0 = 128-bit, 1 = 256-bit. Held stable by software across an operation."
+        },
+        {
+          bits: "4",
+          name: "INIT",
+          desc: "AES only: write 1 to pulse the core's init input (start key schedule), poll STATUS.READY, then write 0 back before the next INIT/NEXT pulse."
+        },
+        {
+          bits: "5",
+          name: "NEXT",
+          desc: "Write 1 to pulse the core's next input (AES: run block, Keccak: start permute), poll STATUS.READY/RESULT_VALID/KECCAK_DONE, then write 0 back before the next INIT/NEXT pulse."
+        }
+      ]
+    },
+    {
+      name: "STATUS",
+      desc: "Status register for the kecc_aes_k_axi (v2) accelerator wrapper",
+      swaccess: "ro",
+      hwaccess: "hwo",
+      fields: [
+        {
+          bits: "0",
+          name: "READY",
+          desc: "Mirrors the core's ready output (1 = idle / operation complete). Level signal, always up to date."
+        },
+        {
+          bits: "1",
+          name: "RESULT_VALID",
+          desc: "AES only: mirrors the core's result_valid output. Level signal, always up to date."
+        },
+        {
+          bits: "2",
+          name: "KECCAK_DONE",
+          swaccess: "rw",
+          hwaccess: "hrw",
+          desc: "Keccak only: latched by hardware on the core's one-cycle keccak_done pulse. Software must write 0 to clear it before the next Keccak op."
+        }
+      ]
+    },
+    { multireg: {
+        name: "KEY",
+        desc: "Word i (0-3) of the 256-bit AES key input, word i = key[64*i +: 64]. AES only. Software-owned staging register, read directly by the core -- do not write while an operation is in flight.",
+        count: "4",
+        cname: "KEY",
+        swaccess: "rw",
+        hwaccess: "hro",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    { multireg: {
+        name: "BLOCK",
+        desc: "Word i (0-1) of the 128-bit AES block input, word i = block[64*i +: 64]. AES only. Software-owned staging register, read directly by the core -- do not write while an operation is in flight.",
+        count: "2",
+        cname: "BLOCK",
+        swaccess: "rw",
+        hwaccess: "hro",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    { multireg: {
+        name: "RESULT",
+        desc: "Word i (0-1) of the 128-bit AES result output, word i = result[64*i +: 64]. AES only. Hardware-driven, mirrors the core's result output for as long as STATUS.RESULT_VALID is asserted.",
+        count: "2",
+        cname: "RESULT",
+        swaccess: "ro",
+        hwaccess: "hwo",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    { multireg: {
+        name: "KECCAK_DATA",
+        desc: "Word i (0-24) of the 1600-bit Keccak state, word i = bits [64*i +: 64] of keccak_din/keccak_dout. This is the core's own working storage (state_reg) -- not a staging/mirror copy -- so it must not be written while a Keccak op is in flight (between NEXT and KECCAK_DONE). Software writes it before pulsing NEXT (feeds keccak_din); hardware overwrites it with the final permuted state on the keccak_done pulse (captures keccak_dout).",
+        count: "25",
+        cname: "KECCAK",
+        swaccess: "rw",
+        hwaccess: "hrw",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    }
+  ]
+}

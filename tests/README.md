@@ -1,14 +1,24 @@
-# Software vs. tightly-coupled coprocessor benchmark suite
+# Software vs. tightly-coupled vs. loosely-coupled accelerator benchmark suite
 
-`tests/software/` and `tests/tightly/` run the **same 11 algorithms** two ways:
+`tests/software/`, `tests/tightly/`, and `tests/loosely/` run the same algorithms three
+ways:
 
 - **`tests/software/`** — pure software, no custom instructions.
-- **`tests/tightly/`** — the same algorithms accelerated by the `kecc_aes_k_xif`
-  tightly-coupled coprocessor (`xor3`/`xandn`/`rxri` for Keccak, `aes64es/esm/ds/dsm/ks2/im/ks1i`
-  for AES64).
+- **`tests/tightly/`** — accelerated by the `kecc_aes_k_xif` tightly-coupled coprocessor
+  (`xor3`/`xandn`/`rxri` for Keccak, `aes64es/esm/ds/dsm/ks2/im/ks1i` for AES64).
+- **`tests/loosely/`** — accelerated by `kecc_aes_k_axi`, a loosely-coupled AXI-mapped
+  peripheral wrapping the `keccak_aes_k_top` core from the `kecc-aes-k` project. Which
+  RTL variant (v2/v3/v4/v5, and for v4/v5 which `SBOX_IMPL`) gets built is a single
+  `AES_VARIANT` flag (see `scripts/select_aes_variant.sh`), not a separate branch per
+  variant — `AES_VARIANT=loose_v2`, `loose_v3`, `loose_v4_serial_rom`, `loose_v4_dp_rom`,
+  `loose_v4_bp`, `loose_v5_serial_rom`, `loose_v5_dp_rom`, `loose_v5_bp` are all built
+  from this one tree. Only `keccak_core`/`aes_core` are ported here so far (the two
+  primitives `keccak_aes_k_top` exposes directly); the other 9 `tightly`/`software` tests
+  are composite algorithms built in software on top of a primitive and still need their
+  driver swapped to `kecc_aes_k_axi`'s MMIO interface.
 
-The directory names are deliberate: a future `tests/loosely/` tree (loosely-coupled
-accelerator variant) is expected to reuse the same 11-test structure.
+The directory names were deliberate from the start: `tests/loosely/` was reserving the
+same 11-test structure `tests/software/`/`tests/tightly/` already use.
 
 Both trees count clock cycles (`mcycle`) and retired instructions (`minstret`) around
 just the benchmarked operation (`common/bench.h`), separately from program startup/UART
@@ -64,6 +74,46 @@ program (which also includes UART output).
 - `aes_core` (key expansion alone) shows the coprocessor's largest *relative* win
   (4.8x cycles, 8.8x instructions) since it's almost entirely S-box/round-constant work
   with very little other overhead to dilute the comparison.
+
+## Results — loosely-coupled (`tests/loosely/`, target `cv64a6_imac_crypto`)
+
+All 16 runs below (8 RTL variants x 2 tests) passed with **zero mismatches**. Unlike
+`tests/tightly/`'s `aes_core` (key expansion only), `tests/loosely/aes_core` benchmarks
+one full AES-128 block encrypt against the FIPS-197 Appendix B vector, since
+`keccak_aes_k_top`'s AXI register map only exposes the final block result, not the
+intermediate round-key schedule — see `tests/loosely/aes_core/aes_core.c`'s header
+comment.
+
+| `AES_VARIANT` | `keccak_core` cycles | `keccak_core` instrs | `aes_core` cycles | `aes_core` instrs |
+|---|---:|---:|---:|---:|
+| `loose_v2` | 3,684 | 2,665 | 743 | 417 |
+| `loose_v3` | 3,664 | 2,665 | 753 | 420 |
+| `loose_v4_serial_rom` | 3,664 | 2,665 | 953 | 480 |
+| `loose_v4_dp_rom` | 3,664 | 2,665 | 953 | 480 |
+| `loose_v4_bp` | 3,664 | 2,665 | 953 | 480 |
+| `loose_v5_serial_rom` | 4,069 | 2,785 | 953 | 480 |
+| `loose_v5_dp_rom` | 4,069 | 2,785 | 953 | 480 |
+| `loose_v5_bp` | 4,069 | 2,785 | 953 | 480 |
+
+**Takeaways:**
+- `keccak_core` cycles/instrs are identical across v3/v4 (all `SBOX_IMPL` choices) —
+  expected, since none of those changes touch the Keccak datapath, only the AES S-box.
+  v5's `keccak_core` cost is higher (4,069 vs. 3,664 cycles, +11%) because v5 replaces
+  the full-width combinational Keccak round with a slice-serial datapath
+  (`keccak_slice_serial.sv`, `PARALLEL_SLICES` bits/cycle) that trades cycles for area —
+  the "smaller serial" tradeoff `kecc-aes-k`'s own `result.md` describes, and this is the
+  first real confirmation it actually executes (not silently falling back to the
+  full-width path) since it produces a *different, still-correct* cycle count.
+- `aes_core` is identical within each version-family (v2/v3 have no `SBOX_IMPL` choice;
+  v4/v5 share the same 953/480 regardless of which S-box backend is selected) — expected,
+  since `SBOX_IMPL` changes the S-box's internal implementation/timing at the
+  sub-instruction level in a way this coarse whole-operation cycle count doesn't resolve;
+  differentiating the three backends needs a cycle-accurate per-round trace or an area
+  comparison (see `kecc-aes-k/result.md`), not this benchmark.
+- v3's AES path costs 10 more cycles than v2's despite v3's whole design point being
+  "cheaper" key expansion (on-the-fly key schedule) — this benchmark does one AES
+  operation (key schedule + one block) so it isn't structured to isolate that win; see
+  `kecc-aes-k/result.md` for the dedicated comparison.
 
 ## Test list
 

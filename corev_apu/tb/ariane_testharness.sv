@@ -508,8 +508,52 @@ module ariane_testharness #(
     '{ idx: ariane_soc::SPI,      start_addr: ariane_soc::SPIBase,      end_addr: ariane_soc::SPIBase + ariane_soc::SPILength           },
     '{ idx: ariane_soc::Ethernet, start_addr: ariane_soc::EthernetBase, end_addr: ariane_soc::EthernetBase + ariane_soc::EthernetLength },
     '{ idx: ariane_soc::GPIO,     start_addr: ariane_soc::GPIOBase,     end_addr: ariane_soc::GPIOBase + ariane_soc::GPIOLength         },
-    '{ idx: ariane_soc::DRAM,     start_addr: ariane_soc::DRAMBase,     end_addr: ariane_soc::DRAMBase + ariane_soc::DRAMLength         }
+    '{ idx: ariane_soc::DRAM,     start_addr: ariane_soc::DRAMBase,     end_addr: ariane_soc::DRAMBase + ariane_soc::DRAMLength         },
+    '{ idx: ariane_soc::KeccAesAxi, start_addr: ariane_soc::KeccAesAxiBase, end_addr: ariane_soc::KeccAesAxiBase + ariane_soc::KeccAesAxiLength }
   };
+
+  // ------------------------------
+  // Loosely-coupled kecc-aes-k AXI accelerator (see kecc_aes_k_axi/). Address-map
+  // entry is always present (xbar port count is compile-time), but only actually
+  // instantiated when CVA6Cfg.LooseAesEn is set (AES_VARIANT=loose_v2/... via
+  // scripts/select_aes_variant.sh) -- otherwise it's a proper AXI decode-error slave,
+  // mirroring the GPIO error-slave pattern above and ariane.sv's gen_COPRO_NONE.
+  // ------------------------------
+  ariane_axi_soc::req_slv_t  loose_aes_req;
+  ariane_axi_soc::resp_slv_t loose_aes_resp;
+  `AXI_ASSIGN_TO_REQ(loose_aes_req, master[ariane_soc::KeccAesAxi])
+  `AXI_ASSIGN_FROM_RESP(master[ariane_soc::KeccAesAxi], loose_aes_resp)
+
+  if (CVA6Cfg.LooseAesEn) begin : gen_loose_aes
+    kecc_aes_k_axi_top #(
+      .AXI_ADDR_WIDTH ( CVA6Cfg.XLEN ),
+      .AXI_DATA_WIDTH ( CVA6Cfg.XLEN ),
+      .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
+      .AXI_USER_WIDTH ( AXI_USER_WIDTH ),
+      .SBOX_IMPL       ( CVA6Cfg.LooseAesSboxImpl       ),
+      .PARALLEL_SLICES ( CVA6Cfg.LooseAesParallelSlices ),
+      .axi_req_t ( ariane_axi_soc::req_slv_t  ),
+      .axi_rsp_t ( ariane_axi_soc::resp_slv_t )
+    ) i_loose_aes_slv (
+      .clk_i        ( clk_i          ),
+      .rst_ni       ( ndmreset_n     ),
+      .test_mode_i  ( test_en        ),
+      .axi_req_i    ( loose_aes_req  ),
+      .axi_rsp_o    ( loose_aes_resp )
+    );
+  end else begin : gen_no_loose_aes
+    axi_err_slv #(
+      .AxiIdWidth ( ariane_axi_soc::IdWidthSlave ),
+      .req_t      ( ariane_axi_soc::req_slv_t    ),
+      .resp_t     ( ariane_axi_soc::resp_slv_t   )
+    ) i_loose_aes_err_slv (
+      .clk_i      ( clk_i          ),
+      .rst_ni     ( ndmreset_n     ),
+      .test_i     ( test_en        ),
+      .slv_req_i  ( loose_aes_req  ),
+      .slv_resp_o ( loose_aes_resp )
+    );
+  end
 
   localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{
     NoSlvPorts: unsigned'(ariane_soc::NrSlaves),

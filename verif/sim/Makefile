@@ -19,6 +19,9 @@ endif
 ifndef TARGET_CFG
 export TARGET_CFG = $(target)
 endif
+ifndef AES_LOOSE_VERSION
+export AES_LOOSE_VERSION = v2
+endif
 
 HPDCACHE_DIR ?= $(CVA6_REPO_DIR)/core/cache_subsystem/hpdcache
 export HPDCACHE_DIR

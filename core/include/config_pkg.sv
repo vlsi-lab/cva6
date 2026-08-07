@@ -57,6 +57,18 @@ package config_pkg;
     COPRO_KECC_AES_K
   } copro_type_t;
 
+  /// Loosely-coupled AXI kecc-aes-k accelerator RTL variant. Selects which
+  /// kecc_aes_k_axi/hw/rtl/vN/ directory a build was compiled against (see
+  /// core/Flist.cva6's ${AES_LOOSE_VERSION}-keyed line) -- this field only
+  /// documents/asserts that choice for the SoC-integration code, it cannot
+  /// itself change which files were compiled in.
+  typedef enum {
+    LOOSE_AES_V2,
+    LOOSE_AES_V3,
+    LOOSE_AES_V4,
+    LOOSE_AES_V5
+  } loose_aes_version_e;
+
   localparam NrMaxRules = 16;
 
   typedef struct packed {
@@ -160,6 +172,14 @@ package config_pkg;
     bit                          CvxifEn;
     // Coprocessor type
     copro_type_t                 CoproType;
+    // Loosely-coupled AXI kecc-aes-k accelerator enable
+    bit                          LooseAesEn;
+    // Loosely-coupled AXI kecc-aes-k accelerator RTL variant
+    loose_aes_version_e          LooseAesVersion;
+    // AES S-box backend (v4/v5 only; ignored otherwise): 0=serial_rom, 1=dp_rom, 2=bp
+    int unsigned                 LooseAesSboxImpl;
+    // Keccak slice-serial datapath width (v5 only; ignored otherwise)
+    int unsigned                 LooseAesParallelSlices;
     // NOC bus type
     noc_type_e                   NOCType;
     // AXI address width
@@ -295,6 +315,10 @@ package config_pkg;
     bit          XFVec;
     bit          CvxifEn;
     copro_type_t CoproType;
+    bit                  LooseAesEn;
+    loose_aes_version_e  LooseAesVersion;
+    int unsigned         LooseAesSboxImpl;
+    int unsigned         LooseAesParallelSlices;
     bit          RVZiCond;
     bit          RVZicntr;
     bit          RVZihpm;

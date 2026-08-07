@@ -113,6 +113,36 @@ ${CVA6_REPO_DIR}/kecc_aes_k_xif/hw/kecc_aes_k_xif_id.sv
 ${CVA6_REPO_DIR}/kecc_aes_k_xif/hw/kecc_aes_k_xif_ex.sv
 ${CVA6_REPO_DIR}/kecc_aes_k_xif/hw/kecc_aes_k_xif.sv
 
+// KECC_AES_K AXI IP (loosely-coupled, see kecc_aes_k_axi/) -- AES_LOOSE_VERSION selects
+// which vendored kecc-aes-k RTL variant is compiled in (v2/v3/v4/v5, see
+// scripts/select_aes_variant.sh). Only one version's keccak_aes_k_top can ever be in
+// a build at a time -- v2/v3/v4/v5 all define a module by that same name -- so the
+// actual per-version file list lives in a separate -F'd flist
+// (kecc_aes_k_axi/hw/rtl/${AES_LOOSE_VERSION}.flist) rather than being enumerated
+// here directly: v2/v3 share one 12-file set, v4/v5 need extra S-box backend files,
+// and v5 needs extra slice-serial Keccak files, so a single flat list here can't
+// cover all four without pulling in files that don't exist for the others.
+// +define+KECC_AES_K_LOOSE_${AES_LOOSE_VERSION} lets kecc_aes_k_axi_top.sv pick the
+// right keccak_aes_k_top instantiation form (v2/v3 take no parameters, v4 takes
+// SBOX_IMPL, v5 takes SBOX_IMPL + PARALLEL_SLICES).
++define+KECC_AES_K_LOOSE_${AES_LOOSE_VERSION}
+${CVA6_REPO_DIR}/corev_apu/register_interface/vendor/lowrisc_opentitan/src/prim_subreg_arb.sv
+${CVA6_REPO_DIR}/corev_apu/register_interface/vendor/lowrisc_opentitan/src/prim_subreg.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/regs/gen/kecc_aes_k_axi_reg_pkg.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/regs/gen/kecc_aes_k_axi_reg_top.sv
+-F ${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/${AES_LOOSE_VERSION}.flist
++incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/include
++incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/vendor/lowrisc_opentitan/src/
++incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/src/
+// axi_to_reg.sv internally instantiates axi_to_axi_lite (already pulled in by the
+// stock Makefile's $(src) list for other reasons) which in turn needs
+// axi_burst_splitter -- a pre-existing gap in that list (nothing in this repo used
+// axi_to_reg before), so it's added here instead since it's specifically our new
+// dependency chain that exposes it.
+${CVA6_REPO_DIR}/vendor/pulp-platform/axi/src/axi_burst_splitter.sv
+${CVA6_REPO_DIR}/corev_apu/register_interface/src/axi_to_reg.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/kecc_aes_k_axi_top.sv
+
 // Common Cells
 ${CVA6_REPO_DIR}/vendor/pulp-platform/common_cells/src/cf_math_pkg.sv
 ${CVA6_REPO_DIR}/vendor/pulp-platform/common_cells/src/fifo_v3.sv

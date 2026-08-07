@@ -20,3 +20,12 @@ WIP...
 - `aes64es`, `aes64esm`, `aes64ds`, `aes64dsm`, `aes64ks2`, `aes64im`, `aes64ks1i` (real Zknd/Zkne
   opcode encoding, ported from aes-ext/cva6/core/crypto). AES32 is out of scope (RV32-only; every
   target in this repo is RV64). SHA/SM3/SM4/PACK/etc. from aes-ext are out of scope.
+
+## Considered and not implemented
+- **GHASH block-multiply** (`ghash_clmull`/`ghash_clmulh`, CUSTOM-0 opcode): prototyped as a
+  dedicated 64x64->128 carry-less-multiply instruction pair, measured against the RISC-V
+  B-extension's native `clmul`/`clmulh` (already present and enabled in this repo's target
+  config, `core/multiplier.sv`) -- identical instruction count, no measurable cycle advantage
+  (see `tests/result.md`'s "Results -- GHASH block-multiply"). Removed: it added RTL/opcode-table
+  complexity for no benefit over what the base ISA already provides for free. GHASH acceleration
+  in `tests/tightly/aes_gcm` now comes from native `clmul`/`clmulh`, not this coprocessor.

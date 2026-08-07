@@ -1,0 +1,42 @@
+// kecc-aes-k v4 RTL file list. Included via core/Flist.cva6's
+// -F ${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/${AES_LOOSE_VERSION}.flist -- only
+// this version's flist is ever included in a given build (see the note in
+// core/Flist.cva6), which is what lets v2/v3/v4/v5 all define a module named
+// keccak_aes_k_top without colliding.
+//
+// v4 adds a configurable S-box (SBOX_IMPL parameter, see aes_sbox_pkg.sv):
+// aes_sbox.sv is now a thin selecting wrapper around one of the three
+// backend files below (aes_sbox_serial_rom/aes_sbox_dp_rom/aes_sbox_bp).
+//
+// aes_sbox_serial_rom.sv/aes_sbox_dp_rom.sv $readmemh a lookup table from
+// AES_SBOX_MEM_PATH, defaulting to a path relative to kecc-aes-k's own
+// standalone testbench/ layout ("../rtl/aes_sbox_512.mem") that does not
+// resolve from this build's actual simulation CWD (verif/sim/, where
+// veri-testharness's Variane_testharness binary actually runs -- confirmed
+// via the "$readmem file not found" runtime warning for any other path
+// shape) -- override it here, exactly as aes_sbox_serial_rom.sv's own header
+// comment invites ("+define+AES_SBOX_MEM_PATH=... if that ever changes").
+// Plain relative path, not ${CVA6_REPO_DIR}-based: ${VAR} tokens are only
+// expanded by Verilator's -f parser for standalone file-path tokens on a
+// line, NOT for text embedded inside a +define+NAME=value token (confirmed
+// empirically -- an embedded ${CVA6_REPO_DIR} comes through as the 19
+// literal characters "${CVA6_REPO_DIR}", not the expanded path).
++define+AES_SBOX_MEM_PATH=\"../../kecc_aes_k_axi/hw/rtl/v4/aes_sbox_512.mem\"
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/pkg_keccak.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/aes_sbox_pkg.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/aes_sbox_serial_rom.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/aes_sbox_dp_rom.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/aes_sbox_comb.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/aes_sbox_bp_byte.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/aes_sbox_bp.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/aes_sbox.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/aes_key_mem.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/aes_key_mem_enc128.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/aes_encipher_datapath.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/aes_encipher_block.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/aes_decipher_block.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/aes_enc128_core.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/aes_core.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/keccak_round_constants_gen.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/keccak_round.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v4/keccak_aes_k_top.sv

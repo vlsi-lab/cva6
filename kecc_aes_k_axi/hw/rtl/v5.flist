@@ -1,0 +1,32 @@
+// kecc-aes-k v5 RTL file list. Included via core/Flist.cva6's
+// -F ${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/${AES_LOOSE_VERSION}.flist -- only
+// this version's flist is ever included in a given build (see the note in
+// core/Flist.cva6), which is what lets v2/v3/v4/v5 all define a module named
+// keccak_aes_k_top without colliding.
+//
+// v5 keeps v4's configurable S-box (SBOX_IMPL) and replaces the full-width
+// combinational Keccak round (keccak_round.sv, still vendored but no longer
+// instantiated by keccak_aes_k_top) with a slice-serial datapath
+// (keccak_slice_serial.sv, parameter PARALLEL_SLICES) backed by
+// keccak_lane_mem.sv.
++define+AES_SBOX_MEM_PATH=\"../../kecc_aes_k_axi/hw/rtl/v5/aes_sbox_512.mem\"
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/pkg_keccak.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/aes_sbox_pkg.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/aes_sbox_serial_rom.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/aes_sbox_dp_rom.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/aes_sbox_comb.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/aes_sbox_bp_byte.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/aes_sbox_bp.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/aes_sbox.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/aes_key_mem.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/aes_key_mem_enc128.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/aes_encipher_datapath.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/aes_encipher_block.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/aes_decipher_block.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/aes_enc128_core.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/aes_core.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/keccak_round_constants_gen.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/keccak_round.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/keccak_lane_mem.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/keccak_slice_serial.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v5/keccak_aes_k_top.sv
