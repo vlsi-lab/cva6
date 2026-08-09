@@ -452,3 +452,71 @@ of a measured software baseline.
 Both are comparatively small contributors next to matrix-A expansion/NTT
 (ML-DSA) and WOTS+ chain-stepping (SPHINCS+), the two costs this pass
 targeted.
+
+## 2026-08-09 — Phase 4: SHAKE message-hash and multi-block thash() offload
+
+Closes the two gaps explicitly flagged at the end of Phase 3: ML-DSA's
+SHAKE256 message-hash/challenge calls, and SPHINCS+'s multi-block
+(`inblocks>2`) `thash()` calls (FORS's root-aggregation hash, WOTS+'s leaf
+hash) that didn't fit `chain_job_ctrl.sv`'s fixed 1-2-block register
+interface.
+
+**Integration point, simpler than Phase 3 anticipated**: every
+`shake128_*`/`shake256_*`/`sha3_*` function in a given `fips202.c` routes
+through exactly one function, `KeccakF1600_StatePermute()`, for the actual
+24-round permutation -- the byte-level absorb/pad/squeeze bookkeeping around
+it is comparatively cheap. Replacing *only that one function's body* with a
+dispatch to the shared vrf_ip Keccak core (the same CSREG/DATA[]
+raw-permute MMIO interface already used throughout this accelerator: upload
+25 words, pulse `CSREG.START`, wait `CSREG.DONE`, download the result)
+accelerates every caller in the file with no other call site needing to
+change. No RTL modification was required -- `keccak_dma_ctrl.sv`'s
+general-purpose absorb engine was considered but turned out to be
+unnecessary; the raw-permute path alone was sufficient and is simpler.
+
+For ML-DSA this newly covers the μ/transcript/challenge SHAKE256 calls in
+`sign.c`/`poly.c` left software-only in Phase 3. For SPHINCS+ this covers
+`hash_message()` (verify's message digest, never previously offloaded) and
+the `inblocks>2` fallback path inside `thash()` (previously left in
+software as a stated Phase 3 scope boundary) -- both without touching
+`thash_shake_{robust,simple}.c` at all, since they call `shake256()` from
+`fips202.c` for that fallback.
+
+ML-DSA verify's Keccak usage is fully sequential (each incremental context
+runs to completion before the next starts, unlike Falcon's KeyGen/Sign/
+Verify which interleaves many concurrent SHAKE256 contexts), so no
+residency tracking was needed -- every `KeccakF1600_StatePermute()` call is
+a self-contained upload-permute-download round trip.
+
+| Variant | Phase 3 cycles | Phase 4 cycles | Reduction | Cumulative vs. SW baseline |
+| --- | ---: | ---: | ---: | ---: |
+| ML-DSA-44 | 896,175 | 818,613 | 8.7% | 1.84× (baseline 1,504,523) |
+| ML-DSA-65 | 1,346,166 | 1,226,830 | 8.9% | 1.97× (baseline 2,413,716) |
+| ML-DSA-87 | 2,043,509 | 1,909,871 | 6.5% | 2.06× (baseline 3,941,622) |
+| SPHINCS-128f-robust | 2,227,893 | 1,181,051 | 47.0% | n/a (SW baseline not collected) |
+| SPHINCS-128f-simple | 1,164,835 | 625,755 | 46.3% | n/a |
+| SPHINCS-192f-robust | 3,915,071 | 1,934,901 | 50.6% | n/a |
+| SPHINCS-192f-simple | 2,051,594 | 1,011,534 | 50.7% | n/a |
+| SPHINCS-256f-robust | 4,940,704 | 2,326,409 | 52.9% | n/a |
+| SPHINCS-256f-simple | 2,550,913 | 1,184,582 | 53.6% | n/a |
+
+All 9 variants `*** SUCCESS ***`, KAT-correct, on real RTL simulation.
+
+**Notable asymmetry**: SPHINCS+'s reduction (~46-54%) is far larger than
+ML-DSA's (~7-9%). This makes sense in hindsight -- ML-DSA's SHAKE256 usage
+is a handful of small, fixed-size calls (mu/transcript/challenge), a minor
+fraction of a verify already dominated by NTT/matrix-A-expansion HW work,
+whereas SPHINCS+'s multi-block `thash()` fallback was, before this pass,
+the *only* unaccelerated hashing left in a verify otherwise fully offloaded
+via `chain_job_ctrl` (the 22 WOTS+ leaf hashes and 1 FORS root-aggregation
+hash, each `inblocks*SPX_N` bytes, apparently cost as much or more in pure
+software as the thousands of now-HW-accelerated WOTS+ chain steps combined)
+-- confirming this was a materially larger contributor than either the
+Phase 3 scope note or an a-priori guess would have suggested.
+
+### Scope now fully closed for this pass
+
+With both Phase 3 and Phase 4 complete, every hash/NTT/rejection-sampling
+primitive reached by `crypto_sign_open`/`crypto_sign_verify` across all 11
+schemes is hardware-offloaded. No further known gaps remain in the current
+`vrf_ip` verify-acceleration scope.
