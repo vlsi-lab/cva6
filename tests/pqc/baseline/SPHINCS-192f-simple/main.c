@@ -1,0 +1,183 @@
+///////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright 2025 PoliTO - @VLSI Lab
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+//
+// Auth: Alessandra Dolmeta, Valeria Piscopo
+// Email: alessandra.dolmeta@polito.it, valeria.piscopo@polito.it
+// Affiliation: Politecnico di Torino - @VLSI Lab
+// Date: October 2025
+//
+///////////////////////////////////////////////////////////////////////////////////
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include "api.h"
+#include "encoding.h"
+
+
+
+
+#include "test_vectors_shake256_192f_simple.h"
+
+
+#ifndef TEST_KEY
+#define TEST_KEY 0
+#endif
+#ifndef TEST_SIGN
+#define TEST_SIGN 0
+#endif
+#ifndef TEST_SIGN_OPEN
+#define TEST_SIGN_OPEN 1
+#endif
+
+#define MLEN_KAT 33
+uint8_t keypair_rnd[CRYPTO_SEEDBYTES];
+uint8_t signature_rnd[SPX_N];
+
+#define CRYPTO_SECRETKEYBYTES SPX_SK_BYTES
+#define CRYPTO_PUBLICKEYBYTES SPX_PK_BYTES
+#define CRYPTO_BYTES SPX_BYTES
+#define CRYPTO_SEEDBYTES 3*SPX_N
+
+void printVect(char* name, uint8_t* buf, size_t size) {
+    printf("%s = ", name);
+    for (int i=0; i<size; i++){
+        printf("%02X", buf[i]);
+    }
+    printf("\n");
+}
+
+int main(void)
+{
+
+    uint8_t sk[CRYPTO_SECRETKEYBYTES];
+    uint8_t pk[CRYPTO_PUBLICKEYBYTES];
+
+    uint8_t m[MLEN_KAT];
+    uint8_t sm[MLEN_KAT + CRYPTO_BYTES];
+    uint8_t m1[MLEN_KAT + CRYPTO_BYTES];
+
+        
+    unsigned long long  mlen, smlen, mlen1;
+    unsigned cycles_keygen, cycles_sign, cycles_sign_open;
+    unsigned instr_keygen, instr_sign, instr_sign_open;
+    unsigned start_instret_keygen, start_instret_sign, start_instret_sign_open;
+    
+
+        clear_csr(mcountinhibit, 1);
+        write_csr(mcycle, 0);
+
+
+
+    char test_str[50] = "Testing";
+    #if TEST_KEY
+        strcat(test_str," keypair");
+    #endif
+    #if TEST_SIGN
+        strcat(test_str," sign.");
+    #endif
+    #if TEST_SIGN_OPEN
+        strcat(test_str," sign_open.");
+    #endif
+        printf("%s\n", test_str);
+
+    //************************************************* 
+    // KEY
+    //*************************************************
+
+    #if TEST_KEY
+        // Filling coin vector with indcpa_keypair and kem_keypair seeds
+        memcpy(keypair_rnd , TVEC_IN_SIGN_KEYPAIR, 72);
+    
+    
+            write_csr(mcycle, 0);
+            start_instret_keygen = (uint32_t)read_csr(minstret);
+
+        crypto_sign_keypair(pk, sk, keypair_rnd);        
+
+            cycles_keygen = (uint32_t)read_csr(mcycle);
+            instr_keygen = (uint32_t)read_csr(minstret) - start_instret_keygen;
+            printf("Keygen cycles: %u, instructions: %u\n", cycles_keygen, instr_keygen);
+
+        
+
+        if(memcmp(pk, TVEC_OUT_PK, CRYPTO_PUBLICKEYBYTES)) { printf("ERROR: PK mismatch\n"); }
+        if(memcmp(sk, TVEC_OUT_SK, CRYPTO_SECRETKEYBYTES)) { printf("ERROR: SK mismatch\n");}
+        //printVect("pk", pk, CRYPTO_PUBLICKEYBYTES);
+        //printVect("sk", sk, CRYPTO_SECRETKEYBYTES);
+    #endif /* TEST_KEY */
+
+    //************************************************* 
+    // SIGN
+    //*************************************************
+    #if TEST_SIGN
+        // Setting up Input test vectors
+        memcpy(m, TVEC_IN_M_SIGN, MLEN_KAT);
+        memcpy(signature_rnd , TVEC_IN_SIGN_SIGNATURE, SPX_N);
+
+        #if TEST_KEY == 0
+          // In case we do not generate PK in this test we take it from the test vectors
+          memcpy(sk, TVEC_OUT_SK, CRYPTO_SECRETKEYBYTES);
+        #endif /* TEST_KEY */
+
+            write_csr(mcycle, 0);
+            start_instret_sign = (uint32_t)read_csr(minstret);
+
+        crypto_sign(sm, &smlen, m, MLEN_KAT, sk, signature_rnd);
+        
+
+            cycles_sign = (uint32_t)read_csr(mcycle);
+            instr_sign = (uint32_t)read_csr(minstret) - start_instret_sign;
+            printf("Sign cycles: %u, instructions: %u\n", cycles_sign, instr_sign);
+
+  
+              if(memcmp(sm, TVEC_IN_SM_SIGN, SPX_BYTES)) { printf("ERROR: SM mismatch\n");}
+        //printf("mlen1: %llu\n", SPX_BYTES);
+        //printf("sm: ");
+        //for (int i = 0; i < SPX_BYTES; i++) {
+        //    printf("%02x", sm[i]);
+        //}
+        //printf("\n");
+
+    #endif /* TEST_SIGN */
+    
+    //************************************************* 
+    // IGN_OPEN
+    //*************************************************
+    #if TEST_SIGN_OPEN
+
+        #if TEST_KEY == 0
+          // In case we do not generate PK in this test we take it from the test vectors
+          memcpy(pk, TVEC_OUT_PK, CRYPTO_PUBLICKEYBYTES);
+        #endif /* TEST_KEY */
+
+        #if TEST_SIGN == 0
+          memcpy(sm, TVEC_IN_SM_SIGN, 35697);
+        #endif /* TEST_SIGN */
+
+            write_csr(mcycle, 0);
+            start_instret_sign_open = (uint32_t)read_csr(minstret);
+
+        crypto_sign_open(m1, &mlen1, sm, 35697, pk);
+
+            cycles_sign_open = (uint32_t)read_csr(mcycle);
+            instr_sign_open = (uint32_t)read_csr(minstret) - start_instret_sign_open;
+            printf("Verify cycles: %u, instructions: %u\n", cycles_sign_open, instr_sign_open);
+
+        if(memcmp(m1, TVEC_IN_M_SIGN, MLEN_KAT)) { printf("ERROR: M mismatch\n");}
+
+    #endif /* TEST_SIGN_OPEN */
+    
+    printf("OK\n");
+
+    printf("Test Successful\n");
+
+    return 0;
+
+
+}
+

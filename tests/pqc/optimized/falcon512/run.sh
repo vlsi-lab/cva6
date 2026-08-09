@@ -90,7 +90,7 @@ cflags=(
     -I../tests/custom/env       # encoding.h  (CSR macros)
     -I../tests/custom/common    # util.h
     -I../../tests/pqc/optimized/falcon512  # api.h, uart.h, test_vectors_512.h, inner.h, fpr.h
-    -I../../keccak_ip/sw        # keccak_axi.h (register offsets for the AXI accelerator)
+    -I../../vrf_ip/sw        # vrf_axi.h (register offsets for the AXI accelerator)
 )
 
 # ---- Launch simulation --------------------------------------------------

@@ -353,29 +353,29 @@ assign addr_map = '{
   '{ idx: ariane_soc::GPIO,     start_addr: ariane_soc::GPIOBase,     end_addr: ariane_soc::GPIOBase + ariane_soc::GPIOLength         },
   '{ idx: ariane_soc::DRAM,     start_addr: ariane_soc::DRAMBase,     end_addr: ariane_soc::DRAMBase + ariane_soc::DRAMLength         },
   '{ idx: ariane_soc::HPS,      start_addr: ariane_soc::HPSBase,      end_addr: ariane_soc::HPSBase + ariane_soc::HPSLength           },
-  '{ idx: ariane_soc::Keccak,   start_addr: ariane_soc::KeccakBase,   end_addr: ariane_soc::KeccakBase + ariane_soc::KeccakLength     }
+  '{ idx: ariane_soc::Vrf,      start_addr: ariane_soc::VrfBase,      end_addr: ariane_soc::VrfBase + ariane_soc::VrfLength           }
 };
 
-// Keccak AXI Accelerator
-logic keccak_irq;
-axi_slave_req_t  keccak_req;
-axi_slave_resp_t keccak_resp;
-`AXI_ASSIGN_TO_REQ(keccak_req, master[ariane_soc::Keccak])
-`AXI_ASSIGN_FROM_RESP(master[ariane_soc::Keccak], keccak_resp)
-keccak_axi_top #(
+// Shared Falcon/ML-DSA/SPHINCS+ verify AXI accelerator
+logic vrf_irq;
+axi_slave_req_t  vrf_req;
+axi_slave_resp_t vrf_resp;
+`AXI_ASSIGN_TO_REQ(vrf_req, master[ariane_soc::Vrf])
+`AXI_ASSIGN_FROM_RESP(master[ariane_soc::Vrf], vrf_resp)
+vrf_axi_top #(
     .AXI_ADDR_WIDTH ( AxiAddrWidth     ),
     .AXI_DATA_WIDTH ( AxiDataWidth     ),
     .AXI_ID_WIDTH   ( AxiIdWidthSlaves ),
     .AXI_USER_WIDTH ( AxiUserWidth     ),
     .axi_req_t      ( axi_slave_req_t  ),
     .axi_rsp_t      ( axi_slave_resp_t )
-) i_keccak_slv (
-    .clk_i         ( clk         ),
-    .rst_ni        ( ndmreset_n  ),
-    .test_mode_i   ( test_en     ),
-    .axi_req_i     ( keccak_req  ),
-    .axi_rsp_o     ( keccak_resp ),
-    .keccak_intr_o ( keccak_irq  )
+) i_vrf_slv (
+    .clk_i         ( clk        ),
+    .rst_ni        ( ndmreset_n ),
+    .test_mode_i   ( test_en    ),
+    .axi_req_i     ( vrf_req    ),
+    .axi_rsp_o     ( vrf_resp   ),
+    .vrf_intr_o    ( vrf_irq    )
 );
 
 localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{

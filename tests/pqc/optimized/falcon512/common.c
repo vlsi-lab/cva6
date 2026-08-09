@@ -52,7 +52,7 @@ Zf(hash_to_point_vartime)(
 	uint16_t *x, unsigned logn)
 {
 	/*
-	 * Offloaded to the rej_sampler hardware unit (keccak_ip/rtl/
+	 * Offloaded to the rej_sampler hardware unit (vrf_ip/rtl/
 	 * rej_sampler.sv, dispatched via shake.c's Zf(hash_to_point_hw)())
 	 * -- q=12289 and thresh=61445=5*12289 are Falcon's fixed values,
 	 * matching what the reference software loop this replaces used

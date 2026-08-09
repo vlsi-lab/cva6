@@ -104,27 +104,30 @@ ${CVA6_REPO_DIR}/core/cvxif_compressed_if_driver.sv
 ${CVA6_REPO_DIR}/core/cvxif_issue_register_commit_if_driver.sv
 ${CVA6_REPO_DIR}/core/cvxif_fu.sv
 
-// KECCAK IP
+// VRF IP -- shared Falcon/ML-DSA/SPHINCS+ verify accelerator (one keccak_f
+// core behind DMA-absorb, NTT/iNTT, rejection-sampler, and the SPHINCS+
+// hash-chain job (chain_job_ctrl))
 ${CVA6_REPO_DIR}/corev_apu/register_interface/vendor/lowrisc_opentitan/src/prim_subreg_arb.sv
 ${CVA6_REPO_DIR}/corev_apu/register_interface/vendor/lowrisc_opentitan/src/prim_subreg.sv
-${CVA6_REPO_DIR}/keccak_ip/gen/keccak_reg_pkg.sv
-${CVA6_REPO_DIR}/keccak_ip/gen/keccak_reg_top.sv
-${CVA6_REPO_DIR}/keccak_ip/rtl/pkg_keccak.sv
-${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_cu.sv
-${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_round_constants_gen.sv
-${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_round.sv
-${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_dp.sv
-${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_f.sv
-${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_dma_ctrl.sv
-${CVA6_REPO_DIR}/keccak_ip/rtl/rej_sampler.sv
-${CVA6_REPO_DIR}/keccak_ip/rtl/ntt_engine.sv
+${CVA6_REPO_DIR}/vrf_ip/gen/vrf_reg_pkg.sv
+${CVA6_REPO_DIR}/vrf_ip/gen/vrf_reg_top.sv
+${CVA6_REPO_DIR}/vrf_ip/rtl/pkg_keccak.sv
+${CVA6_REPO_DIR}/vrf_ip/rtl/keccak_cu.sv
+${CVA6_REPO_DIR}/vrf_ip/rtl/keccak_round_constants_gen.sv
+${CVA6_REPO_DIR}/vrf_ip/rtl/keccak_round.sv
+${CVA6_REPO_DIR}/vrf_ip/rtl/keccak_dp.sv
+${CVA6_REPO_DIR}/vrf_ip/rtl/keccak_f.sv
+${CVA6_REPO_DIR}/vrf_ip/rtl/keccak_dma_ctrl.sv
+${CVA6_REPO_DIR}/vrf_ip/rtl/rej_sampler.sv
+${CVA6_REPO_DIR}/vrf_ip/rtl/ntt_engine.sv
+${CVA6_REPO_DIR}/vrf_ip/rtl/chain_job_ctrl.sv
 +incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/include
 +incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/vendor/lowrisc_opentitan/src/
 +incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/src/
 +incdir+${CVA6_REPO_DIR}/vendor/pulp-platform/axi/src/
 ${CVA6_REPO_DIR}/corev_apu/register_interface/src/axi_lite_to_reg.sv
 ${CVA6_REPO_DIR}/corev_apu/register_interface/src/axi_to_reg.sv
-${CVA6_REPO_DIR}/keccak_ip/rtl/keccak_axi_top.sv
+${CVA6_REPO_DIR}/vrf_ip/rtl/vrf_axi_top.sv
 
 // Common Cells
 ${CVA6_REPO_DIR}/vendor/pulp-platform/common_cells/src/cf_math_pkg.sv

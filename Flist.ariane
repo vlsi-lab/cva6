@@ -167,7 +167,3 @@ common/local/util/instr_tracer.sv
 vendor/pulp-platform/common_cells/src/counter.sv
 vendor/pulp-platform/common_cells/src/delta_counter.sv
 core/cvxif_fu.sv
-keccak_ip/hw/keccak_xif_cid.sv
-keccak_ip/hw/keccak_xif_id.sv
-keccak_ip/hw/keccak_xif_ex.sv
-keccak_ip/hw/keccak_xif.sv

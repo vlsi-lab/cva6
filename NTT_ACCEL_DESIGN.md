@@ -2,9 +2,9 @@
 
 ## Status
 
-**Implemented and integrated.** `keccak_ip/rtl/ntt_engine.sv`, the
-`NTT_*` register additions to `keccak_ip/keccak.hjson`, and the
-`keccak_axi_top.sv` wiring all exist and have been confirmed correct
+**Implemented and integrated.** `vrf_ip/rtl/ntt_engine.sv`, the
+`NTT_*` register additions to `vrf_ip/vrf.hjson`, and the
+`vrf_axi_top.sv` wiring all exist and have been confirmed correct
 end-to-end on real verilator/DV simulation, not just compiled.
 
 The engine implements a generic 32-bit-domain Montgomery NTT/iNTT:
@@ -305,7 +305,7 @@ master. No new on-chip buffer or ROM.
     capability anywhere — every DRAM access, for the DMA absorb engine
     and this engine alike, is a single-outstanding, one-beat
     req/gnt/valid transaction, with no length/burst-size field at all
-    (confirmed by reading `keccak_axi_top.sv`'s `dma_*` port and the
+    (confirmed by reading `vrf_axi_top.sv`'s `dma_*` port and the
     `axi_adapter` instantiation one level up, which is fixed to
     `SINGLE_REQ`/non-burst framing). So loading 16 triples still costs
     48 individual word transactions, same total as loading them one

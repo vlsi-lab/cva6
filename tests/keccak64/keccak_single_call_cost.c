@@ -5,17 +5,17 @@
 
 #include "inc/uart.h"
 #include "encoding.h"
-#include "keccak_axi.h"
+#include "vrf_axi.h"
 
-#define KECCAK_BASE_ADDR 0x50000000UL
+#define VRF_BASE_ADDR 0x50000000UL
 
 int
 main(void)
 {
 	uint64_t volatile *cryptoState =
-	    (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_DATA_0_REG_OFFSET);
+	    (uint64_t volatile *)(VRF_BASE_ADDR + VRF_DATA_0_REG_OFFSET);
 	uint64_t volatile *csreg =
-	    (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_CSREG_REG_OFFSET);
+	    (uint64_t volatile *)(VRF_BASE_ADDR + VRF_CSREG_REG_OFFSET);
 	static uint64_t A[25];
 	int cycles_full, cycles_upload, cycles_poll, cycles_readback;
 	int i;
@@ -26,8 +26,8 @@ main(void)
 	clear_csr(mcountinhibit, 1);
 	write_csr(mcycle, 0);
 	for (i = 0; i < 25; i++) cryptoState[i] = A[i];
-	*csreg |= (uint64_t)1 << KECCAK_CSREG_START_BIT;
-	while (((*csreg) & ((uint64_t)1 << KECCAK_CSREG_DONE_BIT)) == 0);
+	*csreg |= (uint64_t)1 << VRF_CSREG_START_BIT;
+	while (((*csreg) & ((uint64_t)1 << VRF_CSREG_DONE_BIT)) == 0);
 	for (i = 0; i < 25; i++) A[i] = cryptoState[i];
 	*csreg = 0;
 	cycles_full = read_csr(mcycle);
@@ -39,8 +39,8 @@ main(void)
 
 	/* start + poll only (compute + handshake, no data movement) */
 	write_csr(mcycle, 0);
-	*csreg |= (uint64_t)1 << KECCAK_CSREG_START_BIT;
-	while (((*csreg) & ((uint64_t)1 << KECCAK_CSREG_DONE_BIT)) == 0);
+	*csreg |= (uint64_t)1 << VRF_CSREG_START_BIT;
+	while (((*csreg) & ((uint64_t)1 << VRF_CSREG_DONE_BIT)) == 0);
 	cycles_poll = read_csr(mcycle);
 	*csreg = 0;
 

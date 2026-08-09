@@ -158,7 +158,7 @@ void Zf(i_shake256_extract)(
 
 /*
  * Hardware offload of a squeeze-compare-reduce rejection-sampling loop
- * (see keccak_ip/rtl/rej_sampler.sv, shake.c) -- sc must already be
+ * (see vrf_ip/rtl/rej_sampler.sv, shake.c) -- sc must already be
  * flipped (as for Zf(i_shake256_extract)()). Produces n accepted samples
  * into x[], each in [0, q), by squeezing 16-bit big-endian words and
  * rejecting w >= thresh (thresh must be <= 5*q so the hardware's fixed

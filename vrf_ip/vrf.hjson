@@ -1,0 +1,339 @@
+// VRF Accelerator IP - Loosely
+// Shared verify-only accelerator for Falcon, ML-DSA, and SPHINCS+/SLH-DSA:
+// one Keccak-f[1600] core shared by DMA-absorb (SHAKE128/256), NTT/iNTT,
+// rejection sampling, and the SPHINCS+ hash-chain (THASH1/THASH2/PRF_ADDR) job.
+// Register definition for reggen.py
+// Author: Federico Runco
+
+{
+  name: "vrf",
+  clock_primary: "clk_i",
+  reset_primary: "rst_ni",
+  bus_interfaces: [
+    {
+      protocol: "reg_iface", 
+      direction: "device" 
+    }
+  ],
+  regwidth: "64",
+  registers: [
+    {
+      multireg: {
+        name: "DATA",
+        desc: "I/O cryptographic state register of the VRF AXI Accellerator",
+        count: "25",
+        cname: "data",
+        swaccess: "rw",
+        hwaccess: "hrw",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      name: "CSREG",
+      desc: "Control and status register for VRF AXI Accellerator",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "0",
+          name: "START",
+          desc: "Start the permutation"
+        },
+        {
+          bits: "1",
+          name: "DONE",
+          desc: "Asserted if permutation is done"
+        }
+      ]
+    },
+    {
+      name: "JOB_SRC_ADDR",
+      desc: "Physical address of raw input bytes for the DMA-driven absorb job",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "63:0" } ]
+    },
+    {
+      name: "JOB_SRC_LEN",
+      desc: "Number of bytes to DMA-absorb from JOB_SRC_ADDR",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "31:0" } ]
+    },
+    {
+      name: "JOB_DST_ADDR",
+      desc: "Physical address to DMA-squeeze output bytes into",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "63:0" } ]
+    },
+    {
+      name: "JOB_DST_LEN",
+      desc: "Number of bytes to DMA-squeeze into JOB_DST_ADDR",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "31:0" } ]
+    },
+    {
+      name: "JOBCTRL",
+      desc: "DMA job descriptor control and status",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "0",
+          name: "GO",
+          desc: "Start the DMA job"
+        },
+        {
+          bits: "1",
+          name: "FRESH",
+          desc: "State starts from all-zero rather than XOR onto resident state"
+        },
+        {
+          bits: "2",
+          name: "FLIP",
+          desc: "Apply SHAKE pad10*1 after the absorb portion of the job"
+        },
+        {
+          bits: "3",
+          name: "DONE",
+          desc: "Asserted if the DMA job is done"
+        },
+        {
+          bits: "11:4",
+          name: "DPTR",
+          desc: "Byte offset within the current rate block where this job's absorb begins (mirrors the caller's shake_context.dptr)"
+        },
+        {
+          bits: "12",
+          name: "RATE168",
+          desc: "SHAKE rate for this absorb job: 0 = 136 bytes (SHAKE256, Falcon/SPHINCS+); 1 = 168 bytes (SHAKE128, ML-DSA matrix-A expansion)"
+        }
+      ]
+    },
+    {
+      name: "NTT_A_ADDR",
+      desc: "Physical base address of the uint32_t polynomial array a[] (mp_NTT/mp_iNTT operand, updated in place)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "63:0" } ]
+    },
+    {
+      name: "NTT_GM_ADDR",
+      desc: "Physical base address of the uint32_t twiddle table (gm[] for forward NTT_CTRL.MODE=0, igm[] for inverse NTT_CTRL.MODE=1 -- caller points this at whichever mp_mkgm/mp_mkigm table the job needs)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "63:0" } ]
+    },
+    {
+      name: "NTT_LOGN",
+      desc: "Degree parameter (log2 n; matches mp_NTT/mp_iNTT's logn argument, n = 1 << logn)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "4:0" } ]
+    },
+    {
+      name: "NTT_P_VAL",
+      desc: "Modulus p for this job (any usable prime -- software supplies it directly, matching mp_NTT/mp_iNTT's own p argument, instead of the accelerator hardcoding a fixed prime table)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "31:0" } ]
+    },
+    {
+      name: "NTT_P0I_VAL",
+      desc: "p0i = -1/p mod 2^32 for this job, software-precomputed exactly as mp_NTT/mp_iNTT's own p0i argument (e.g. from the PRIMES[] table)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "31:0" } ]
+    },
+    {
+      name: "NTT_CTRL",
+      desc: "NTT/iNTT accelerator job control and status",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "0",
+          name: "GO",
+          desc: "Start the job",
+          hwaccess: "hro"
+        },
+        {
+          bits: "1",
+          name: "DONE",
+          desc: "Asserted if the job is done"
+        },
+        {
+          bits: "2",
+          name: "MODE",
+          desc: "Direction: 0 = forward (mp_NTT), 1 = inverse (mp_iNTT).",
+          hwaccess: "hro"
+        },
+        {
+          bits: "3",
+          name: "NOSCALE",
+          desc: "Inverse-mode scaling convention (ignored when MODE=0): 0 = Falcon convention, distribute n^-1 via mp_half at every butterfly of every stage (ng_mp31.c mp_iNTT). 1 = ML-DSA convention, no per-stage scaling -- software applies its own single final correction multiply (matches invntt_tomont()'s plain sum-then-multiply-by-zeta butterfly, no per-butterfly half).",
+          hwaccess: "hro"
+        }
+      ]
+    },
+    {
+      name: "REJ_X_ADDR",
+      desc: "Physical base address of the output sample array for the rejection-sampler job (element width per REJ_CTRL.OUTWIDE): uint16_t for Falcon's Zf(hash_to_point_vartime) (common.c), int32_t for ML-DSA's rej_uniform (poly.c)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "63:0" } ]
+    },
+    {
+      name: "REJ_PARAMS",
+      desc: "Rejection-sampler job parameters, packed to keep the register count small: Q (modulus, bits 23:0), THRESH (rejection bound, bits 47:24), N (accepted-sample target, bits 63:48)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [
+        { bits: "23:0", name: "Q", desc: "Modulus for the conditional-subtract reduction (Falcon: 12289; ML-DSA: 8380417)" },
+        { bits: "47:24", name: "THRESH", desc: "Reject if the (optionally masked) squeezed candidate is >= this (Falcon: 61445 = 5*12289; ML-DSA: 8380417, same as Q -- no wider reduction range needed)" },
+        { bits: "63:48", name: "N", desc: "Number of accepted samples to produce" }
+      ]
+    },
+    {
+      name: "REJ_CTRL",
+      desc: "Rejection-sampler job control and status. Requires the accelerator's DATA[] state to already be hardware-resident and shake_flip()-padded (not yet permuted) for the calling shake context before GO is set.",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "0",
+          name: "GO",
+          desc: "Start the rejection-sampler job"
+        },
+        {
+          bits: "1",
+          name: "DONE",
+          desc: "Asserted if the rejection-sampler job is done"
+        },
+        {
+          bits: "2",
+          name: "CAND3",
+          desc: "Candidate width: 0 = 2-byte/16-bit squeezed words (Falcon hash_to_point_vartime); 1 = 3-byte/24-bit squeezed words, masked to the low 23 bits before the threshold test (ML-DSA rej_uniform)",
+          hwaccess: "hro"
+        },
+        {
+          bits: "3",
+          name: "RATE168",
+          desc: "SHAKE rate for the resident state this job squeezes from: 0 = 136 bytes (SHAKE256, Falcon); 1 = 168 bytes (SHAKE128, ML-DSA matrix expansion)",
+          hwaccess: "hro"
+        },
+        {
+          bits: "4",
+          name: "OUTWIDE",
+          desc: "Output sample element width at REJ_X_ADDR: 0 = 2 bytes (uint16_t, Falcon); 1 = 4 bytes (int32_t, ML-DSA)",
+          hwaccess: "hro"
+        }
+      ]
+    },
+    {
+      multireg: {
+        name: "CHAIN_SEED",
+        desc: "SPHINCS+/SLH-DSA SHAKE256 hash-chain job pub_seed input (32 bytes, word i = bytes [8i..8i+7], byte 8i at bits [7:0])",
+        count: "4",
+        cname: "chain_seed",
+        swaccess: "rw",
+        hwaccess: "hro",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      multireg: {
+        name: "CHAIN_ADRS",
+        desc: "SPHINCS+/SLH-DSA SHAKE256 hash-chain job full 32-byte ADRS input (word i = bytes [8i..8i+7], byte 8i at bits [7:0])",
+        count: "4",
+        cname: "chain_adrs",
+        swaccess: "rw",
+        hwaccess: "hro",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      multireg: {
+        name: "CHAIN_IN2",
+        desc: "SPHINCS+/SLH-DSA SHAKE256 hash-chain job THASH2 second input block (input_block2, 32 bytes, word i = bytes [8i..8i+7], byte 8i at bits [7:0])",
+        count: "4",
+        cname: "chain_in2",
+        swaccess: "rw",
+        hwaccess: "hro",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      multireg: {
+        name: "CHAIN_IO",
+        desc: "SPHINCS+/SLH-DSA SHAKE256 hash-chain job input_block1 (THASH1/THASH2/PRF_ADDR) before GO, and output digest after DONE (32 bytes, word i = bytes [8i..8i+7], byte 8i at bits [7:0])",
+        count: "4",
+        cname: "chain_io",
+        swaccess: "rw",
+        hwaccess: "hrw",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      name: "CHAIN_CTRL",
+      desc: "SPHINCS+/SLH-DSA SHAKE256 hash-chain job control and status",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "0",
+          name: "GO",
+          desc: "Start the hash-chain job",
+          hwaccess: "hro"
+        },
+        {
+          bits: "1",
+          name: "DONE",
+          desc: "Asserted if the hash-chain job is done"
+        },
+        {
+          bits: "2",
+          name: "ROBUST",
+          desc: "0 = simple NIST construction, 1 = robust (bitmasked) construction",
+          hwaccess: "hro"
+        },
+        {
+          bits: "10:3",
+          name: "N",
+          desc: "Security level byte length (16/24/32)",
+          hwaccess: "hro"
+        },
+        {
+          bits: "18:11",
+          name: "STEPS",
+          desc: "Number of WOTS+ chain steps to run",
+          hwaccess: "hro"
+        },
+        {
+          bits: "26:19",
+          name: "STEP_START",
+          desc: "First step index (0-based); also the initial value overlaid into ADRS byte 31 (SPX_OFFSET_HASH_ADDR) for OP_TYPE=THASH1",
+          hwaccess: "hro"
+        },
+        {
+          bits: "28:27",
+          name: "OP_TYPE",
+          desc: "0=PRF_ADDR, 1=THASH1, 2=THASH2, 3=reserved",
+          hwaccess: "hro"
+        }
+      ]
+    }
+  ]
+}

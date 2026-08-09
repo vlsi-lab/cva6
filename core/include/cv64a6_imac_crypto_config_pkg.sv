@@ -141,9 +141,9 @@ package cva6_config_pkg;
       // uncached (still within the simulated ~16.7MB DRAM backing, well
       // above any realistic test program/stack footprint) -- used as a
       // dedicated scratch window so peripheral-writes-to-CPU-memory
-      // (e.g. the Keccak NTT/rejection-sampler jobs) never race the CPU's
+      // (e.g. the Falcon NTT/rejection-sampler jobs) never race the CPU's
       // own D$ without needing a global, all-fences-flush-the-whole-cache
-      // policy (see FALCON_NTT_HW_SCRATCH_ADDR/KECCAK_REJ_HW_SCRATCH_ADDR
+      // policy (see VRF_NTT_HW_SCRATCH_ADDR/VRF_REJ_HW_SCRATCH_ADDR
       // in tests/falcon512-opt's vrfy.c/shake.c).
       NrCachedRegionRules: unsigned'(1),
       CachedRegionAddrBase: 1024'({64'h8000_0000}),

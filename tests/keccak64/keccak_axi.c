@@ -5,14 +5,14 @@
 
 #include "inc/uart.h"
 #include "encoding.h"
-#include "keccak_axi.h"
+#include "vrf_axi.h"
 
-#define KECCAK_BASE_ADDR 0x50000000
+#define VRF_BASE_ADDR 0x50000000
 
 static void KeccakF1600_StatePermute(uint64_t *s)
 {
-    uint64_t volatile *cryptoState  = (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_DATA_0_REG_OFFSET);
-    uint64_t volatile *csreg        = (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_CSREG_REG_OFFSET);
+    uint64_t volatile *cryptoState  = (uint64_t volatile *)(VRF_BASE_ADDR + VRF_DATA_0_REG_OFFSET);
+    uint64_t volatile *csreg        = (uint64_t volatile *)(VRF_BASE_ADDR + VRF_CSREG_REG_OFFSET);
 
     // Copy crypto state to Keccak AXI accelerator
     cryptoState[0] = s[0];
@@ -42,11 +42,11 @@ static void KeccakF1600_StatePermute(uint64_t *s)
     cryptoState[24] = s[24];
 
     // Start permutation
-    *csreg |= 1 << KECCAK_CSREG_START_BIT;
+    *csreg |= 1 << VRF_CSREG_START_BIT;
 
     // Wait for permutation and clear start bit at end
-    while (((*csreg) & (1 << KECCAK_CSREG_DONE_BIT)) == 0);
-    *csreg &= ~(1ULL << KECCAK_CSREG_START_BIT);
+    while (((*csreg) & (1 << VRF_CSREG_DONE_BIT)) == 0);
+    *csreg &= ~(1ULL << VRF_CSREG_START_BIT);
 
     // Copy crypto state from Keccak AXI accellerator
     s[0] = cryptoState[0];

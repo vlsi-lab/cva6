@@ -5,18 +5,18 @@
 
 #include "inc/uart.h"
 #include "encoding.h"
-#include "keccak_axi.h"
+#include "vrf_axi.h"
 
-#define KECCAK_BASE_ADDR 0x50000000UL
+#define VRF_BASE_ADDR 0x50000000UL
 
 static uint64_t volatile *cryptoState =
-    (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_DATA_0_REG_OFFSET);
+    (uint64_t volatile *)(VRF_BASE_ADDR + VRF_DATA_0_REG_OFFSET);
 static uint64_t volatile *job_src_addr =
-    (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_JOB_SRC_ADDR_REG_OFFSET);
+    (uint64_t volatile *)(VRF_BASE_ADDR + VRF_JOB_SRC_ADDR_REG_OFFSET);
 static uint64_t volatile *job_src_len =
-    (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_JOB_SRC_LEN_REG_OFFSET);
+    (uint64_t volatile *)(VRF_BASE_ADDR + VRF_JOB_SRC_LEN_REG_OFFSET);
 static uint64_t volatile *jobctrl =
-    (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_JOBCTRL_REG_OFFSET);
+    (uint64_t volatile *)(VRF_BASE_ADDR + VRF_JOBCTRL_REG_OFFSET);
 
 static void
 run_job(const void *src, uint32_t len, int fresh, int flip, int dptr)
@@ -25,13 +25,13 @@ run_job(const void *src, uint32_t len, int fresh, int flip, int dptr)
 	*job_src_addr = (uint64_t)(uintptr_t)src;
 	*job_src_len  = len;
 
-	uint64_t ctrl = (uint64_t)1 << KECCAK_JOBCTRL_GO_BIT;
-	if (fresh) ctrl |= (uint64_t)1 << KECCAK_JOBCTRL_FRESH_BIT;
-	if (flip)  ctrl |= (uint64_t)1 << KECCAK_JOBCTRL_FLIP_BIT;
-	ctrl |= ((uint64_t)(dptr & KECCAK_JOBCTRL_DPTR_MASK)) << KECCAK_JOBCTRL_DPTR_OFFSET;
+	uint64_t ctrl = (uint64_t)1 << VRF_JOBCTRL_GO_BIT;
+	if (fresh) ctrl |= (uint64_t)1 << VRF_JOBCTRL_FRESH_BIT;
+	if (flip)  ctrl |= (uint64_t)1 << VRF_JOBCTRL_FLIP_BIT;
+	ctrl |= ((uint64_t)(dptr & VRF_JOBCTRL_DPTR_MASK)) << VRF_JOBCTRL_DPTR_OFFSET;
 
 	*jobctrl = ctrl;
-	while (((*jobctrl) & ((uint64_t)1 << KECCAK_JOBCTRL_DONE_BIT)) == 0);
+	while (((*jobctrl) & ((uint64_t)1 << VRF_JOBCTRL_DONE_BIT)) == 0);
 	*jobctrl = 0;
 }
 

@@ -71,7 +71,7 @@ cflags=(
     -I../tests/custom/env
     -I../tests/custom/common
 	-I../../tests/keccak64/include
-	-I../../keccak_ip/sw
+	-I../../vrf_ip/sw
 )
 
 python3 cva6.py \

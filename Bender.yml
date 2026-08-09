@@ -99,14 +99,6 @@ sources:
       - core/cvxif_issue_register_commit_if_driver.sv
       - core/cvxif_compressed_if_driver.sv
 
-      # Keccak IP
-      - keccak_ip/hw/include/keccak_xif_instr_pkg.sv
-      - keccak_ip/hw/keccak_xif_cid.sv
-      - keccak_ip/hw/keccak_xif_id.sv
-      - keccak_ip/hw/keccak_xif_ex.sv
-      - keccak_ip/hw/keccak_xif.sv
-
-
       # Tracing
       - core/cva6_rvfi_probes.sv
       - core/cva6_fifo_v3.sv

@@ -8,21 +8,21 @@
 
 #include "inc/uart.h"
 #include "encoding.h"
-#include "keccak_axi.h"
+#include "vrf_axi.h"
 
-#define KECCAK_BASE_ADDR 0x50000000UL
+#define VRF_BASE_ADDR 0x50000000UL
 
 int main()
 {
 	static uint64_t src_buf[25];
 	uint64_t volatile *cryptoState =
-	    (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_DATA_0_REG_OFFSET);
+	    (uint64_t volatile *)(VRF_BASE_ADDR + VRF_DATA_0_REG_OFFSET);
 	uint64_t volatile *job_src_addr =
-	    (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_JOB_SRC_ADDR_REG_OFFSET);
+	    (uint64_t volatile *)(VRF_BASE_ADDR + VRF_JOB_SRC_ADDR_REG_OFFSET);
 	uint64_t volatile *job_src_len =
-	    (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_JOB_SRC_LEN_REG_OFFSET);
+	    (uint64_t volatile *)(VRF_BASE_ADDR + VRF_JOB_SRC_LEN_REG_OFFSET);
 	uint64_t volatile *jobctrl =
-	    (uint64_t volatile *)(KECCAK_BASE_ADDR + KECCAK_JOBCTRL_REG_OFFSET);
+	    (uint64_t volatile *)(VRF_BASE_ADDR + VRF_JOBCTRL_REG_OFFSET);
 	int errors = 0;
 	int cycles;
 
@@ -41,9 +41,9 @@ int main()
 
 	*job_src_addr = (uint64_t)(uintptr_t)src_buf;
 	*job_src_len  = 25 * 8;
-	*jobctrl = (uint64_t)1 << KECCAK_JOBCTRL_GO_BIT;
+	*jobctrl = (uint64_t)1 << VRF_JOBCTRL_GO_BIT;
 
-	while (((*jobctrl) & ((uint64_t)1 << KECCAK_JOBCTRL_DONE_BIT)) == 0);
+	while (((*jobctrl) & ((uint64_t)1 << VRF_JOBCTRL_DONE_BIT)) == 0);
 
 	cycles = read_csr(mcycle);
 
