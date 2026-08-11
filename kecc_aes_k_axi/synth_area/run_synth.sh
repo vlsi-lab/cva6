@@ -34,12 +34,12 @@ TCL_SCRIPT_WIN="$(wslpath -w "$SCRIPT_DIR/scripts/run_synth.tcl")"
 mkdir -p "$SCRIPT_DIR/logs"
 
 run_variant() {
-    local version="$1" sbox_impl="$2" parallel_slices="$3" variant_name="$4"
-    echo "[run_synth] ${variant_name} (version=${version}, SBOX_IMPL=${sbox_impl}, PARALLEL_SLICES=${parallel_slices}, part=${XILINX_PART}, clk=${CLK_PERIOD_NS}ns)"
+    local version="$1" sbox_impl="$2" parallel_slices="$3" variant_name="$4" wrapper="${5:-kecc_aes_k_axi}"
+    echo "[run_synth] ${variant_name} (version=${version}, wrapper=${wrapper}, SBOX_IMPL=${sbox_impl}, PARALLEL_SLICES=${parallel_slices}, part=${XILINX_PART}, clk=${CLK_PERIOD_NS}ns)"
     "$VIVADO" -mode batch -nojournal \
         -log "${PROJ_ROOT_WIN}\\kecc_aes_k_axi\\synth_area\\logs\\${variant_name}.log" \
         -source "$TCL_SCRIPT_WIN" \
-        -tclargs "$PROJ_ROOT_WIN" "$XILINX_PART" "$CLK_PERIOD_NS" "$version" "$sbox_impl" "$parallel_slices" "$variant_name"
+        -tclargs "$PROJ_ROOT_WIN" "$XILINX_PART" "$CLK_PERIOD_NS" "$version" "$sbox_impl" "$parallel_slices" "$variant_name" "$wrapper"
 }
 
 run_all() {
@@ -55,6 +55,7 @@ run_all() {
 
 case "${1:-v2}" in
     v2)             run_variant v2 0 4 v2 ;;
+    v2_unified)     run_variant v2_unified 0 4 v2_unified kecc_aes_k_axi_unified ;;
     v3)             run_variant v3 0 4 v3 ;;
     v4_serial_rom)  run_variant v4 0 4 v4_serial_rom ;;
     v4_dp_rom)      run_variant v4 1 4 v4_dp_rom ;;
@@ -64,7 +65,7 @@ case "${1:-v2}" in
     v5_bp)          run_variant v5 2 4 v5_bp ;;
     all)            run_all ;;
     *)
-        echo "Usage: $0 [v2|v3|v4_serial_rom|v4_dp_rom|v4_bp|v5_serial_rom|v5_dp_rom|v5_bp|all]" >&2
+        echo "Usage: $0 [v2|v2_unified|v3|v4_serial_rom|v4_dp_rom|v4_bp|v5_serial_rom|v5_dp_rom|v5_bp|all]" >&2
         exit 1
         ;;
 esac

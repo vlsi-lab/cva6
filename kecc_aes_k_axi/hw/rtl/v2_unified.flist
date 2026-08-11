@@ -1,0 +1,23 @@
+// kecc-aes-k v2, unified-storage variant RTL file list. Included via
+// core/Flist.cva6's -F ${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/${AES_LOOSE_VERSION}.flist
+// when AES_LOOSE_VERSION=v2_unified (see scripts/select_aes_variant.sh's
+// loose_v2_unified case).
+//
+// Reuses v2's pure-combinational AES/Keccak datapath sub-modules verbatim from
+// ../v2/ (aes_encipher_datapath.sv, aes_decipher_block.sv, aes_key_mem.sv,
+// aes_sbox.sv, keccak_round.sv, keccak_round_constants_gen.sv, pkg_keccak.sv --
+// none of these needed any change, see keccak_aes_k_top_unified.sv's header) --
+// only the top-level controller/register-commit module differs
+// (keccak_aes_k_top_unified.sv, in v2_unified/, NOT v2/keccak_aes_k_top.sv --
+// different module name, so no collision with a plain v2 build). Skips v2's
+// aes_key_mem_enc128.sv/aes_encipher_block.sv/aes_enc128_core.sv/aes_core.sv --
+// those only exist for the standalone aes_core.sv testbench path, never
+// instantiated by keccak_aes_k_top(_unified).
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v2/pkg_keccak.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v2/aes_sbox.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v2/aes_key_mem.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v2/aes_encipher_datapath.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v2/aes_decipher_block.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v2/keccak_round_constants_gen.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v2/keccak_round.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/v2_unified/keccak_aes_k_top_unified.sv

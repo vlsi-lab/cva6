@@ -17,7 +17,7 @@ src_common=(
     ../tests/custom/common/syscalls.c
     ../tests/custom/common/crt.S
     ../../tests/loosely/common/aes_xts.c
-    ../../kecc_aes_k_axi/sw/kecc_aes_k_axi.c
+    ../../kecc_aes_k_axi/sw/${AES_DRIVER_C:-kecc_aes_k_axi.c}
 )
 
 cflags=(

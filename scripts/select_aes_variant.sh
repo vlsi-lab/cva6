@@ -26,18 +26,39 @@
 
 if [ -z "$AES_VARIANT" ]; then
     echo "select_aes_variant.sh: AES_VARIANT is not set." >&2
-    echo "  Valid values: loose_v2, loose_v3," >&2
+    echo "  Valid values: loose_v2, loose_v2_unified, loose_v3," >&2
     echo "  loose_v4_serial_rom, loose_v4_dp_rom, loose_v4_bp," >&2
     echo "  loose_v5_serial_rom, loose_v5_dp_rom, loose_v5_bp." >&2
     return 1 2>/dev/null || exit 1
 fi
 
 export DV_TARGET=cv64a6_imac_crypto
+# Default wrapper/reg-file set for every case below except loose_v2_unified
+# (which overrides it) -- set unconditionally here, not just on first use,
+# since this script is `source`d and a stale value from a previous
+# AES_VARIANT=loose_v2_unified invocation in the same shell must not leak
+# into a later loose_v3/v4/v5 one (e.g. tests/run_all.sh looping variants).
+export AES_LOOSE_WRAPPER=kecc_aes_k_axi
+# Which kecc_aes_k_axi/sw/*.c driver implementation tests/loosely/*/run.sh
+# links in -- same public API (kecc_aes_k_axi.h) either way, only the
+# register offsets/handshake underneath differ. Reset unconditionally for
+# the same shell-state-leakage reason as AES_LOOSE_WRAPPER above.
+export AES_DRIVER_C=kecc_aes_k_axi.c
 
 case "$AES_VARIANT" in
     loose_v2)
         export TARGET_CFG=cv64a6_imac_crypto_loose_v2
         export AES_LOOSE_VERSION=v2
+        ;;
+    loose_v2_unified)
+        # Area-optimized sibling of loose_v2 (see
+        # kecc_aes_k_axi/hw/rtl/v2_unified/keccak_aes_k_top_unified.sv):
+        # no internal working-state register, the AXI register file itself
+        # is the core's only storage for both Keccak and AES.
+        export TARGET_CFG=cv64a6_imac_crypto_loose_v2_unified
+        export AES_LOOSE_VERSION=v2_unified
+        export AES_LOOSE_WRAPPER=kecc_aes_k_axi_unified
+        export AES_DRIVER_C=kecc_aes_k_axi_unified.c
         ;;
     loose_v3)
         export TARGET_CFG=cv64a6_imac_crypto_loose_v3

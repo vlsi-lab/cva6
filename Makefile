@@ -123,6 +123,13 @@ endif
 ifndef AES_LOOSE_VERSION
 	export AES_LOOSE_VERSION = v2
 endif
+# Which reg-file/wrapper set (kecc_aes_k_axi vs. its unified-storage sibling
+# kecc_aes_k_axi_unified) core/Flist.cva6 pairs with AES_LOOSE_VERSION -- see
+# core/Flist.cva6's own comment. Defaults to the non-unified design for every
+# existing AES_VARIANT; only loose_v2_unified overrides it.
+ifndef AES_LOOSE_WRAPPER
+	export AES_LOOSE_WRAPPER = kecc_aes_k_axi
+endif
 
 # HPDcache directory
 HPDCACHE_DIR ?= $(CVA6_REPO_DIR)/core/cache_subsystem/hpdcache
@@ -726,16 +733,16 @@ verilate_command := $(verilator) --no-timing verilator_config.vlt               
 # built for the previous config. Track what it was last built for and force a
 # clean rebuild whenever that changes.
 verilate:
-	@current_cfg="$(TARGET_CFG)|$(AES_LOOSE_VERSION)"; \
+	@current_cfg="$(TARGET_CFG)|$(AES_LOOSE_VERSION)|$(AES_LOOSE_WRAPPER)"; \
 	stamp_file="$(ver-library)/.last_verilate_config"; \
 	if [ ! -f "$$stamp_file" ] || [ "$$(cat $$stamp_file 2>/dev/null)" != "$$current_cfg" ]; then \
-		echo "[Verilator] TARGET_CFG/AES_LOOSE_VERSION changed to $$current_cfg -- forcing clean rebuild"; \
+		echo "[Verilator] TARGET_CFG/AES_LOOSE_VERSION/AES_LOOSE_WRAPPER changed to $$current_cfg -- forcing clean rebuild"; \
 		rm -rf $(ver-library); \
 	fi
 	@echo "[Verilator] Building Model$(if $(PROFILE), for Profiling,)"
 	$(verilate_command)
 	cd $(ver-library) && $(MAKE) -j${NUM_JOBS} -f Variane_testharness.mk
-	@mkdir -p $(ver-library) && echo "$(TARGET_CFG)|$(AES_LOOSE_VERSION)" > $(ver-library)/.last_verilate_config
+	@mkdir -p $(ver-library) && echo "$(TARGET_CFG)|$(AES_LOOSE_VERSION)|$(AES_LOOSE_WRAPPER)" > $(ver-library)/.last_verilate_config
 
 sim-verilator: verilate
 	$(ver-library)/Variane_testharness $(elf_file)
@@ -822,6 +829,7 @@ src_flist = $(shell \
 	    TARGET_CFG=$(TARGET_CFG) \
 	    HPDCACHE_DIR=$(HPDCACHE_DIR) \
 	    AES_LOOSE_VERSION=$(AES_LOOSE_VERSION) \
+	    AES_LOOSE_WRAPPER=$(AES_LOOSE_WRAPPER) \
 	    python3 util/flist_flattener.py core/Flist.cva6)
 fpga_filter := $(addprefix $(root-dir), corev_apu/bootrom/bootrom.sv)
 fpga_filter += $(addprefix $(root-dir), core/include/instr_tracer_pkg.sv)

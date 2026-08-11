@@ -1,0 +1,181 @@
+// kecc_aes_k_axi_unified (v2) - Loosely coupled AXI wrapper for
+// keccak_aes_k_top_unified, the area-optimized sibling of kecc_aes_k_axi_top
+// (see kecc_aes_k_axi.hjson). Same idea as cva6-keccak-loosely/keccak_ip's
+// keccak_axi_top.sv/keccak.hjson (DATA *is* the permutation engine's working
+// storage, no internal state_reg), extended here to AES as well: BLOCK *is*
+// the AES datapath's round-by-round working register, not a separate
+// staging copy read once and then shadowed by an internal state_reg.
+//
+// keccak_aes_k_top_unified.sv (kecc_aes_k_axi/hw/rtl/v2_unified/) has NO
+// internal 1600-bit or 128-bit working-state register at all -- every
+// permutation round / AES round reads its input live from this register
+// file's Q output and commits its output back into the SAME register file
+// location on the same cycle, exactly mirroring the sibling keccak-only
+// core's state_i/state_o/state_we_o handshake:
+//   - KECCAK_DATA0-24: read live as the round input, hardware overwrites
+//     all 25 words every one of the 24 rounds (not just once at
+//     completion, unlike kecc_aes_k_axi.hjson's KECCAK_DATA).
+//   - BLOCK0-1: read live as the AES round's `old_block`, hardware
+//     overwrites it on every INIT/SBOX/MAIN/FINAL sub-step (AES's SBOX
+//     phase substitutes one 32-bit word at a time -- see
+//     aes_encipher_datapath.sv's block_w0_we..block_w3_we -- so each
+//     32-bit half-word needs its own hw2reg.d/de, hence the WORD0-3 field
+//     split below instead of one 64-bit hwaccess per register).
+//
+// Consequence: there is no separate RESULT0-1 register in this map at
+// all. Software reads the (by-then fully transformed) BLOCK0-1 registers
+// as the AES result once STATUS.READY/RESULT_VALID go high -- the same
+// storage that held the plaintext/ciphertext input now holds the output,
+// same as how KECCAK_DATA already held both keccak_din and keccak_dout in
+// the non-unified design.
+//
+// CTRL/STATUS/KEY are otherwise identical to kecc_aes_k_axi.hjson -- see
+// that file's header for their rationale, not repeated here.
+
+{
+  name: "kecc_aes_k_axi_unified",
+  clock_primary: "clk_i",
+  reset_primary: "rst_ni",
+  bus_interfaces: [
+    {
+      protocol: "reg_iface",
+      direction: "device"
+    }
+  ],
+  regwidth: "64",
+  registers: [
+    {
+      name: "CTRL",
+      desc: "Control register for the kecc_aes_k_axi_unified accelerator wrapper",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [
+        {
+          bits: "0",
+          name: "ZEROIZE",
+          desc: "Level-held: scrub BLOCK/KECCAK_DATA + the AES key schedule to 0 while asserted. Takes priority over any in-flight op. Software sets then clears it."
+        },
+        {
+          bits: "1",
+          name: "SEL",
+          desc: "0 = keccak, 1 = aes. Held stable by software across an operation."
+        },
+        {
+          bits: "2",
+          name: "ENCDEC",
+          desc: "AES only: 1 = encrypt, 0 = decrypt. Held stable by software across an operation."
+        },
+        {
+          bits: "3",
+          name: "KEYLEN",
+          desc: "AES only: 0 = 128-bit, 1 = 256-bit. Held stable by software across an operation."
+        },
+        {
+          bits: "4",
+          name: "INIT",
+          desc: "AES only: write 1 to pulse the core's init input (start key schedule), poll STATUS.READY, then write 0 back before the next INIT/NEXT pulse."
+        },
+        {
+          bits: "5",
+          name: "NEXT",
+          desc: "Write 1 to pulse the core's next input (AES: run block, Keccak: start permute), poll STATUS.READY/RESULT_VALID/KECCAK_DONE, then write 0 back before the next INIT/NEXT pulse."
+        }
+      ]
+    },
+    {
+      name: "STATUS",
+      desc: "Status register for the kecc_aes_k_axi_unified accelerator wrapper",
+      swaccess: "ro",
+      hwaccess: "hwo",
+      fields: [
+        {
+          bits: "0",
+          name: "READY",
+          desc: "Mirrors the core's ready output (1 = idle / operation complete). Level signal, always up to date."
+        },
+        {
+          bits: "1",
+          name: "RESULT_VALID",
+          desc: "AES only: mirrors the core's result_valid output; when this is 1, BLOCK0-1 holds the AES result. Level signal, always up to date."
+        },
+        {
+          bits: "2",
+          name: "KECCAK_DONE",
+          swaccess: "rw",
+          hwaccess: "hrw",
+          desc: "Keccak only: latched by hardware on the core's one-cycle keccak_done pulse. Software must write 0 to clear it before the next Keccak op."
+        }
+      ]
+    },
+    { multireg: {
+        name: "KEY",
+        desc: "Word i (0-3) of the 256-bit AES key input, word i = key[64*i +: 64]. AES only. Software-owned staging register, read directly by the core -- do not write while an operation is in flight.",
+        count: "4",
+        cname: "KEY",
+        swaccess: "rw",
+        hwaccess: "hro",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    },
+    {
+      // Register NAME (BLOCK0) intentionally does not match "which half of
+      // the 128-bit block" the way it might suggest: this holds the UPPER
+      // half (w0/w1) because it must match the software driver's existing
+      // BLOCK_1-gets-the-upper-half convention (kecc_aes_k_axi.c's
+      // write_block/read_result, inherited unchanged from the non-unified
+      // driver -- REG64(BLOCK_1_OFFSET) is written with the block's first
+      // 8 bytes). kecc_aes_k_axi_unified.c's write_block/read_block keep
+      // that exact byte-offset pattern, writing to BLOCK1_REG_OFFSET for
+      // the upper half -- so BLOCK1 (not BLOCK0) is the register defined
+      // here with the w0/w1 fields, and BLOCK0 gets w2/w3, below.
+      name: "BLOCK1",
+      desc: "AES only. Upper 64 bits (words 0-1) of the 128-bit AES block -- also the core's own round-by-round working register (no separate copy): software writes the plaintext/ciphertext here, hardware overwrites it every AES sub-step (INIT/SBOX/MAIN/FINAL), and software reads the transformed value back from here once STATUS.RESULT_VALID is 1. Do not write while an operation is in flight.",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "63:32",
+          name: "W0",
+          desc: "block[127:96], AES word 0"
+        },
+        {
+          bits: "31:0",
+          name: "W1",
+          desc: "block[95:64], AES word 1"
+        }
+      ]
+    },
+    {
+      name: "BLOCK0",
+      desc: "AES only. Lower 64 bits (words 2-3) of the 128-bit AES block -- see BLOCK1 for the working-register/result semantics and for why the BLOCK0/BLOCK1 naming doesn't match upper/lower intuitively.",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "63:32",
+          name: "W2",
+          desc: "block[63:32], AES word 2"
+        },
+        {
+          bits: "31:0",
+          name: "W3",
+          desc: "block[31:0], AES word 3"
+        }
+      ]
+    },
+    { multireg: {
+        name: "KECCAK_DATA",
+        desc: "Word i (0-24) of the 1600-bit Keccak state, word i = bits [64*i +: 64] of keccak_din/keccak_dout, matching the vendored core's own w=5*y+x lane packing. This is the core's own working storage -- not a staging/mirror copy -- overwritten by hardware every one of the 24 permutation rounds (not just once at completion). Software must not write KECCAK_DATA[i] while a Keccak op is in flight (between NEXT and KECCAK_DONE).",
+        count: "25",
+        cname: "KECCAK",
+        swaccess: "rw",
+        hwaccess: "hrw",
+        fields: [
+          { bits: "63:0" }
+        ]
+      }
+    }
+  ]
+}

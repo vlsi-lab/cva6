@@ -1,5 +1,53 @@
 # Benchmark results: software baseline vs. tightly-coupled coprocessor
 
+## Index
+
+This document covers three implementations of the AES/Keccak accelerator --
+**software** baseline, **tightly-coupled** CV-X-IF coprocessor, and
+**loosely-coupled** AXI-memory-mapped peripheral (8 RTL variants: v2/v3/
+v4×3-`SBOX_IMPL`/v5×3-`SBOX_IMPL`, plus one area-optimized redesign,
+`v2_unified`) -- and their measured performance and FPGA area.
+
+- [Results — original 11 algorithms](#results--original-11-algorithms) --
+  software vs. tightly-coupled, the first 11 tests ported (Keccak permute,
+  AES-128 ECB, SHA3/SHAKE/KMAC/HMAC): tightly-coupled is 1.6-8.8x faster.
+- [Results — new AES modes (CTR, GCM, XTS)](#results--new-aes-modes-ctr-gcm-xts) --
+  same comparison extended to AES-CTR/GCM/XTS.
+- [Results — AES-GCM payload-size sweep](#results--aes-gcm-payload-size-sweep) --
+  GCM cost vs. payload size, 16 B to 1024 B.
+- [Results — GHASH block-multiply](#results--ghash-block-multiply) --
+  a prototyped `GHASH_CLMULL`/`CLMULH` addition, measured and then removed
+  (no benefit over native `clmul`/`clmulh`).
+- [Results — Keccak sponge interface (Phase B)](#results--keccak-sponge-interface-phase-b) --
+  absorb/squeeze/init/padding/context-save as separate, composable calls,
+  including chunked-vs-monolithic incremental absorb/squeeze.
+- [Results — Loosely-coupled AXI accelerator (all 8 variants)](#results--loosely-coupled-axi-accelerator-all-8-variants) --
+  the full 22-test suite re-run on every one of the 8 `kecc_aes_k_axi` RTL
+  variants (176/176 runs pass); `SBOX_IMPL` is a no-op for v4 but measurably
+  speeds up 6 of 12 AES-touching tests for v5's `bp` variant; v5 is slower
+  end-to-end than v2/v3/v4.
+- [Results — Area (Vivado synthesis)](#results--area-vivado-synthesis) --
+  tightly-coupled system area: the CV-X-IF coprocessor is <1% of total
+  LUTs/FFs.
+- [Results — Area, loosely-coupled AXI accelerator (all 8 variants)](#results--area-loosely-coupled-axi-accelerator-all-8-variants) --
+  real synthesized area (wrapper + register file + core) for all 8 variants;
+  v5's slice-serial Keccak datapath is ~40% smaller than v2/v3/v4, trading
+  area for the extra cycles above; the AXI register file + bridge together
+  are roughly as large as the compute core itself.
+- [Results — Unified-storage redesign (`v2_unified`)](#results--unified-storage-redesign-loose_v2_unified) --
+  a second wrapper/core with no internal working-state register at all (the
+  AXI register file itself is the only storage, for both Keccak and AES):
+  cycle-identical to v2 on 21/22 tests, **-14% LUTs / -26% FFs / -14%
+  Slices**. Built for v2 only; [what porting to v3/v4/v5 would
+  take](#extending-to-v3v4v5) is scoped but not implemented.
+- [Takeaways](#takeaways) -- cross-cutting conclusions across all of the above.
+- [Future work / methodology notes](#future-work--methodology-notes-not-implemented-here) --
+  known gaps and ideas not pursued in this round.
+- [Reproducing](#reproducing) -- exact commands to re-run any result in this
+  document.
+
+---
+
 Fresh re-run of all 22 original tests (`tests/software/` and `tests/tightly/`) on real
 RTL (`veri-testharness`, target `cv64a6_imafdc_sv39`), executed via
 `source tests/software/run.sh all` and `source tests/tightly/run.sh all`, plus 3 new
@@ -285,7 +333,7 @@ Reading down each column tells a consistent story:
 | Test | v2 | v3 | v4 (all `SBOX_IMPL`) | v5 (serial/dp_rom) | v5 (bp) |
 |---|---:|---:|---:|---:|---:|
 | `keccak_core` | 3,684 / 2,665 | 3,660 / 2,667 | 3,660 / 2,667 | 4,065 / 2,787 | 4,065 / 2,787 |
-| `aes_core` (single-block encrypt; not comparable to SW/Tightly `aes_core` -- see above) | 743 / 417 | 946 / 496 | 1,146 / 556 | 1,146 / 556 | 946 / 496 |
+| `aes_core` (single-block encrypt; not comparable to SW/Tightly `aes_core` -- see above) | 936 / 493 | 946 / 496 | 1,146 / 556 | 1,146 / 556 | 946 / 496 |
 | `sha3_256` | 4,709 / 3,560 | 4,709 / 3,560 | 4,709 / 3,560 | 5,109 / 3,677 | 5,109 / 3,677 |
 | `sha3_512` | 4,957 / 3,743 | 4,957 / 3,743 | 4,957 / 3,743 | 5,357 / 3,860 | 5,357 / 3,860 |
 | `shake128_short` (32 B in) | 4,875 / 3,728 | 4,875 / 3,728 | 4,875 / 3,728 | 5,275 / 3,845 | 5,275 / 3,845 |
@@ -295,6 +343,13 @@ Reading down each column tells a consistent story:
 | `aes_encrypt` (ECB, 2 blocks) | 1,608 / 895 | 1,628 / 901 | 2,028 / 1,021 | 2,028 / 1,021 | 1,628 / 901 |
 | `aes_decrypt` (ECB, 2 blocks) | 1,601 / 897 | 1,651 / 912 | 2,131 / 1,056 | 2,131 / 1,056 | 1,651 / 912 |
 | `aes_cbc` (3 blocks, enc+dec) | — | — | — | — | — |
+
+Correction (2026-08-11): `v2`'s `aes_core` row above previously read 743/417,
+a stale number from earlier in this project's development. Re-running
+`AES_VARIANT=loose_v2 tests/loosely/aes_core/run.sh` fresh today gives
+936/493 -- the value now shown. Every other cell in this table was spot-
+checked against the same re-run and still matches, so this correction is
+isolated to this one cell.
 
 `aes_cbc` breakdown, cycles / instrs (encrypt / decrypt phases):
 
@@ -468,6 +523,131 @@ motivating the unified-storage redesign below: if the register file's own
 storage *is* the core's working storage (no separate copy, no
 `axi_to_reg`-mediated round trip through a second storage element), both the
 register-file and a share of the bridge/glue overhead should shrink.
+
+## Results — Unified-storage redesign (`loose_v2_unified`)
+
+The redesign predicted above: a second AXI wrapper (`kecc_aes_k_axi_unified_top.sv`
++ `kecc_aes_k_axi_unified.hjson`, both new) around a new core
+(`keccak_aes_k_top_unified.sv`, in `kecc_aes_k_axi/hw/rtl/v2_unified/`) with **no
+internal working-state register at all**, for both Keccak and AES -- modeled
+directly on `cva6-keccak-loosely/keccak_ip/rtl/keccak_dp.sv`'s pattern (state read
+live from the register file every cycle, written back into the very same
+registers every round, gated by a write-enable pulse -- the register file's own
+flip-flops are the only storage). Extended here to AES too, which the keccak-only
+precedent didn't cover: `BLOCK0`/`BLOCK1` are now hardware-writable (`hwaccess:
+hrw`, split into four independent 32-bit sub-fields to match AES's word-serial
+SBOX substitution phase) and there is no separate `RESULT0`/`RESULT1` register at
+all -- software reads the (by then fully transformed) `BLOCK0`/`BLOCK1` back as
+the AES result, the same way `KECCAK_DATA0-24` already served as both input and
+output. AES's expanded key *schedule* (`aes_key_mem`'s internal RAM) is not part
+of this unification and stays private/internal either way -- it was never
+AXI-visible to begin with, in either design.
+
+Selected via `AES_VARIANT=loose_v2_unified` (same `select_aes_variant.sh`/
+`tests/loosely/` flow as the other 8 variants) or
+`kecc_aes_k_axi/synth_area/run_synth.sh v2_unified` for synthesis. Built only for
+the v2 RTL family so far (no `SBOX_IMPL`/`PARALLEL_SLICES` variants) -- see
+"Extending to v3/v4/v5" below for what porting further would take.
+
+**Correctness**: all 22/22 tests pass (same KAT vectors as every other variant).
+One real bug was caught and fixed during bring-up: the initial register map had
+`BLOCK0`/`BLOCK1`'s upper/lower-half assignment backwards relative to the
+existing driver's fixed byte-ordering convention, which silently computed a
+consistent but wrong ciphertext (`aes_core` failed all 16 output bytes on the
+first run) -- fixed by swapping which register holds which half in
+`kecc_aes_k_axi_unified.hjson` and the wrapper's wiring, no driver change needed.
+
+### Performance: cycle-for-cycle identical to v2 on 21 of 22 tests
+
+| Test | v2 | v2\_unified | Difference |
+|---|---:|---:|---:|
+| `keccak_core` | 3,684 / 2,665 | 3,660 / 2,667 | -24 cycles (no separate Keccak "load" step needed -- the register file already holds the input) |
+| every other test (21/22) | (see tables above) | identical | 0 |
+
+Every AES test that chains multiple block calls through the same driver
+(`aes_cbc`, `aes_ctr`, `aes_gcm`, `aes_xts`, `aes_encrypt`, `aes_decrypt`,
+`aes_gcm_sweep`) and every Keccak sponge/KMAC/HMAC/SHA3/SHAKE test reproduces
+its v2 cycle count exactly -- removing the internal working-state register cost
+*zero* extra cycles anywhere except the one Keccak case above, where it actually
+removed a cycle. This matches expectation: the redesign only changes *where*
+each round's result is stored (register file vs. a second internal copy), not
+the round count, the FSM's state sequencing, or the AXI transaction pattern.
+
+(Note: `tests/result.md`'s `v2` `aes_core` figure was corrected from a stale
+743/417 to the freshly-verified 936/493 during this comparison -- see the
+correction note above the "Original 11 algorithms" table. Without that fix,
+`aes_core` would have looked like a 193-cycle regression; re-running v2 fresh
+confirmed it isn't one.)
+
+### Area: real reduction, though smaller than a naive "remove 1600+128 duplicate bits" estimate
+
+Same Vivado flow, same part, same 100 MHz virtual clock as the 8-variant area
+table above. Measured 2026-08-11.
+
+| Metric | v2 | v2\_unified | Change |
+|---|---:|---:|---:|
+| Total LUTs | 10,894 | 9,358 | **-14.1%** |
+| Slice Registers (FFs) | 6,720 | 4,999 | **-25.6%** |
+| Slices (packed CLBs) | 3,657 | 3,143 | **-14.1%** |
+| WNS @ 10ns (100 MHz target) | -1.532ns | -0.905ns | closer to closing, still not met |
+
+Hierarchical breakdown, LUTs / FFs (same cross-hierarchy-optimization caveat as
+the 8-variant table above applies -- Vivado can move logic across the
+register-file/bridge instance boundary during optimization, so read the
+individual sub-block split as approximate; the row totals and the grand total
+are what's robust):
+
+| Sub-block | v2 | v2\_unified |
+|---|---:|---:|
+| Core (`i_keccak_aes_k_top` / `i_keccak_aes_k_top_unified`) | 5,392 / 3,806 | 2,918 / 2,206 |
+| Register file (`kecc_aes_k_axi_reg_top_i` / `..._unified_reg_top_i`) | 2,222 / 2,138 | 4,449 / 2,017 |
+| AXI bridge (`i_axi2reg`) | 3,026 / 773 | 1,751 / 773 |
+
+The **core itself shrank 45.9% in LUTs / 42.0% in FFs** -- removing the
+1600-bit Keccak state register and the 128-bit AES working-block register (no
+longer duplicated anywhere in this module) is exactly the saving predicted.
+The **register file's LUT cost roughly doubled** (2,222 -> 4,449) -- the
+expected cost of the trade: `BLOCK0`/`BLOCK1` need real per-field
+read/hardware-write/software-write arbitration logic now (four independent
+32-bit fields with `hwaccess: hrw`, versus two plain software-only 64-bit
+fields before), and `KECCAK_DATA` commits every round instead of once, both of
+which cost real muxing silicon that the non-unified design's register file
+never needed. The AXI bridge's reported LUT count also dropped (3,026 ->
+1,751) with FFs unchanged -- given `axi_to_reg.sv` itself is bit-for-bit
+identical in both builds, this is most likely more of the same cross-hierarchy
+attribution shift already seen in the 8-variant table, not a genuine
+behavioral difference in the bridge.
+
+**Net result: the area saved by removing the duplicate working-state storage
+is larger than the area added by the register file's new fine-grained
+hardware-write logic, giving a real net reduction -- but a meaningfully
+smaller one than "delete 1728 bits of duplicate flip-flops" would naively
+suggest**, because eliminating that duplication requires adding real
+arbitration logic elsewhere to let the AXI-visible registers safely serve
+double duty as both the software staging area and the hardware's active
+working set.
+
+### Extending to v3/v4/v5
+
+Not done in this pass. The user's own hint -- "once done for one, probably the
+new structure/wrapper should adapt easily to all the variant" -- holds
+structurally: `keccak_aes_k_top_unified.sv` reuses v2's pure-combinational
+`aes_encipher_datapath.sv`/`aes_decipher_block.sv`/`aes_key_mem.sv`/
+`aes_sbox.sv`/`keccak_round.sv` verbatim (same files v3 also uses unmodified),
+and the wrapper/register-file pieces (`kecc_aes_k_axi_unified_top.sv`,
+`kecc_aes_k_axi_unified.hjson`) don't reference `SBOX_IMPL`/`PARALLEL_SLICES`
+or any version-specific file at all -- only the RTL file list
+(`kecc_aes_k_axi/hw/rtl/v2_unified.flist`) is version-specific. Porting to v3
+should be a small delta (swap which `aes_sbox`/`keccak_round` files the flist
+points at, matching v3's own file set). v4/v5 are a larger delta:
+`keccak_aes_k_top_unified.sv` would need the same `SBOX_IMPL`/(`PARALLEL_SLICES`
+for v5) parameters and `` `ifdef``-based instantiation-shape handling the
+non-unified core already has, plus v5's `keccak_slice_serial.sv`/
+`keccak_lane_mem.sv` datapath would need its own live-register-file
+integration (its round structure differs from v2/v3/v4's single-shot
+`keccak_round.sv`, so the "read live, commit every round" pattern would need
+re-deriving for its slice-serial round structure specifically, not just
+reused).
 
 ## Takeaways
 

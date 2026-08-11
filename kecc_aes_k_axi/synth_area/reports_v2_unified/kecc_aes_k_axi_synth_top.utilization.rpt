@@ -1,0 +1,247 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2024.1 (win64) Build 5076996 Wed May 22 18:37:14 MDT 2024
+| Date         : Tue Aug 11 13:39:41 2026
+| Host         : AlessandraYOGA running 64-bit major release  (build 9200)
+| Command      : report_utilization -hierarchical -file reports_v2_unified/kecc_aes_k_axi_synth_top.utilization.rpt
+| Design       : kecc_aes_k_axi_synth_top
+| Device       : xc7a100tftg256-2
+| Speed File   : -2
+| Design State : Fully Placed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++-------------------------------------------------------------+--------------------------------------------+------------+------------+---------+------+------+--------+--------+------------+
+|                           Instance                          |                   Module                   | Total LUTs | Logic LUTs | LUTRAMs | SRLs |  FFs | RAMB36 | RAMB18 | DSP Blocks |
++-------------------------------------------------------------+--------------------------------------------+------------+------------+---------+------+------+--------+--------+------------+
+| kecc_aes_k_axi_synth_top                                    |                                      (top) |       9358 |       9358 |       0 |    0 | 4999 |      0 |      0 |          0 |
+|   (kecc_aes_k_axi_synth_top)                                |                                      (top) |          0 |          0 |       0 |    0 |    0 |      0 |      0 |          0 |
+|   i_kecc_aes_k_axi_top                                      |                         kecc_aes_k_axi_top |       9358 |       9358 |       0 |    0 | 4999 |      0 |      0 |          0 |
+|     (i_kecc_aes_k_axi_top)                                  |                         kecc_aes_k_axi_top |        256 |        256 |       0 |    0 |    3 |      0 |      0 |          0 |
+|     i_axi2reg                                               |                                 axi_to_reg |       1751 |       1751 |       0 |    0 |  773 |      0 |      0 |          0 |
+|       (i_axi2reg)                                           |                                 axi_to_reg |        280 |        280 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       i_axi_lite_to_reg                                     |                            axi_lite_to_reg |        724 |        724 |       0 |    0 |  321 |      0 |      0 |          0 |
+|         i_fifo_read                                         |                    fifo_v3__parameterized6 |        623 |        623 |       0 |    0 |   22 |      0 |      0 |          0 |
+|         i_fifo_read_resp                                    |                    fifo_v3__parameterized7 |          2 |          2 |       0 |    0 |  134 |      0 |      0 |          0 |
+|         i_fifo_write_req                                    |                    fifo_v3__parameterized4 |         96 |         96 |       0 |    0 |  158 |      0 |      0 |          0 |
+|         i_fifo_write_resp                                   |                    fifo_v3__parameterized5 |          3 |          3 |       0 |    0 |    6 |      0 |      0 |          0 |
+|         i_stream_arbiter                                    |                             stream_arbiter |          0 |          0 |       0 |    0 |    1 |      0 |      0 |          0 |
+|           i_arb                                             |                   stream_arbiter_flushable |          0 |          0 |       0 |    0 |    1 |      0 |      0 |          0 |
+|             gen_rr_arb.i_arbiter                            |                rr_arb_tree__parameterized1 |          0 |          0 |       0 |    0 |    1 |      0 |      0 |          0 |
+|       i_axi_to_axi_lite                                     |                            axi_to_axi_lite |        751 |        751 |       0 |    0 |  452 |      0 |      0 |          0 |
+|         i_axi_atop_filter                                   |                            axi_atop_filter |         11 |         11 |       0 |    0 |   31 |      0 |      0 |          0 |
+|           (i_axi_atop_filter)                               |                            axi_atop_filter |          4 |          4 |       0 |    0 |   21 |      0 |      0 |          0 |
+|           r_resp_cmd                                        |                            stream_register |          7 |          7 |       0 |    0 |   10 |      0 |      0 |          0 |
+|             i_fifo                                          |                                    fifo_v2 |          7 |          7 |       0 |    0 |   10 |      0 |      0 |          0 |
+|               i_fifo_v3                                     |                                    fifo_v3 |          7 |          7 |       0 |    0 |   10 |      0 |      0 |          0 |
+|         i_axi_burst_splitter                                |                         axi_burst_splitter |        682 |        682 |       0 |    0 |  393 |      0 |      0 |          0 |
+|           (i_axi_burst_splitter)                            |                         axi_burst_splitter |          0 |          0 |       0 |    0 |    4 |      0 |      0 |          0 |
+|           i_axi_burst_splitter_ar_chan                      | axi_burst_splitter_ax_chan__parameterized0 |        114 |        114 |       0 |    0 |   67 |      0 |      0 |          0 |
+|             (i_axi_burst_splitter_ar_chan)                  | axi_burst_splitter_ax_chan__parameterized0 |         24 |         24 |       0 |    0 |   28 |      0 |      0 |          0 |
+|             i_axi_burst_splitter_counters                   |            axi_burst_splitter_counters_130 |         90 |         90 |       0 |    0 |   39 |      0 |      0 |          0 |
+|               gen_cnt[0].i_cnt                              |                counter__parameterized0_131 |         13 |         13 |       0 |    0 |    9 |      0 |      0 |          0 |
+|                 i_counter                                   |          delta_counter__parameterized1_135 |         13 |         13 |       0 |    0 |    9 |      0 |      0 |          0 |
+|               gen_cnt[1].i_cnt                              |                counter__parameterized0_132 |         21 |         21 |       0 |    0 |    9 |      0 |      0 |          0 |
+|                 i_counter                                   |          delta_counter__parameterized1_134 |         21 |         21 |       0 |    0 |    9 |      0 |      0 |          0 |
+|               i_idq                                         |                               id_queue_133 |         56 |         56 |       0 |    0 |   21 |      0 |      0 |          0 |
+|           i_axi_burst_splitter_aw_chan                      |                 axi_burst_splitter_ax_chan |        136 |        136 |       0 |    0 |   69 |      0 |      0 |          0 |
+|             (i_axi_burst_splitter_aw_chan)                  |                 axi_burst_splitter_ax_chan |         42 |         42 |       0 |    0 |   28 |      0 |      0 |          0 |
+|             i_axi_burst_splitter_counters                   |                axi_burst_splitter_counters |         94 |         94 |       0 |    0 |   41 |      0 |      0 |          0 |
+|               (i_axi_burst_splitter_counters)               |                axi_burst_splitter_counters |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_cnt[0].i_cnt                              |                    counter__parameterized0 |         24 |         24 |       0 |    0 |    9 |      0 |      0 |          0 |
+|                 i_counter                                   |          delta_counter__parameterized1_129 |         24 |         24 |       0 |    0 |    9 |      0 |      0 |          0 |
+|               gen_cnt[1].i_cnt                              |                counter__parameterized0_128 |         18 |         18 |       0 |    0 |    9 |      0 |      0 |          0 |
+|                 i_counter                                   |              delta_counter__parameterized1 |         18 |         18 |       0 |    0 |    9 |      0 |      0 |          0 |
+|               i_idq                                         |                                   id_queue |         50 |         50 |       0 |    0 |   21 |      0 |      0 |          0 |
+|           i_demux_supported_vs_unsupported                  |                                  axi_demux |        397 |        397 |       0 |    0 |  208 |      0 |      0 |          0 |
+|             (i_demux_supported_vs_unsupported)              |                                  axi_demux |          0 |          0 |       0 |    0 |    2 |      0 |      0 |          0 |
+|             gen_demux.gen_ar_id_counter.i_ar_id_counter     |                      axi_demux_id_counters |        124 |        124 |       0 |    0 |   96 |      0 |      0 |          0 |
+|               (gen_demux.gen_ar_id_counter.i_ar_id_counter) |                      axi_demux_id_counters |          0 |          0 |       0 |    0 |   32 |      0 |      0 |          0 |
+|               gen_counters[0].i_in_flight_cnt               |                           delta_counter_96 |          1 |          1 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[10].i_in_flight_cnt              |                           delta_counter_97 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[11].i_in_flight_cnt              |                           delta_counter_98 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[12].i_in_flight_cnt              |                           delta_counter_99 |          1 |          1 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[13].i_in_flight_cnt              |                          delta_counter_100 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[14].i_in_flight_cnt              |                          delta_counter_101 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[15].i_in_flight_cnt              |                          delta_counter_102 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[16].i_in_flight_cnt              |                          delta_counter_103 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[17].i_in_flight_cnt              |                          delta_counter_104 |          1 |          1 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[18].i_in_flight_cnt              |                          delta_counter_105 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[19].i_in_flight_cnt              |                          delta_counter_106 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[1].i_in_flight_cnt               |                          delta_counter_107 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[20].i_in_flight_cnt              |                          delta_counter_108 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[21].i_in_flight_cnt              |                          delta_counter_109 |          1 |          1 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[22].i_in_flight_cnt              |                          delta_counter_110 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[23].i_in_flight_cnt              |                          delta_counter_111 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[24].i_in_flight_cnt              |                          delta_counter_112 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[25].i_in_flight_cnt              |                          delta_counter_113 |          1 |          1 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[26].i_in_flight_cnt              |                          delta_counter_114 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[27].i_in_flight_cnt              |                          delta_counter_115 |         54 |         54 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[28].i_in_flight_cnt              |                          delta_counter_116 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[29].i_in_flight_cnt              |                          delta_counter_117 |          1 |          1 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[2].i_in_flight_cnt               |                          delta_counter_118 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[30].i_in_flight_cnt              |                          delta_counter_119 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[31].i_in_flight_cnt              |                          delta_counter_120 |         13 |         13 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[3].i_in_flight_cnt               |                          delta_counter_121 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[4].i_in_flight_cnt               |                          delta_counter_122 |          1 |          1 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[5].i_in_flight_cnt               |                          delta_counter_123 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[6].i_in_flight_cnt               |                          delta_counter_124 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[7].i_in_flight_cnt               |                          delta_counter_125 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[8].i_in_flight_cnt               |                          delta_counter_126 |          1 |          1 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[9].i_in_flight_cnt               |                          delta_counter_127 |          5 |          5 |       0 |    0 |    2 |      0 |      0 |          0 |
+|             gen_demux.gen_aw_id_counter.i_aw_id_counter     |                   axi_demux_id_counters_64 |        178 |        178 |       0 |    0 |   96 |      0 |      0 |          0 |
+|               (gen_demux.gen_aw_id_counter.i_aw_id_counter) |                   axi_demux_id_counters_64 |         11 |         11 |       0 |    0 |   32 |      0 |      0 |          0 |
+|               gen_counters[0].i_in_flight_cnt               |                              delta_counter |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[10].i_in_flight_cnt              |                           delta_counter_65 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[11].i_in_flight_cnt              |                           delta_counter_66 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[12].i_in_flight_cnt              |                           delta_counter_67 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[13].i_in_flight_cnt              |                           delta_counter_68 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[14].i_in_flight_cnt              |                           delta_counter_69 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[15].i_in_flight_cnt              |                           delta_counter_70 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[16].i_in_flight_cnt              |                           delta_counter_71 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[17].i_in_flight_cnt              |                           delta_counter_72 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[18].i_in_flight_cnt              |                           delta_counter_73 |          4 |          4 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[19].i_in_flight_cnt              |                           delta_counter_74 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[1].i_in_flight_cnt               |                           delta_counter_75 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[20].i_in_flight_cnt              |                           delta_counter_76 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[21].i_in_flight_cnt              |                           delta_counter_77 |          5 |          5 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[22].i_in_flight_cnt              |                           delta_counter_78 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[23].i_in_flight_cnt              |                           delta_counter_79 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[24].i_in_flight_cnt              |                           delta_counter_80 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[25].i_in_flight_cnt              |                           delta_counter_81 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[26].i_in_flight_cnt              |                           delta_counter_82 |          4 |          4 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[27].i_in_flight_cnt              |                           delta_counter_83 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[28].i_in_flight_cnt              |                           delta_counter_84 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[29].i_in_flight_cnt              |                           delta_counter_85 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[2].i_in_flight_cnt               |                           delta_counter_86 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[30].i_in_flight_cnt              |                           delta_counter_87 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[31].i_in_flight_cnt              |                           delta_counter_88 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[3].i_in_flight_cnt               |                           delta_counter_89 |         71 |         71 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[4].i_in_flight_cnt               |                           delta_counter_90 |          2 |          2 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[5].i_in_flight_cnt               |                           delta_counter_91 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[6].i_in_flight_cnt               |                           delta_counter_92 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[7].i_in_flight_cnt               |                           delta_counter_93 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[8].i_in_flight_cnt               |                           delta_counter_94 |          3 |          3 |       0 |    0 |    2 |      0 |      0 |          0 |
+|               gen_counters[9].i_in_flight_cnt               |                           delta_counter_95 |          4 |          4 |       0 |    0 |    2 |      0 |      0 |          0 |
+|             gen_demux.i_b_mux                               |                                rr_arb_tree |          6 |          6 |       0 |    0 |    4 |      0 |      0 |          0 |
+|             gen_demux.i_r_mux                               |                rr_arb_tree__parameterized0 |         76 |         76 |       0 |    0 |    4 |      0 |      0 |          0 |
+|             gen_demux.i_w_fifo                              |                    fifo_v3__parameterized0 |         13 |         13 |       0 |    0 |    6 |      0 |      0 |          0 |
+|           i_err_slv                                         |                                axi_err_slv |         36 |         36 |       0 |    0 |   45 |      0 |      0 |          0 |
+|             (i_err_slv)                                     |                                axi_err_slv |          0 |          0 |       0 |    0 |    1 |      0 |      0 |          0 |
+|             i_b_fifo                                        |                 fifo_v3__parameterized2_63 |         16 |         16 |       0 |    0 |   14 |      0 |      0 |          0 |
+|             i_r_counter                                     |                                    counter |         13 |         13 |       0 |    0 |    8 |      0 |      0 |          0 |
+|               i_counter                                     |              delta_counter__parameterized0 |         13 |         13 |       0 |    0 |    8 |      0 |      0 |          0 |
+|             i_r_fifo                                        |                    fifo_v3__parameterized3 |          6 |          6 |       0 |    0 |   15 |      0 |      0 |          0 |
+|             i_w_fifo                                        |                    fifo_v3__parameterized1 |          1 |          1 |       0 |    0 |    7 |      0 |      0 |          0 |
+|         i_axi_to_axi_lite_id_reflect                        |                 axi_to_axi_lite_id_reflect |         59 |         59 |       0 |    0 |   28 |      0 |      0 |          0 |
+|           i_ar_id_fifo                                      |                    fifo_v3__parameterized2 |         39 |         39 |       0 |    0 |   14 |      0 |      0 |          0 |
+|           i_aw_id_fifo                                      |                 fifo_v3__parameterized2_62 |         20 |         20 |       0 |    0 |   14 |      0 |      0 |          0 |
+|     i_keccak_aes_k_top_unified                              |                   keccak_aes_k_top_unified |       2918 |       2918 |       0 |    0 | 2206 |      0 |      0 |          0 |
+|       (i_keccak_aes_k_top_unified)                          |                   keccak_aes_k_top_unified |         98 |         98 |       0 |    0 |   22 |      0 |      0 |          0 |
+|       keymem                                                |                                aes_key_mem |       2620 |       2620 |       0 |    0 | 2184 |      0 |      0 |          0 |
+|       sbox_inst                                             |                                   aes_sbox |        200 |        200 |       0 |    0 |    0 |      0 |      0 |          0 |
+|     kecc_aes_k_axi_unified_reg_top_i                        |             kecc_aes_k_axi_unified_reg_top |       4449 |       4449 |       0 |    0 | 2017 |      0 |      0 |          0 |
+|       u_block0_w2                                           |                prim_subreg__parameterized2 |        126 |        126 |       0 |    0 |   32 |      0 |      0 |          0 |
+|       u_block0_w3                                           |              prim_subreg__parameterized2_0 |         64 |         64 |       0 |    0 |   32 |      0 |      0 |          0 |
+|       u_block1_w0                                           |              prim_subreg__parameterized2_1 |         53 |         53 |       0 |    0 |   32 |      0 |      0 |          0 |
+|       u_block1_w1                                           |              prim_subreg__parameterized2_2 |         85 |         85 |       0 |    0 |   32 |      0 |      0 |          0 |
+|       u_ctrl_encdec                                         |                                prim_subreg |          2 |          2 |       0 |    0 |    1 |      0 |      0 |          0 |
+|       u_ctrl_init                                           |                              prim_subreg_3 |          2 |          2 |       0 |    0 |    1 |      0 |      0 |          0 |
+|       u_ctrl_keylen                                         |                              prim_subreg_4 |          2 |          2 |       0 |    0 |    5 |      0 |      0 |          0 |
+|       u_ctrl_next                                           |                              prim_subreg_5 |          4 |          4 |       0 |    0 |    1 |      0 |      0 |          0 |
+|       u_ctrl_sel                                            |                              prim_subreg_6 |          2 |          2 |       0 |    0 |    1 |      0 |      0 |          0 |
+|       u_ctrl_zeroize                                        |                              prim_subreg_7 |          3 |          3 |       0 |    0 |   21 |      0 |      0 |          0 |
+|       u_keccak_data_0                                       |                prim_subreg__parameterized1 |        371 |        371 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_0)                                   |                prim_subreg__parameterized1 |        246 |        246 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_61 |        125 |        125 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_1                                       |              prim_subreg__parameterized1_8 |        245 |        245 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_1)                                   |              prim_subreg__parameterized1_8 |        163 |        163 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_60 |         82 |         82 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_10                                      |              prim_subreg__parameterized1_9 |        128 |        128 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_10)                                  |              prim_subreg__parameterized1_9 |         64 |         64 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_59 |         64 |         64 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_11                                      |             prim_subreg__parameterized1_10 |        129 |        129 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_11)                                  |             prim_subreg__parameterized1_10 |         65 |         65 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_58 |         64 |         64 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_12                                      |             prim_subreg__parameterized1_11 |        116 |        116 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_12)                                  |             prim_subreg__parameterized1_11 |         59 |         59 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_57 |         57 |         57 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_13                                      |             prim_subreg__parameterized1_12 |        128 |        128 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_13)                                  |             prim_subreg__parameterized1_12 |         64 |         64 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_56 |         64 |         64 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_14                                      |             prim_subreg__parameterized1_13 |        136 |        136 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_14)                                  |             prim_subreg__parameterized1_13 |         72 |         72 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_55 |         64 |         64 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_15                                      |             prim_subreg__parameterized1_14 |        135 |        135 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_15)                                  |             prim_subreg__parameterized1_14 |         71 |         71 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_54 |         64 |         64 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_16                                      |             prim_subreg__parameterized1_15 |        128 |        128 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_16)                                  |             prim_subreg__parameterized1_15 |         64 |         64 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_53 |         64 |         64 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_17                                      |             prim_subreg__parameterized1_16 |        128 |        128 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_17)                                  |             prim_subreg__parameterized1_16 |         64 |         64 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_52 |         64 |         64 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_18                                      |             prim_subreg__parameterized1_17 |        130 |        130 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_18)                                  |             prim_subreg__parameterized1_17 |         66 |         66 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_51 |         64 |         64 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_19                                      |             prim_subreg__parameterized1_18 |        140 |        140 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_19)                                  |             prim_subreg__parameterized1_18 |         76 |         76 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_50 |         64 |         64 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_2                                       |             prim_subreg__parameterized1_19 |        245 |        245 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_2)                                   |             prim_subreg__parameterized1_19 |        143 |        143 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_49 |        102 |        102 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_20                                      |             prim_subreg__parameterized1_20 |        143 |        143 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_20)                                  |             prim_subreg__parameterized1_20 |         79 |         79 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_48 |         64 |         64 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_21                                      |             prim_subreg__parameterized1_21 |        157 |        157 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_21)                                  |             prim_subreg__parameterized1_21 |         93 |         93 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_47 |         64 |         64 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_22                                      |             prim_subreg__parameterized1_22 |        130 |        130 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_22)                                  |             prim_subreg__parameterized1_22 |         66 |         66 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_46 |         64 |         64 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_23                                      |             prim_subreg__parameterized1_23 |        129 |        129 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_23)                                  |             prim_subreg__parameterized1_23 |         65 |         65 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_45 |         64 |         64 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_24                                      |             prim_subreg__parameterized1_24 |        185 |        185 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_24)                                  |             prim_subreg__parameterized1_24 |        121 |        121 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_44 |         64 |         64 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_3                                       |             prim_subreg__parameterized1_25 |        250 |        250 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_3)                                   |             prim_subreg__parameterized1_25 |        172 |        172 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_43 |         78 |         78 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_4                                       |             prim_subreg__parameterized1_26 |        175 |        175 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_4)                                   |             prim_subreg__parameterized1_26 |        110 |        110 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_42 |         65 |         65 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_5                                       |             prim_subreg__parameterized1_27 |        182 |        182 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_5)                                   |             prim_subreg__parameterized1_27 |        119 |        119 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_41 |         63 |         63 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_6                                       |             prim_subreg__parameterized1_28 |         51 |         51 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_6)                                   |             prim_subreg__parameterized1_28 |         48 |         48 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_40 |          3 |          3 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_7                                       |             prim_subreg__parameterized1_29 |        197 |        197 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_7)                                   |             prim_subreg__parameterized1_29 |        151 |        151 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_39 |         46 |         46 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_8                                       |             prim_subreg__parameterized1_30 |        115 |        115 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_8)                                   |             prim_subreg__parameterized1_30 |         89 |         89 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |         prim_subreg_arb__parameterized1_38 |         26 |         26 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_keccak_data_9                                       |             prim_subreg__parameterized1_31 |        163 |        163 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         (u_keccak_data_9)                                   |             prim_subreg__parameterized1_31 |        113 |        113 |       0 |    0 |   64 |      0 |      0 |          0 |
+|         wr_en_data_arb                                      |            prim_subreg_arb__parameterized1 |         50 |         50 |       0 |    0 |    0 |      0 |      0 |          0 |
+|       u_key_0                                               |             prim_subreg__parameterized1_32 |         16 |         16 |       0 |    0 |   64 |      0 |      0 |          0 |
+|       u_key_1                                               |             prim_subreg__parameterized1_33 |         57 |         57 |       0 |    0 |   64 |      0 |      0 |          0 |
+|       u_key_2                                               |             prim_subreg__parameterized1_34 |          3 |          3 |       0 |    0 |   64 |      0 |      0 |          0 |
+|       u_key_3                                               |             prim_subreg__parameterized1_35 |          0 |          0 |       0 |    0 |   64 |      0 |      0 |          0 |
+|       u_status_keccak_done                                  |                             prim_subreg_36 |          0 |          0 |       0 |    0 |    1 |      0 |      0 |          0 |
+|       u_status_ready                                        |                prim_subreg__parameterized0 |          0 |          0 |       0 |    0 |    1 |      0 |      0 |          0 |
+|       u_status_result_valid                                 |             prim_subreg__parameterized0_37 |          0 |          0 |       0 |    0 |    1 |      0 |      0 |          0 |
++-------------------------------------------------------------+--------------------------------------------+------------+------------+---------+------+------+--------+--------+------------+
+* Note: The sum of lower-level cells may be larger than their parent cells total, due to cross-hierarchy LUT combining
+
+

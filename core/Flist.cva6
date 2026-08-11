@@ -125,11 +125,22 @@ ${CVA6_REPO_DIR}/kecc_aes_k_xif/hw/kecc_aes_k_xif.sv
 // +define+KECC_AES_K_LOOSE_${AES_LOOSE_VERSION} lets kecc_aes_k_axi_top.sv pick the
 // right keccak_aes_k_top instantiation form (v2/v3 take no parameters, v4 takes
 // SBOX_IMPL, v5 takes SBOX_IMPL + PARALLEL_SLICES).
+//
+// AES_LOOSE_WRAPPER selects which AXI wrapper + register file gets compiled in
+// alongside it -- "kecc_aes_k_axi" (default, unset) for the non-unified design
+// (kecc_aes_k_axi_top.sv + kecc_aes_k_axi.hjson's reg file: separate BLOCK/RESULT
+// registers, a copy-in/copy-out core), or "kecc_aes_k_axi_unified" for the
+// area-optimized sibling (kecc_aes_k_axi_unified_top.sv +
+// kecc_aes_k_axi_unified.hjson's reg file: BLOCK is hardware-writable and doubles
+// as the result, no internal working-state register in the core at all -- see
+// kecc_aes_k_axi/hw/rtl/v2_unified/keccak_aes_k_top_unified.sv). Set together with
+// AES_LOOSE_VERSION=v2_unified by scripts/select_aes_variant.sh's loose_v2_unified
+// case; every other AES_VARIANT leaves AES_LOOSE_WRAPPER at its default.
 +define+KECC_AES_K_LOOSE_${AES_LOOSE_VERSION}
 ${CVA6_REPO_DIR}/corev_apu/register_interface/vendor/lowrisc_opentitan/src/prim_subreg_arb.sv
 ${CVA6_REPO_DIR}/corev_apu/register_interface/vendor/lowrisc_opentitan/src/prim_subreg.sv
-${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/regs/gen/kecc_aes_k_axi_reg_pkg.sv
-${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/regs/gen/kecc_aes_k_axi_reg_top.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/regs/gen/${AES_LOOSE_WRAPPER}_reg_pkg.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/regs/gen/${AES_LOOSE_WRAPPER}_reg_top.sv
 -F ${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/rtl/${AES_LOOSE_VERSION}.flist
 +incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/include
 +incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/vendor/lowrisc_opentitan/src/
@@ -141,7 +152,7 @@ ${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/regs/gen/kecc_aes_k_axi_reg_top.sv
 // dependency chain that exposes it.
 ${CVA6_REPO_DIR}/vendor/pulp-platform/axi/src/axi_burst_splitter.sv
 ${CVA6_REPO_DIR}/corev_apu/register_interface/src/axi_to_reg.sv
-${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/kecc_aes_k_axi_top.sv
+${CVA6_REPO_DIR}/kecc_aes_k_axi/hw/${AES_LOOSE_WRAPPER}_top.sv
 
 // Common Cells
 ${CVA6_REPO_DIR}/vendor/pulp-platform/common_cells/src/cf_math_pkg.sv

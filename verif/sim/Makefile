@@ -22,6 +22,9 @@ endif
 ifndef AES_LOOSE_VERSION
 export AES_LOOSE_VERSION = v2
 endif
+ifndef AES_LOOSE_WRAPPER
+export AES_LOOSE_WRAPPER = kecc_aes_k_axi
+endif
 
 HPDCACHE_DIR ?= $(CVA6_REPO_DIR)/core/cache_subsystem/hpdcache
 export HPDCACHE_DIR

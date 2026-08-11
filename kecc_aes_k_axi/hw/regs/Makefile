@@ -11,6 +11,8 @@ REGS_H_FNAME = kecc_aes_k_axi_regs.h
 reg:
 	python3 $(REGGEN_PATH) -r -t $(REGS_PATH)/gen/ $(REGS_PATH)/kecc_aes_k_axi.hjson
 	python3 $(REGGEN_PATH) --cdefines -o $(SW_PATH)/$(REGS_H_FNAME) $(REGS_PATH)/kecc_aes_k_axi.hjson
+	python3 $(REGGEN_PATH) -r -t $(REGS_PATH)/gen/ $(REGS_PATH)/kecc_aes_k_axi_unified.hjson
+	python3 $(REGGEN_PATH) --cdefines -o $(SW_PATH)/kecc_aes_k_axi_unified_regs.h $(REGS_PATH)/kecc_aes_k_axi_unified.hjson
 
 deps:
 	pip install hjson mako

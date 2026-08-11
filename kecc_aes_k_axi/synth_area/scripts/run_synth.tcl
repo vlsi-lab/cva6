@@ -15,6 +15,12 @@
 #   6. parallel_slices : v5 only, ignored otherwise
 #   7. variant_name : human-readable tag used for the report/checkpoint dir
 #                     (e.g. v2, v4_serial_rom, v5_bp)
+#   8. wrapper      : kecc_aes_k_axi (default, non-unified) or
+#                      kecc_aes_k_axi_unified (area-optimized, see
+#                      kecc_aes_k_axi/hw/rtl/v2_unified/keccak_aes_k_top_unified.sv) --
+#                      selects which reg_pkg/reg_top/top.sv file set gets
+#                      compiled, same AES_LOOSE_WRAPPER mechanism
+#                      core/Flist.cva6 uses for simulation.
 
 set proj_root        [lindex $argv 0]
 set part             [lindex $argv 1]
@@ -23,6 +29,8 @@ set version          [lindex $argv 3]
 set sbox_impl        [lindex $argv 4]
 set parallel_slices  [lindex $argv 5]
 set variant_name     [lindex $argv 6]
+set wrapper          [lindex $argv 7]
+if {$wrapper eq ""} { set wrapper "kecc_aes_k_axi" }
 
 set top "kecc_aes_k_axi_synth_top"
 
@@ -141,13 +149,13 @@ set rtl_files [concat [list \
     "$proj_root/corev_apu/tb/ariane_axi_soc_pkg.sv" \
     "$proj_root/corev_apu/register_interface/vendor/lowrisc_opentitan/src/prim_subreg_arb.sv" \
     "$proj_root/corev_apu/register_interface/vendor/lowrisc_opentitan/src/prim_subreg.sv" \
-    "$proj_root/kecc_aes_k_axi/hw/regs/gen/kecc_aes_k_axi_reg_pkg.sv" \
-    "$proj_root/kecc_aes_k_axi/hw/regs/gen/kecc_aes_k_axi_reg_top.sv" \
+    "$proj_root/kecc_aes_k_axi/hw/regs/gen/${wrapper}_reg_pkg.sv" \
+    "$proj_root/kecc_aes_k_axi/hw/regs/gen/${wrapper}_reg_top.sv" \
 ] $common_cells_files $axi_files [list \
     "$proj_root/corev_apu/register_interface/src/axi_lite_to_reg.sv" \
     "$proj_root/corev_apu/register_interface/src/axi_to_reg.sv" \
 ] $version_rtl_files [list \
-    "$proj_root/kecc_aes_k_axi/hw/kecc_aes_k_axi_top.sv" \
+    "$proj_root/kecc_aes_k_axi/hw/${wrapper}_top.sv" \
     "$proj_root/kecc_aes_k_axi/synth_area/rtl/kecc_aes_k_axi_synth_top.sv" \
 ]]
 
@@ -190,4 +198,4 @@ report_utilization                -file $reports_dir/${top}.utilization_summary.
 report_timing_summary            -file $reports_dir/${top}.timing_summary.rpt
 report_timing -max_paths 20 -nworst 20 -delay_type max -sort_by slack \
                                  -file $reports_dir/${top}.timing_WORST_20.rpt
-puts "\[SYNTH\] Done. variant=$variant_name version=$version SBOX_IMPL=$sbox_impl PARALLEL_SLICES=$parallel_slices  Checkpoint: $work_dir/${top}_${variant_name}_synth.dcp"
+puts "\[SYNTH\] Done. variant=$variant_name version=$version wrapper=$wrapper SBOX_IMPL=$sbox_impl PARALLEL_SLICES=$parallel_slices  Checkpoint: $work_dir/${top}_${variant_name}_synth.dcp"

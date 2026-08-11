@@ -19,7 +19,7 @@ src_common=(
     ../../tests/loosely/common/fips202.c
     ../../tests/loosely/common/keccak_permute_loosely.c
     ../../tests/loosely/common/kmac.c
-    ../../kecc_aes_k_axi/sw/kecc_aes_k_axi.c
+    ../../kecc_aes_k_axi/sw/${AES_DRIVER_C:-kecc_aes_k_axi.c}
 )
 
 cflags=(
