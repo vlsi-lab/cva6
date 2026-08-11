@@ -205,6 +205,173 @@ re-running). 4096 B is the largest size that fits in this environment.
 | squeeze cycles | 1024 B | 48,624 | 49,161 | 28,818 | 29,565 |
 | squeeze cycles | 4096 B | 177,059 | 181,142 | 107,123 | 111,029 |
 
+## Results — Loosely-coupled AXI accelerator (all 8 variants)
+
+`tests/loosely/` runs the same test suite a third way, accelerated by
+`kecc_aes_k_axi` -- an AXI-memory-mapped peripheral wrapping `keccak_aes_k_top`
+(the unified AES/Keccak core from the `kecc-aes-k` project), driven by MMIO
+register polling rather than custom instructions. See `kecc_aes_k_axi/README.md`
+for the accelerator itself and the `AES_VARIANT` flag that selects which of 8
+RTL variants (v2/v3/v4x3-`SBOX_IMPL`/v5x3-`SBOX_IMPL`) gets built.
+
+**All 8 variants x all 22 tests = 176/176 runs pass with zero KAT mismatches.**
+Every cycle/instruction number below was measured (Verilator `veri-testharness`,
+`cv64a6_imac_crypto`), not estimated. Column layout collapses variants whose
+numbers are **byte-identical across the entire 22-test suite**, confirmed by
+diffing the raw captured logs (`.variant_data/*.txt` in the repo root) rather
+than assumed:
+
+- **v4's three `SBOX_IMPL` choices (`serial_rom`/`dp_rom`/`bp`) are identical
+  to each other on every single test** -- `SBOX_IMPL` has zero effect on
+  whole-operation cycle count for v4. One `v4` column covers all three.
+- **v5's `serial_rom` and `dp_rom` are identical to each other**, but **v5's
+  `bp` differs from them on 6 of 22 tests** (see below) -- so v5 gets two
+  columns, `v5 (serial/dp_rom)` and `v5 (bp)`.
+
+`v4` has no `PARALLEL_SLICES` parameter (fixed structurally); `v5`'s three
+`SBOX_IMPL` variants above all use `PARALLEL_SLICES=4` (confirmed from the
+generated target config packages), so the v4-vs-v5 comparison below is a
+comparison of the wider (v5) datapath against the narrower (v4) one, not a
+`PARALLEL_SLICES` sweep -- no `PARALLEL_SLICES` value other than 4 was built
+or measured.
+
+**`aes_core` here is not directly comparable to the SW/Tightly `aes_core` row
+above**: `kecc_aes_k_axi`'s register map only exposes the final block result,
+not the intermediate round-key schedule, so `tests/loosely/aes_core` benchmarks
+one full AES-128 block encrypt (FIPS-197 Appendix B vector) instead of
+key-expansion-alone -- see that test's own file header for the rationale.
+
+A real correctness-relevant driver optimization went into these numbers: the
+core's key schedule is direction-specific (encrypt vs. decrypt use different
+internal round keys), but a single schedule stays valid in the core's internal
+registers across any number of same-key, same-direction block calls --
+`kecc_aes_k_axi.c`'s driver caches the last-loaded (key, direction) pair and
+skips re-running the hardware key-schedule pulse when a call reuses it, so
+CBC/CTR/GCM/XTS-style repeated-block-same-key sequences pay for one schedule,
+not one per block -- the same amortization `tightly`'s `aes128_ctx_t` gets by
+precomputing both schedules once up front.
+
+### Cross-version pattern (observed, not assumed)
+
+Reading down each column tells a consistent story:
+
+- **v2 → v3**: Keccak-only tests (`sha3_*`, `shake*`, `kmac256`,
+  `hmac_sha3_256`) are unchanged. AES tests get slightly slower (tens of
+  cycles) across the board.
+- **v3 → v4**: same pattern again -- Keccak-only tests are *exactly* unchanged
+  from v3 (not just close), AES tests get slower again (a larger jump this
+  time, ~200-600 cycles depending on the test).
+  `SBOX_IMPL` does not matter for v4 (see above).
+- **v4 → v5 (serial_rom/dp_rom)**: this time Keccak-only tests *also* get
+  slower (e.g. `keccak_core` 3,660 → 4,065 cycles, `sha3_256` 4,709 → 5,109),
+  on top of AES getting slower again -- consistent with v5's wider
+  (`PARALLEL_SLICES=4`) datapath changing the shared Keccak permutation path
+  too, not just the AES side.
+- **v5 `bp`**: Keccak-only tests are identical to v5 `serial_rom`/`dp_rom`
+  (unaffected, as expected -- `SBOX_IMPL` only touches the AES S-box). On 6 of
+  the 12 AES-touching tests (`aes_core`, `aes_encrypt`, `aes_decrypt`,
+  `aes_cbc`, `aes_ctr`, `aes_gcm`), `bp`'s cycle/instruction counts drop back
+  down to **exactly** v3's numbers. On the other 6 (`aes_xts`, all 4
+  `aes_gcm_sweep` sizes' encrypt+decrypt), `bp` shows **no difference** from
+  `serial_rom`/`dp_rom` -- it stays at v4/v5-serial's slower level. This
+  split was double-checked directly against the raw logs (not just the
+  summary table) and is real, not a transcription error; *why* `bp` helps
+  some AES call patterns and not others was not investigated further (would
+  need RTL-level analysis of the S-box latency vs. the surrounding
+  pipeline/handshake in each test's specific call pattern).
+
+### Original 11 algorithms
+
+| Test | v2 | v3 | v4 (all `SBOX_IMPL`) | v5 (serial/dp_rom) | v5 (bp) |
+|---|---:|---:|---:|---:|---:|
+| `keccak_core` | 3,684 / 2,665 | 3,660 / 2,667 | 3,660 / 2,667 | 4,065 / 2,787 | 4,065 / 2,787 |
+| `aes_core` (single-block encrypt; not comparable to SW/Tightly `aes_core` -- see above) | 743 / 417 | 946 / 496 | 1,146 / 556 | 1,146 / 556 | 946 / 496 |
+| `sha3_256` | 4,709 / 3,560 | 4,709 / 3,560 | 4,709 / 3,560 | 5,109 / 3,677 | 5,109 / 3,677 |
+| `sha3_512` | 4,957 / 3,743 | 4,957 / 3,743 | 4,957 / 3,743 | 5,357 / 3,860 | 5,357 / 3,860 |
+| `shake128_short` (32 B in) | 4,875 / 3,728 | 4,875 / 3,728 | 4,875 / 3,728 | 5,275 / 3,845 | 5,275 / 3,845 |
+| `shake256_long` (2048 B in) | 75,508 / 58,506 | 75,508 / 58,506 | 75,508 / 58,506 | 81,983 / 60,468 | 81,983 / 60,468 |
+| `kmac256` (41 B msg) | 17,146 / 13,795 | 17,146 / 13,795 | 17,146 / 13,795 | 18,373 / 14,161 | 18,373 / 14,161 |
+| `hmac_sha3_256` (41 B msg) | 21,510 / 17,462 | 21,510 / 17,462 | 21,510 / 17,462 | 23,110 / 17,942 | 23,110 / 17,942 |
+| `aes_encrypt` (ECB, 2 blocks) | 1,608 / 895 | 1,628 / 901 | 2,028 / 1,021 | 2,028 / 1,021 | 1,628 / 901 |
+| `aes_decrypt` (ECB, 2 blocks) | 1,601 / 897 | 1,651 / 912 | 2,131 / 1,056 | 2,131 / 1,056 | 1,651 / 912 |
+| `aes_cbc` (3 blocks, enc+dec) | — | — | — | — | — |
+
+`aes_cbc` breakdown, cycles / instrs (encrypt / decrypt phases):
+
+| Phase | v2 | v3 | v4 | v5 (serial/dp_rom) | v5 (bp) |
+|---|---:|---:|---:|---:|---:|
+| encrypt | 2,790 / 1,693 | 2,820 / 1,702 | 3,420 / 1,882 | 3,420 / 1,882 | 2,820 / 1,702 |
+| decrypt | 2,538 / 1,715 | 2,598 / 1,733 | 3,318 / 1,949 | 3,318 / 1,949 | 2,598 / 1,733 |
+
+### New AES modes (CTR, GCM, XTS)
+
+Cycles / instrs:
+
+| Test | v2 | v3 | v4 | v5 (serial/dp_rom) | v5 (bp) |
+|---|---:|---:|---:|---:|---:|
+| `aes_ctr` encrypt (40 B) | 2,643 / 1,567 | 2,673 / 1,576 | 3,273 / 1,756 | 3,273 / 1,756 | 2,673 / 1,576 |
+| `aes_ctr` decrypt (40 B) | 1,993 / 1,395 | 2,023 / 1,404 | 2,623 / 1,584 | 2,623 / 1,584 | 2,023 / 1,404 |
+| `aes_gcm` encrypt (20 B AAD + 48 B payload) | 14,735 / 11,967 | 14,785 / 11,982 | 15,785 / 12,282 | 15,785 / 12,282 | 14,785 / 11,982 |
+| `aes_gcm` decrypt (20 B AAD + 48 B payload) | 13,843 / 11,924 | 13,893 / 11,939 | 14,893 / 12,239 | 14,893 / 12,239 | 13,893 / 11,939 |
+| `aes_xts` encrypt (1 sector, 48 B) | 4,663 / 2,980 | 4,703 / 2,992 | 5,503 / 3,232 | 5,503 / 3,232 | 5,503 / 3,232 |
+| `aes_xts` decrypt (1 sector, 48 B) | 4,267 / 2,990 | 4,337 / 3,011 | 5,257 / 3,287 | 5,257 / 3,287 | 5,257 / 3,287 |
+
+Note `aes_xts`: unlike the other 6 AES-touching tests, `v5 (bp)` does **not**
+drop to v3's level here -- it stays at v4/v5-serial's slower number (see
+"Cross-version pattern" above).
+
+### AES-GCM payload-size sweep
+
+Cycles / instrs. As with `aes_xts`, `v5 (bp)` does **not** differ from
+`v5 (serial/dp_rom)` on any sweep size -- both columns are identical here, so
+they're merged into one `v5` column.
+
+| Payload (B) | v2 encrypt | v2 decrypt | v3 encrypt | v3 decrypt | v4 encrypt | v4 decrypt | v5 encrypt | v5 decrypt |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 16 | 9,848 / 7,848 | 8,951 / 7,802 | 9,878 / 7,857 | 8,981 / 7,811 | 10,478 / 8,037 | 9,581 / 7,991 | 10,478 / 8,037 | 9,581 / 7,991 |
+| 64 | 16,142 / 13,852 | 16,215 / 13,979 | 16,202 / 13,870 | 16,275 / 13,997 | 17,402 / 14,230 | 17,475 / 14,357 | 17,402 / 14,230 | 17,475 / 14,357 |
+| 256 | 45,357 / 38,560 | 45,399 / 38,687 | 45,537 / 38,614 | 45,579 / 38,741 | 49,137 / 39,694 | 49,179 / 39,821 | 49,137 / 39,694 | 49,179 / 39,821 |
+| 1024 | 162,309 / 137,392 | 162,135 / 137,519 | 162,969 / 137,590 | 162,795 / 137,717 | 176,169 / 141,550 | 175,995 / 141,677 | 176,169 / 141,550 | 175,995 / 141,677 |
+
+### Keccak sponge interface (Phase B)
+
+Cycles / instrs. `SBOX_IMPL` never affects these (AES-only parameter); v4's
+three variants and v5's three variants are each collapsed to one column.
+
+| Sponge phase | v2 | v3 | v4 | v5 |
+|---|---:|---:|---:|---:|
+| `init` (state zeroing) | 137 / 82 | 137 / 82 | 137 / 82 | 137 / 82 |
+| `absorb` 4096 B | 141,251 / 121,869 | 141,251 / 121,869 | 141,251 / 121,869 | 150,971 / 124,821 |
+| `squeeze` 4096 B | 143,960 / 124,454 | 143,960 / 124,454 | 143,960 / 124,454 | 154,085 / 127,529 |
+| `padding`/`finalize` (O(1)) | 38 / 22 | 38 / 22 | 38 / 22 | 38 / 22 |
+| `context` save (memcpy 208 B) | 162 / 71 | 162 / 71 | 162 / 71 | 162 / 71 |
+| `context` restore (memcpy 208 B) | 185 / 71 | 185 / 71 | 185 / 71 | 185 / 71 |
+
+Full `absorb`/`squeeze` size sweep (0/32/64/128 B..4096 B), all 4 variant
+groups, cycles / instrs -- v2/v3/v4 track together, v5 (both `SBOX_IMPL`
+groups identical) is consistently ~7-9% higher at the larger sizes:
+
+| Size (B) | absorb v2/v3/v4 | absorb v5 | squeeze v2/v3/v4 | squeeze v5 |
+|---:|---:|---:|---:|---:|
+| 0 | 115 / 45 | 115 / 45 | — | — |
+| 32 | 609 / 561 | 609 / 561 | 4,181 / 3,169 | 4,581 / 3,286 |
+| 64 | 1,091 / 1,073 | 1,091 / 1,073 | 4,401 / 3,614 | 4,806 / 3,737 |
+| 128 | 2,114 / 2,097 | 2,114 / 2,097 | 5,314 / 4,510 | 5,719 / 4,633 |
+| 512 | — | — | 21,086 / 17,935 | 22,706 / 18,427 |
+| 1024 | 35,432 / 30,507 (v2/v3/v4) | 37,862 / 31,245 | 38,636 / 33,152 | 41,471 / 34,013 |
+| 2048 | — | — | 73,744 / 63,586 | 79,009 / 65,185 |
+| 4096 | 141,251 / 121,869 | 150,971 / 124,821 | 143,960 / 124,454 | 154,085 / 127,529 |
+
+`absorb`/`squeeze` incremental (chunked, 64 B/call) vs. monolithic, cycles,
+same v2/v3/v4-track vs. v5 split:
+
+| Test | Total (B) | Monolithic v2/v3/v4 | Chunked v2/v3/v4 | Monolithic v5 | Chunked v5 |
+|---|---:|---:|---:|---:|---:|
+| absorb | 1024 | 35,680 | 37,855 | 38,105 | 40,285 |
+| absorb | 4096 | 141,273 | 150,905 | 150,993 | 160,625 |
+| squeeze | 1024 | 38,864 | 39,786 | 41,694 | 42,621 |
+| squeeze | 4096 | 143,970 | 148,193 | 154,095 | 158,318 |
+
 ## Results — Area (Vivado synthesis)
 
 Out-of-context synthesis of the CVA6 core (`ariane`) with `kecc_aes_k_xif`
@@ -232,6 +399,75 @@ and 0 DSP usage (every `xor3`/`xandn`/`rxri`/`aes64*` datapath is pure
 combinational/register logic, see `implementation.md`). Compare against
 `kecc-aes-k/result.md`'s own standalone `keccak_aes_k_top` area section for
 the loosely-coupled comparison.
+
+## Results — Area, loosely-coupled AXI accelerator (all 8 variants)
+
+Out-of-context synthesis of `kecc_aes_k_axi_top` **including its wrapper**
+(the `axi_to_reg` AXI-to-register-file bridge and the reggen-generated
+register file, not just the bare `keccak_aes_k_top` core) -- answering
+"how big is the accelerator, considering also the wrapper", not just the
+core-alone number `kecc-aes-k/result.md` already has. Tool: Vivado v2024.1
+(win64). Part: `xc7a100tftg256-2` (CW305, Artix-7 100T), same part as the
+tightly-coupled measurement above. 100 MHz virtual clock, out-of-context
+mode (no board pins, no bitstream) -- **area-focused, not timing closure**:
+none of these 8 runs meets the 10ns constraint (all show negative WNS), same
+caveat the sibling `kecc-aes-k/fpga/` core-only script already carries. See
+`kecc_aes_k_axi/synth_area/run_synth.sh <variant>` to reproduce; full reports
+under `kecc_aes_k_axi/synth_area/reports_<variant>/` (Vivado checkpoints
+(`.dcp`) themselves were deleted after extraction to save disk space -- rerun
+the script to regenerate one if needed). Measured 2026-08-10.
+
+| Variant | Total LUTs | % LUTs | Slice Registers (FFs) | % FFs | Slices (packed CLBs) | % Slices |
+|---|---:|---:|---:|---:|---:|---:|
+| v2 | 10,894 | 17.18% | 6,720 | 5.30% | 3,657 | 23.07% |
+| v3 | 10,200 | 16.09% | 4,781 | 3.77% | 2,833 | 17.87% |
+| v4 (serial_rom) | 9,182 | 14.48% | 4,843 | 3.82% | 2,573 | 16.23% |
+| v4 (dp_rom) | 9,093 | 14.34% | 4,783 | 3.77% | 2,476 | 15.62% |
+| v4 (bp) | 10,214 | 16.11% | 4,815 | 3.80% | 2,866 | 18.08% |
+| v5 (serial_rom) | 6,252 | 9.86% | 3,396 | 2.68% | 1,821 | 11.49% |
+| v5 (dp_rom) | 6,233 | 9.83% | 3,339 | 2.63% | 1,789 | 11.29% |
+| v5 (bp) | 6,629 | 10.46% | 3,369 | 2.66% | 1,898 | 11.97% |
+
+RAMB36/RAMB18/DSP are 0 across all 8 variants. `v4`'s three `SBOX_IMPL`
+choices barely move total area (~9.1-10.2K LUTs, within normal synthesis
+noise); **`v5`'s slice-serial Keccak datapath (`keccak_slice_serial.sv`,
+`PARALLEL_SLICES=4`) is genuinely ~40% smaller than v2/v3/v4's fully-parallel
+`keccak_round.sv`** (6.2-6.6K LUTs vs 9.1-10.9K) -- consistent with, and the
+direct explanation for, v5 also being measurably *slower* in the performance
+results above (a smaller per-cycle datapath reused over more cycles is a
+textbook area/latency trade, not a contradiction). Confirmed no black boxes
+in any of the 8 utilization reports, so none of this is an artifact of
+missing RTL.
+
+Hierarchical breakdown (`report_utilization -hierarchical`), LUTs / FFs:
+
+| Variant | `i_keccak_aes_k_top` (core) | `kecc_aes_k_axi_reg_top_i` (reg file) | `i_axi2reg` (AXI bridge) |
+|---|---:|---:|---:|
+| v2 | 5,392 / 3,806 | 2,222 / 2,138 | 3,026 / 773 |
+| v3 | 4,514 / 1,878 | 2,407 / 2,127 | 3,025 / 773 |
+| v4 (serial_rom) | 4,365 / 1,939 | 2,453 / 2,128 | 2,365 / 773 |
+| v4 (dp_rom) | 4,289 / 1,880 | 2,443 / 2,127 | 2,361 / 773 |
+| v4 (bp) | 4,649 / 1,912 | 2,411 / 2,127 | 3,154 / 773 |
+| v5 (serial_rom) | 2,163 / 480 | 729 / 2,128 | 3,361 / 786 |
+| v5 (dp_rom) | 2,168 / 421 | 706 / 2,130 | 3,359 / 786 |
+| v5 (bp) | 2,560 / 453 | 729 / 2,128 | 3,342 / 786 |
+
+Each row's three numbers plus the wrapper's own small glue logic (not shown,
+a few hundred LUTs) sum back to that variant's total LUTs above -- but the
+**split between the register file and the AXI bridge shifts noticeably
+between the v2/v3/v4 family and v5** (register file drops from ~2.2-2.5K LUTs
+to ~0.7K, bridge rises from ~2.4-3.2K to ~3.3-3.4K) even though
+`kecc_aes_k_axi_reg_top.sv` itself is the exact same generated file in every
+variant. This is Vivado's cross-hierarchy optimization moving logic across
+the reported instance boundary (confirmed the *totals* stay consistent; only
+the *attribution* between these two specific sub-blocks moves) -- read the
+register-file-vs-bridge split as approximate per variant, but the **overall
+finding that AXI plumbing (bridge + register file combined) is on the same
+order of magnitude as the compute core itself holds across all 8 variants**,
+motivating the unified-storage redesign below: if the register file's own
+storage *is* the core's working storage (no separate copy, no
+`axi_to_reg`-mediated round trip through a second storage element), both the
+register-file and a share of the bridge/glue overhead should shrink.
 
 ## Takeaways
 

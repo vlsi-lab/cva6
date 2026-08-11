@@ -1,0 +1,346 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2024.1 (win64) Build 5076996 Wed May 22 18:37:14 MDT 2024
+| Date         : Mon Aug 10 14:56:01 2026
+| Host         : AlessandraYOGA running 64-bit major release  (build 9200)
+| Command      : report_timing_summary -file reports_v4_bp/kecc_aes_k_axi_synth_top.timing_summary.rpt
+| Design       : kecc_aes_k_axi_synth_top
+| Device       : 7a100t-ftg256
+| Speed File   : -2  PRODUCTION 1.23 2018-06-13
+| Design State : Fully Placed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Timing Summary Report
+
+------------------------------------------------------------------------------------------------
+| Timer Settings
+| --------------
+------------------------------------------------------------------------------------------------
+
+  Enable Multi Corner Analysis               :  Yes
+  Enable Pessimism Removal                   :  Yes
+  Pessimism Removal Resolution               :  Nearest Common Node
+  Enable Input Delay Default Clock           :  No
+  Enable Preset / Clear Arcs                 :  No
+  Disable Flight Delays                      :  No
+  Ignore I/O Paths                           :  No
+  Timing Early Launch at Borrowing Latches   :  No
+  Borrow Time for Max Delay Exceptions       :  Yes
+  Merge Timing Exceptions                    :  Yes
+  Inter-SLR Compensation                     :  Conservative
+
+  Corner  Analyze    Analyze    
+  Name    Max Paths  Min Paths  
+  ------  ---------  ---------  
+  Slow    Yes        Yes        
+  Fast    Yes        Yes        
+
+
+------------------------------------------------------------------------------------------------
+| Report Methodology
+| ------------------
+------------------------------------------------------------------------------------------------
+
+No report available as report_methodology has not been run prior. Run report_methodology on the current design for the summary of methodology violations.
+
+
+
+check_timing report
+
+Table of Contents
+-----------------
+1. checking no_clock (0)
+2. checking constant_clock (0)
+3. checking pulse_width_clock (0)
+4. checking unconstrained_internal_endpoints (0)
+5. checking no_input_delay (133)
+6. checking no_output_delay (83)
+7. checking multiple_clock (0)
+8. checking generated_clocks (0)
+9. checking loops (0)
+10. checking partial_input_delay (0)
+11. checking partial_output_delay (0)
+12. checking latch_loops (0)
+
+1. checking no_clock (0)
+------------------------
+ There are 0 register/latch pins with no clock.
+
+
+2. checking constant_clock (0)
+------------------------------
+ There are 0 register/latch pins with constant_clock.
+
+
+3. checking pulse_width_clock (0)
+---------------------------------
+ There are 0 register/latch pins which need pulse_width check
+
+
+4. checking unconstrained_internal_endpoints (0)
+------------------------------------------------
+ There are 0 pins that are not constrained for maximum delay.
+
+ There are 0 pins that are not constrained for maximum delay due to constant clock.
+
+
+5. checking no_input_delay (133)
+--------------------------------
+ There are 133 input ports with no input delay specified. (HIGH)
+
+ There are 0 input ports with no input delay but user has a false path constraint.
+
+
+6. checking no_output_delay (83)
+--------------------------------
+ There are 83 ports with no output delay specified. (HIGH)
+
+ There are 0 ports with no output delay but user has a false path constraint
+
+ There are 0 ports with no output delay but with a timing clock defined on it or propagating through it
+
+
+7. checking multiple_clock (0)
+------------------------------
+ There are 0 register/latch pins with multiple clocks.
+
+
+8. checking generated_clocks (0)
+--------------------------------
+ There are 0 generated clocks that are not connected to a clock source.
+
+
+9. checking loops (0)
+---------------------
+ There are 0 combinational loops in the design.
+
+
+10. checking partial_input_delay (0)
+------------------------------------
+ There are 0 input ports with partial input delay specified.
+
+
+11. checking partial_output_delay (0)
+-------------------------------------
+ There are 0 ports with partial output delay specified.
+
+
+12. checking latch_loops (0)
+----------------------------
+ There are 0 combinational latch loops in the design through latch input
+
+
+
+------------------------------------------------------------------------------------------------
+| Design Timing Summary
+| ---------------------
+------------------------------------------------------------------------------------------------
+
+    WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
+    -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
+     -1.125    -2127.691                   3809                 9144        0.186        0.000                      0                 9144        4.500        0.000                       0                  4815  
+
+
+Timing constraints are not met.
+
+
+------------------------------------------------------------------------------------------------
+| Clock Summary
+| -------------
+------------------------------------------------------------------------------------------------
+
+Clock  Waveform(ns)       Period(ns)      Frequency(MHz)
+-----  ------------       ----------      --------------
+clk_i  {0.000 5.000}      10.000          100.000         
+
+
+------------------------------------------------------------------------------------------------
+| Intra Clock Table
+| -----------------
+------------------------------------------------------------------------------------------------
+
+Clock             WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
+-----             -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
+clk_i              -1.125    -2127.691                   3809                 9144        0.186        0.000                      0                 9144        4.500        0.000                       0                  4815  
+
+
+------------------------------------------------------------------------------------------------
+| Inter Clock Table
+| -----------------
+------------------------------------------------------------------------------------------------
+
+From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
+----------    --------          -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+
+
+------------------------------------------------------------------------------------------------
+| Other Path Groups Table
+| -----------------------
+------------------------------------------------------------------------------------------------
+
+Path Group    From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
+----------    ----------    --------          -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+
+
+------------------------------------------------------------------------------------------------
+| Timing Details
+| --------------
+------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------
+From Clock:  clk_i
+  To Clock:  clk_i
+
+Setup :         3809  Failing Endpoints,  Worst Slack       -1.125ns,  Total Violation    -2127.691ns
+Hold  :            0  Failing Endpoints,  Worst Slack        0.186ns,  Total Violation        0.000ns
+PW    :            0  Failing Endpoints,  Worst Slack        4.500ns,  Total Violation        0.000ns
+---------------------------------------------------------------------------------------------------
+
+
+Max Delay Paths
+--------------------------------------------------------------------------------------
+Slack (VIOLATED) :        -1.125ns  (required time - arrival time)
+  Source:                 i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_ar_id_counter.i_ar_id_counter/gen_counters[18].i_in_flight_cnt/counter_q_reg[0]/C
+                            (rising edge-triggered cell FDCE clocked by clk_i  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Destination:            i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_aw_id_counter.i_aw_id_counter/gen_counters[2].i_in_flight_cnt/counter_q_reg[0]/D
+                            (rising edge-triggered cell FDCE clocked by clk_i  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             clk_i
+  Path Type:              Setup (Max at Slow Process Corner)
+  Requirement:            10.000ns  (clk_i rise@10.000ns - clk_i rise@0.000ns)
+  Data Path Delay:        11.082ns  (logic 2.323ns (20.962%)  route 8.759ns (79.038%))
+  Logic Levels:           18  (LUT3=1 LUT4=2 LUT5=3 LUT6=12)
+  Clock Path Skew:        -0.039ns (DCD - SCD + CPR)
+    Destination Clock Delay (DCD):    0.748ns = ( 10.748 - 10.000 ) 
+    Source Clock Delay      (SCD):    0.787ns
+    Clock Pessimism Removal (CPR):    0.000ns
+  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter     (TSJ):    0.071ns
+    Total Input Jitter      (TIJ):    0.000ns
+    Discrete Jitter          (DJ):    0.000ns
+    Phase Error              (PE):    0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk_i rise edge)      0.000     0.000 r  
+                                                      0.000     0.000 r  clk_i (IN)
+                         net (fo=4814, unset)         0.787     0.787    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_ar_id_counter.i_ar_id_counter/gen_counters[18].i_in_flight_cnt/clk_i
+    SLICE_X12Y128        FDCE                                         r  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_ar_id_counter.i_ar_id_counter/gen_counters[18].i_in_flight_cnt/counter_q_reg[0]/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X12Y128        FDCE (Prop_fdce_C_Q)         0.433     1.220 f  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_ar_id_counter.i_ar_id_counter/gen_counters[18].i_in_flight_cnt/counter_q_reg[0]/Q
+                         net (fo=4, estimated)        0.531     1.751    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_ar_id_counter.i_ar_id_counter/gen_counters[18].i_in_flight_cnt/counter_q_reg[0]_0
+    SLICE_X13Y127        LUT4 (Prop_lut4_I0_O)        0.105     1.856 f  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_ar_id_counter.i_ar_id_counter/gen_counters[18].i_in_flight_cnt/axi_rsp_o[ar_ready]_INST_0_i_35/O
+                         net (fo=1, estimated)        0.509     2.365    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_ar_id_counter.i_ar_id_counter/gen_counters[18].i_in_flight_cnt/axi_rsp_o[ar_ready]_INST_0_i_35_n_0
+    SLICE_X13Y128        LUT4 (Prop_lut4_I0_O)        0.105     2.470 f  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_ar_id_counter.i_ar_id_counter/gen_counters[18].i_in_flight_cnt/axi_rsp_o[ar_ready]_INST_0_i_18/O
+                         net (fo=1, estimated)        0.522     2.992    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_ar_id_counter.i_ar_id_counter/gen_counters[9].i_in_flight_cnt/gen_demux.lock_ar_valid_q_reg_5
+    SLICE_X13Y138        LUT6 (Prop_lut6_I5_O)        0.105     3.097 f  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_ar_id_counter.i_ar_id_counter/gen_counters[9].i_in_flight_cnt/axi_rsp_o[ar_ready]_INST_0_i_5/O
+                         net (fo=6, estimated)        0.626     3.723    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.ar_id_cnt_full
+    SLICE_X14Y139        LUT6 (Prop_lut6_I3_O)        0.105     3.828 r  i_kecc_aes_k_axi_top/i_axi2reg/i___33/O
+                         net (fo=41, estimated)       0.313     4.141    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.i_w_fifo/write_pointer_q_reg[0]_0
+    SLICE_X14Y140        LUT6 (Prop_lut6_I1_O)        0.105     4.246 r  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.i_w_fifo/i__i_2__0__0/O
+                         net (fo=2, estimated)        0.936     5.182    i_kecc_aes_k_axi_top/i_axi2reg/axi_lite_req[w_valid]
+    SLICE_X33Y130        LUT6 (Prop_lut6_I4_O)        0.105     5.287 r  i_kecc_aes_k_axi_top/i_axi2reg/i__i_1__4/O
+                         net (fo=31, estimated)       0.311     5.598    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_aw_id_counter.i_aw_id_counter/gen_counters[3].i_in_flight_cnt/splitted_resp[aw_ready]
+    SLICE_X32Y128        LUT6 (Prop_lut6_I3_O)        0.105     5.703 r  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_aw_id_counter.i_aw_id_counter/gen_counters[3].i_in_flight_cnt/i__i_3__6/O
+                         net (fo=1, estimated)        0.231     5.934    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite_n_112
+    SLICE_X37Y128        LUT6 (Prop_lut6_I3_O)        0.105     6.039 r  i_kecc_aes_k_axi_top/i_axi2reg/i___29/O
+                         net (fo=41, estimated)       0.341     6.380    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_to_axi_lite_id_reflect/i_aw_id_fifo/i__i_2__4_0
+    SLICE_X36Y128        LUT5 (Prop_lut5_I2_O)        0.105     6.485 r  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_to_axi_lite_id_reflect/i_aw_id_fifo/i__i_2__3__0/O
+                         net (fo=1, estimated)        0.658     7.143    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_to_axi_lite_id_reflect/i_aw_id_fifo/i__i_2__3__0_n_0
+    SLICE_X35Y128        LUT6 (Prop_lut6_I0_O)        0.105     7.248 r  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_to_axi_lite_id_reflect/i_aw_id_fifo/i__i_1__9/O
+                         net (fo=22, estimated)       0.179     7.427    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_axi_burst_splitter_aw_chan/i_axi_burst_splitter_counters/i_idq/gen_ht_ffs[1].head_tail_q_reg[1][free]__0_1
+    SLICE_X35Y128        LUT6 (Prop_lut6_I5_O)        0.105     7.532 r  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_axi_burst_splitter_aw_chan/i_axi_burst_splitter_counters/i_idq/i__i_1__7__0/O
+                         net (fo=25, estimated)       0.511     8.043    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_axi_burst_splitter_aw_chan/i_axi_burst_splitter_counters/i_idq/gen_ht_ffs[0].head_tail_q_reg[0][free]_0
+    SLICE_X33Y127        LUT5 (Prop_lut5_I3_O)        0.105     8.148 f  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_axi_burst_splitter_aw_chan/i_axi_burst_splitter_counters/i_idq/i__i_6__2/O
+                         net (fo=4, estimated)        0.576     8.724    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_axi_burst_splitter_aw_chan/i_axi_burst_splitter_counters/i_idq/counter_q_reg[4]
+    SLICE_X33Y127        LUT6 (Prop_lut6_I0_O)        0.105     8.829 f  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_axi_burst_splitter_aw_chan/i_axi_burst_splitter_counters/i_idq/i__i_2__13/O
+                         net (fo=5, estimated)        0.575     9.404    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_axi_burst_splitter_aw_chan/i_axi_burst_splitter_counters/i_idq/counter_q_reg[4]_0
+    SLICE_X33Y127        LUT6 (Prop_lut6_I0_O)        0.105     9.509 f  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_axi_burst_splitter_aw_chan/i_axi_burst_splitter_counters/i_idq/axi_rsp_o[b][resp][1]_INST_0_i_4/O
+                         net (fo=1, estimated)        0.232     9.741    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.i_b_mux/read_pointer_q_reg[0]
+    SLICE_X31Y128        LUT6 (Prop_lut6_I2_O)        0.105     9.846 r  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.i_b_mux/axi_rsp_o[b][resp][1]_INST_0_i_2/O
+                         net (fo=14, estimated)       0.389    10.235    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_err_slv/i_b_fifo/read_pointer_q_reg[0]_1
+    SLICE_X30Y128        LUT6 (Prop_lut6_I3_O)        0.105    10.340 r  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_err_slv/i_b_fifo/axi_rsp_o[b][id][2]_INST_0_i_1/O
+                         net (fo=9, estimated)        0.631    10.971    i_kecc_aes_k_axi_top/i_axi2reg/filtered_resp[b][id][2]
+    SLICE_X28Y130        LUT3 (Prop_lut3_I0_O)        0.105    11.076 r  i_kecc_aes_k_axi_top/i_axi2reg/i___16/O
+                         net (fo=8, estimated)        0.688    11.764    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_aw_id_counter.i_aw_id_counter/gen_counters[2].i_in_flight_cnt/counter_q_reg[1]_1
+    SLICE_X15Y135        LUT5 (Prop_lut5_I1_O)        0.105    11.869 r  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_aw_id_counter.i_aw_id_counter/gen_counters[2].i_in_flight_cnt/counter_q[0]_i_1/O
+                         net (fo=1, routed)           0.000    11.869    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_aw_id_counter.i_aw_id_counter/gen_counters[2].i_in_flight_cnt/counter_q[0]_i_1_n_0
+    SLICE_X15Y135        FDCE                                         r  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_aw_id_counter.i_aw_id_counter/gen_counters[2].i_in_flight_cnt/counter_q_reg[0]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk_i rise edge)     10.000    10.000 r  
+                                                      0.000    10.000 r  clk_i (IN)
+                         net (fo=4814, unset)         0.748    10.748    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_aw_id_counter.i_aw_id_counter/gen_counters[2].i_in_flight_cnt/clk_i
+    SLICE_X15Y135        FDCE                                         r  i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_aw_id_counter.i_aw_id_counter/gen_counters[2].i_in_flight_cnt/counter_q_reg[0]/C
+                         clock pessimism              0.000    10.748    
+                         clock uncertainty           -0.035    10.712    
+    SLICE_X15Y135        FDCE (Setup_fdce_C_D)        0.032    10.744    i_kecc_aes_k_axi_top/i_axi2reg/i_axi_to_axi_lite/i_axi_burst_splitter/i_demux_supported_vs_unsupported/gen_demux.gen_aw_id_counter.i_aw_id_counter/gen_counters[2].i_in_flight_cnt/counter_q_reg[0]
+  -------------------------------------------------------------------
+                         required time                         10.744    
+                         arrival time                         -11.869    
+  -------------------------------------------------------------------
+                         slack                                 -1.125    
+
+
+
+
+
+Min Delay Paths
+--------------------------------------------------------------------------------------
+Slack (MET) :             0.186ns  (arrival time - required time)
+  Source:                 i_kecc_aes_k_axi_top/i_keccak_aes_k_top/ready_reg_reg/C
+                            (rising edge-triggered cell FDPE clocked by clk_i  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Destination:            i_kecc_aes_k_axi_top/kecc_aes_k_axi_reg_top_i/u_status_ready/q_reg[0]/D
+                            (rising edge-triggered cell FDCE clocked by clk_i  {rise@0.000ns fall@5.000ns period=10.000ns})
+  Path Group:             clk_i
+  Path Type:              Hold (Min at Fast Process Corner)
+  Requirement:            0.000ns  (clk_i rise@0.000ns - clk_i rise@0.000ns)
+  Data Path Delay:        0.276ns  (logic 0.141ns (51.016%)  route 0.135ns (48.984%))
+  Logic Levels:           0  
+  Clock Path Skew:        0.021ns (DCD - SCD - CPR)
+    Destination Clock Delay (DCD):    0.411ns
+    Source Clock Delay      (SCD):    0.390ns
+    Clock Pessimism Removal (CPR):    -0.000ns
+
+    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
+  -------------------------------------------------------------------    -------------------
+                         (clock clk_i rise edge)      0.000     0.000 r  
+                                                      0.000     0.000 r  clk_i (IN)
+                         net (fo=4814, unset)         0.390     0.390    i_kecc_aes_k_axi_top/i_keccak_aes_k_top/clk_i
+    SLICE_X63Y152        FDPE                                         r  i_kecc_aes_k_axi_top/i_keccak_aes_k_top/ready_reg_reg/C
+  -------------------------------------------------------------------    -------------------
+    SLICE_X63Y152        FDPE (Prop_fdpe_C_Q)         0.141     0.531 r  i_kecc_aes_k_axi_top/i_keccak_aes_k_top/ready_reg_reg/Q
+                         net (fo=2, estimated)        0.135     0.667    i_kecc_aes_k_axi_top/kecc_aes_k_axi_reg_top_i/u_status_ready/ip_to_reg_file[status][ready][d]
+    SLICE_X63Y152        FDCE                                         r  i_kecc_aes_k_axi_top/kecc_aes_k_axi_reg_top_i/u_status_ready/q_reg[0]/D
+  -------------------------------------------------------------------    -------------------
+
+                         (clock clk_i rise edge)      0.000     0.000 r  
+                                                      0.000     0.000 r  clk_i (IN)
+                         net (fo=4814, unset)         0.411     0.411    i_kecc_aes_k_axi_top/kecc_aes_k_axi_reg_top_i/u_status_ready/clk_i
+    SLICE_X63Y152        FDCE                                         r  i_kecc_aes_k_axi_top/kecc_aes_k_axi_reg_top_i/u_status_ready/q_reg[0]/C
+                         clock pessimism              0.000     0.411    
+    SLICE_X63Y152        FDCE (Hold_fdce_C_D)         0.070     0.481    i_kecc_aes_k_axi_top/kecc_aes_k_axi_reg_top_i/u_status_ready/q_reg[0]
+  -------------------------------------------------------------------
+                         required time                         -0.481    
+                         arrival time                           0.667    
+  -------------------------------------------------------------------
+                         slack                                  0.186    
+
+
+
+
+
+Pulse Width Checks
+--------------------------------------------------------------------------------------
+Clock Name:         clk_i
+Waveform(ns):       { 0.000 5.000 }
+Period(ns):         10.000
+Sources:            { clk_i }
+
+Check Type        Corner  Lib Pin  Reference Pin  Required(ns)  Actual(ns)  Slack(ns)  Location      Pin
+Min Period        n/a     FDCE/C   n/a            1.000         10.000      9.000      SLICE_X9Y148  i_kecc_aes_k_axi_top/core_result_valid_old_reg/C
+Low Pulse Width   Slow    FDCE/C   n/a            0.500         5.000       4.500      SLICE_X9Y148  i_kecc_aes_k_axi_top/core_result_valid_old_reg/C
+High Pulse Width  Slow    FDCE/C   n/a            0.500         5.000       4.500      SLICE_X9Y148  i_kecc_aes_k_axi_top/core_result_valid_old_reg/C
+
+
+

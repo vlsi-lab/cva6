@@ -117,6 +117,29 @@ static const uint16_t KECCAK_DATA_OFFSET[25] = {
   KECC_AES_K_AXI_KECCAK_DATA_24_REG_OFFSET,
 };
 
+// The core's key schedule is direction-specific (aes_key_mem.sv's CTRL_KEY_GEN
+// state uses the inverse S-box for decrypt, forward for encrypt -- see
+// keccak_aes_k_top.sv's `sbox_inv = !encdec`), so one `init` cannot serve both
+// directions. But a single (key, direction) schedule DOES stay valid in the
+// core's internal registers across any number of `next`-only block calls, as
+// long as nothing else pulses `init`/`zeroize` in between -- exactly what
+// tightly's aes128_ctx_t gets by precomputing enc_rk[]/dec_rk[] once up front.
+// Since this core exposes no way to read the schedule back out to cache it in
+// software, the driver instead remembers what the *hardware* last scheduled
+// and skips re-running `init` when a call reuses the same key+direction,
+// which is what makes CBC/CTR/GCM/XTS-style repeated-block-same-key call
+// patterns cost one schedule instead of one per block, same as tightly.
+static uint8_t g_last_key[32];
+static int g_last_keylen256 = -1;
+static int g_last_encdec = -1;
+static int g_schedule_valid = 0;
+
+static int schedule_matches(const uint8_t key[32], int keylen256, int encdec)
+{
+  return g_schedule_valid && keylen256 == g_last_keylen256 && encdec == g_last_encdec
+      && __builtin_memcmp(key, g_last_key, 32) == 0;
+}
+
 static void aes_block_op(const uint8_t key[32], int keylen256, int encdec,
                           const uint8_t block_in[16], uint8_t block_out[16])
 {
@@ -124,15 +147,26 @@ static void aes_block_op(const uint8_t key[32], int keylen256, int encdec,
                             | ((encdec ? 1u : 0u) << KECC_AES_K_AXI_CTRL_ENCDEC_BIT)
                             | ((keylen256 ? 1u : 0u) << KECC_AES_K_AXI_CTRL_KEYLEN_BIT);
 
-  // 1. set sel/encdec/keylen, write key, pulse init, poll ready.
-  ctrl_write(ctrl_base);
-  write_key(key);
-  MMIO_FENCE(); // key must be visible before init pulses the key schedule
+  if (!schedule_matches(key, keylen256, encdec)) {
+    // 1. set sel/encdec/keylen, write key, pulse init, poll ready.
+    ctrl_write(ctrl_base);
+    write_key(key);
+    MMIO_FENCE(); // key must be visible before init pulses the key schedule
 
-  ctrl_write(ctrl_base | (1u << KECC_AES_K_AXI_CTRL_INIT_BIT));
-  MMIO_FENCE(); // init write must be visible before we start polling
-  wait_ready();
-  ctrl_write(ctrl_base); // clear INIT, re-arm for the next pulse
+    ctrl_write(ctrl_base | (1u << KECC_AES_K_AXI_CTRL_INIT_BIT));
+    MMIO_FENCE(); // init write must be visible before we start polling
+    wait_ready();
+    ctrl_write(ctrl_base); // clear INIT, re-arm for the next pulse
+
+    __builtin_memcpy(g_last_key, key, 32);
+    g_last_keylen256 = keylen256;
+    g_last_encdec = encdec;
+    g_schedule_valid = 1;
+  } else {
+    // Schedule already loaded for this (key, direction) -- CTRL still needs
+    // SEL/ENCDEC/KEYLEN held for the upcoming `next`, just skip the init pulse.
+    ctrl_write(ctrl_base);
+  }
 
   // 2. write block, pulse next, poll ready/result_valid, read result.
   write_block(block_in);
@@ -163,6 +197,14 @@ void kecc_aes_k_axi_aes_decrypt_block(const uint8_t key[32], int keylen256,
 void kecc_aes_k_axi_keccak_permute(const uint8_t state_in[200], uint8_t state_out[200])
 {
   const uint64_t ctrl_base = 0; // SEL = 0 (keccak); encdec/keylen don't-care
+
+  // The AES block register aliases two of the core's 25 Keccak lanes (see
+  // keccak_aes_k_top.sv's header comment), so a Keccak permutation can
+  // disturb AES-side state -- invalidate the cached schedule defensively.
+  // None of the current test programs interleave Keccak and AES calls on
+  // the same accelerator instance, so this doesn't fire in practice today,
+  // but it's a correctness trap for any future caller that does.
+  g_schedule_valid = 0;
 
   // 1. set sel, write keccak_din.
   ctrl_write(ctrl_base);
@@ -198,4 +240,6 @@ void kecc_aes_k_axi_zeroize(void)
   ctrl_write(0);
   MMIO_FENCE(); // zeroize release must be visible before we poll ready
   wait_ready();
+
+  g_schedule_valid = 0; // zeroize scrubs the core's internal key schedule too
 }
