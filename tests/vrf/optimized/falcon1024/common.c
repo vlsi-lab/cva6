@@ -31,6 +31,7 @@
 
 #include "inner.h"
 #include "encoding.h"   /* read_csr(mcycle), for the profiling counters below */
+#include "vrf_axi.h"
 
 /*
  * Cycle accounting for Zf(hash_to_point_vartime)()/Zf(is_short)() -- added
@@ -255,37 +256,54 @@ static const uint32_t l2bound[] = {
 	70265242
 };
 
+/*
+ * HW dispatch for Zf(is_short)(): falcon_normcheck.sv accumulates
+ * sum(s1[u]^2) + sum(s2[u]^2) with the reference's own constant-time
+ * saturating-overflow trick, then compares against NORMCHECK_BOUND
+ * (l2bound[logn], computed here in software and passed in -- the
+ * threshold table itself is not replicated in hardware). Both s1[]/s2[]
+ * are read-only inputs to the accelerator; the only output is a single
+ * pass/fail bit read back over MMIO, so unlike Zf(comp_decode)() there is
+ * no DMA write and therefore no D-cache-staleness concern to work around
+ * here.
+ */
+#define VRF_AXI_BASE_ADDR 0x50000000UL
+
 /* see inner.h */
 int
 Zf(is_short)(
 	const int16_t *s1, const int16_t *s2, unsigned logn)
 {
-	/*
-	 * We use the l2-norm. Code below uses only 32-bit operations to
-	 * compute the square of the norm with saturation to 2^32-1 if
-	 * the value exceeds 2^31-1.
-	 */
-	size_t n, u;
-	uint32_t s, ng;
+	uint64_t volatile *normcheck_s1_addr = (uint64_t volatile *)
+	    (VRF_AXI_BASE_ADDR + VRF_NORMCHECK_S1_ADDR_REG_OFFSET);
+	uint64_t volatile *normcheck_s2_addr = (uint64_t volatile *)
+	    (VRF_AXI_BASE_ADDR + VRF_NORMCHECK_S2_ADDR_REG_OFFSET);
+	uint64_t volatile *normcheck_bound = (uint64_t volatile *)
+	    (VRF_AXI_BASE_ADDR + VRF_NORMCHECK_BOUND_REG_OFFSET);
+	uint64_t volatile *normcheck_ctrl = (uint64_t volatile *)
+	    (VRF_AXI_BASE_ADDR + VRF_NORMCHECK_CTRL_REG_OFFSET);
+	size_t n = (size_t)1 << logn;
+	uint64_t ctrl_val;
 	uint64_t _prof_c0 = read_csr(mcycle);
 	int _prof_ret;
 
-	n = (size_t)1 << logn;
-	s = 0;
-	ng = 0;
-	for (u = 0; u < n; u ++) {
-		int32_t z;
+	__asm__ volatile ("fence" ::: "memory");
 
-		z = s1[u];
-		s += (uint32_t)(z * z);
-		ng |= s;
-		z = s2[u];
-		s += (uint32_t)(z * z);
-		ng |= s;
-	}
-	s |= -(ng >> 31);
+	*normcheck_s1_addr = (uint64_t)(uintptr_t)s1;
+	*normcheck_s2_addr = (uint64_t)(uintptr_t)s2;
+	*normcheck_bound   = (uint64_t)l2bound[logn];
+	*normcheck_ctrl = ((uint64_t)1 << VRF_NORMCHECK_CTRL_GO_BIT)
+	    | ((uint64_t)n << VRF_NORMCHECK_CTRL_N_OFFSET);
 
-	_prof_ret = s <= l2bound[logn];
+	while (((*normcheck_ctrl) & ((uint64_t)1 << VRF_NORMCHECK_CTRL_DONE_BIT)) == 0);
+
+	ctrl_val = *normcheck_ctrl;
+	_prof_ret = (ctrl_val & ((uint64_t)1 << VRF_NORMCHECK_CTRL_PASS_BIT)) != 0;
+
+	*normcheck_ctrl = 0;
+
+	__asm__ volatile ("fence" ::: "memory");
+
 	falcon_is_short_cycles += read_csr(mcycle) - _prof_c0;
 	falcon_is_short_calls++;
 	return _prof_ret;

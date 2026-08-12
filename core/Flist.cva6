@@ -121,6 +121,8 @@ ${CVA6_REPO_DIR}/vrf_ip/rtl/keccak_dma_ctrl.sv
 ${CVA6_REPO_DIR}/vrf_ip/rtl/rej_sampler.sv
 ${CVA6_REPO_DIR}/vrf_ip/rtl/ntt_engine.sv
 ${CVA6_REPO_DIR}/vrf_ip/rtl/chain_job_ctrl.sv
+${CVA6_REPO_DIR}/vrf_ip/rtl/falcon_decode.sv
+${CVA6_REPO_DIR}/vrf_ip/rtl/falcon_normcheck.sv
 +incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/include
 +incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/vendor/lowrisc_opentitan/src/
 +incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/src/

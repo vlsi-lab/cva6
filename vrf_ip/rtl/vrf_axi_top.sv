@@ -302,11 +302,92 @@ module vrf_axi_top
 	assign ip_to_reg_file.rej_ctrl.done.d  = rej_done;
 	assign ip_to_reg_file.rej_ctrl.done.de = rej_done;
 
-	assign dma_req_o   = ntt_busy ? ntt_mem_req   : (rej_busy ? rej_mem_req   : dma_mem_req);
-	assign dma_addr_o  = ntt_busy ? ntt_mem_addr  : (rej_busy ? rej_mem_addr  : dma_mem_addr);
-	assign dma_we_o    = ntt_busy ? ntt_mem_we    : (rej_busy ? rej_mem_we    : dma_mem_we);
-	assign dma_wdata_o = ntt_busy ? ntt_mem_wdata : (rej_busy ? rej_mem_wdata : dma_mem_wdata);
-	assign dma_be_o    = ntt_busy ? ntt_mem_be    : (rej_busy ? rej_mem_be    : dma_mem_be);
+	// Falcon Zf(comp_decode)() signature-decompression job (see
+	// falcon_decode.sv header for scope/assumptions). Falcon-specific, no
+	// Keccak/permutation involvement at all -- just another mem-port user
+	// muxed onto the same single physical master, like NTT/rej-sampler.
+	logic                        decode_done, decode_fail, decode_busy;
+	logic [15:0]                 decode_v;
+	logic                        decode_mem_req, decode_mem_we;
+	logic [AXI_ADDR_WIDTH-1:0]   decode_mem_addr;
+	logic [AXI_DATA_WIDTH-1:0]   decode_mem_wdata;
+	logic [AXI_DATA_WIDTH/8-1:0] decode_mem_be;
+
+	falcon_decode #(
+		.AXI_ADDR_WIDTH(AXI_ADDR_WIDTH),
+		.AXI_DATA_WIDTH(AXI_DATA_WIDTH)
+	) i_falcon_decode (
+		.clk_i         (clk_i),
+		.rst_ni        (rst_ni),
+		.job_go_i      (reg_file_to_ip.decode_ctrl.go.q),
+		.job_in_addr_i (reg_file_to_ip.decode_in_addr.q),
+		.job_out_addr_i(reg_file_to_ip.decode_out_addr.q),
+		.job_max_len_i (reg_file_to_ip.decode_params.max_len.q),
+		.job_n_i       (reg_file_to_ip.decode_params.n.q),
+		.job_done_o    (decode_done),
+		.job_fail_o    (decode_fail),
+		.job_v_o       (decode_v),
+		.mem_req_o     (decode_mem_req),
+		.mem_addr_o    (decode_mem_addr),
+		.mem_we_o      (decode_mem_we),
+		.mem_wdata_o   (decode_mem_wdata),
+		.mem_be_o      (decode_mem_be),
+		.mem_gnt_i     (dma_gnt_i),
+		.mem_valid_i   (dma_valid_i),
+		.mem_rdata_i   (dma_rdata_i),
+		.busy_o        (decode_busy)
+	);
+
+	assign ip_to_reg_file.decode_ctrl.done.d  = decode_done;
+	assign ip_to_reg_file.decode_ctrl.done.de = decode_done;
+	assign ip_to_reg_file.decode_ctrl.fail.d  = decode_fail;
+	assign ip_to_reg_file.decode_ctrl.fail.de = decode_done;
+	assign ip_to_reg_file.decode_ctrl.v.d     = decode_v;
+	assign ip_to_reg_file.decode_ctrl.v.de    = decode_done;
+
+	// Falcon Zf(is_short)() squared-l2-norm acceptance-bound check (see
+	// falcon_normcheck.sv header for scope/assumptions). Falcon-specific,
+	// same mem-port-muxing pattern as the other jobs above.
+	logic                        normcheck_done, normcheck_pass, normcheck_busy;
+	logic                        normcheck_mem_req, normcheck_mem_we;
+	logic [AXI_ADDR_WIDTH-1:0]   normcheck_mem_addr;
+	logic [AXI_DATA_WIDTH-1:0]   normcheck_mem_wdata;
+	logic [AXI_DATA_WIDTH/8-1:0] normcheck_mem_be;
+
+	falcon_normcheck #(
+		.AXI_ADDR_WIDTH(AXI_ADDR_WIDTH),
+		.AXI_DATA_WIDTH(AXI_DATA_WIDTH)
+	) i_falcon_normcheck (
+		.clk_i        (clk_i),
+		.rst_ni       (rst_ni),
+		.job_go_i     (reg_file_to_ip.normcheck_ctrl.go.q),
+		.job_s1_addr_i(reg_file_to_ip.normcheck_s1_addr.q),
+		.job_s2_addr_i(reg_file_to_ip.normcheck_s2_addr.q),
+		.job_bound_i  (reg_file_to_ip.normcheck_bound.q),
+		.job_n_i      (reg_file_to_ip.normcheck_ctrl.n.q),
+		.job_done_o   (normcheck_done),
+		.job_pass_o   (normcheck_pass),
+		.mem_req_o    (normcheck_mem_req),
+		.mem_addr_o   (normcheck_mem_addr),
+		.mem_we_o     (normcheck_mem_we),
+		.mem_wdata_o  (normcheck_mem_wdata),
+		.mem_be_o     (normcheck_mem_be),
+		.mem_gnt_i    (dma_gnt_i),
+		.mem_valid_i  (dma_valid_i),
+		.mem_rdata_i  (dma_rdata_i),
+		.busy_o       (normcheck_busy)
+	);
+
+	assign ip_to_reg_file.normcheck_ctrl.done.d  = normcheck_done;
+	assign ip_to_reg_file.normcheck_ctrl.done.de = normcheck_done;
+	assign ip_to_reg_file.normcheck_ctrl.pass.d  = normcheck_pass;
+	assign ip_to_reg_file.normcheck_ctrl.pass.de = normcheck_done;
+
+	assign dma_req_o   = ntt_busy ? ntt_mem_req   : (rej_busy ? rej_mem_req   : (decode_busy ? decode_mem_req   : (normcheck_busy ? normcheck_mem_req   : dma_mem_req)));
+	assign dma_addr_o  = ntt_busy ? ntt_mem_addr  : (rej_busy ? rej_mem_addr  : (decode_busy ? decode_mem_addr  : (normcheck_busy ? normcheck_mem_addr  : dma_mem_addr)));
+	assign dma_we_o    = ntt_busy ? ntt_mem_we    : (rej_busy ? rej_mem_we    : (decode_busy ? decode_mem_we    : (normcheck_busy ? normcheck_mem_we    : dma_mem_we)));
+	assign dma_wdata_o = ntt_busy ? ntt_mem_wdata : (rej_busy ? rej_mem_wdata : (decode_busy ? decode_mem_wdata : (normcheck_busy ? normcheck_mem_wdata : dma_mem_wdata)));
+	assign dma_be_o    = ntt_busy ? ntt_mem_be    : (rej_busy ? rej_mem_be    : (decode_busy ? decode_mem_be    : (normcheck_busy ? normcheck_mem_be    : dma_mem_be)));
 
 	genvar i;
 	generate

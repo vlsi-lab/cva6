@@ -24,8 +24,8 @@
  *     gm[idx] = zetas[idx] mod Q, taken DIRECTLY from ML-DSA's own zetas[]
  *     table with no reordering, is the correct forward twiddle table --
  *     confirmed by symbolic derivation matching the RTL's stage/index
- *     progression to software's loop nest exactly (see result.md's Phase 3
- *     notes), not just by this test's empirical pass/fail.
+ *     progression to software's loop nest exactly, not just by this test's
+ *     empirical pass/fail.
  *
  *  2. Inverse table: ntt_engine.sv's inverse-mode butterfly (k1'=x1+x2,
  *     k2'=montgomery_reduce((x1-x2)*s), matching invntt_tomont()'s

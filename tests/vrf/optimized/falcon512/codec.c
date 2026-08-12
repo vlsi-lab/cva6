@@ -30,6 +30,7 @@
  */
 
 #include "inner.h"
+#include "vrf_axi.h"
 
 /* see inner.h */
 size_t
@@ -400,75 +401,66 @@ Zf(comp_encode)(
 	return v;
 }
 
+/*
+ * HW dispatch for Zf(comp_decode)(): a bit-serial Golomb-Rice-style
+ * decoder (falcon_decode.sv) offloads the sign/magnitude/unary bitstream
+ * walk. The 'in' bitstream is read directly by the accelerator's own AXI
+ * master (a plain `fence` before dispatch is enough to order the caller's
+ * writes ahead of that read, same as every other job's input on this
+ * accelerator); the decoded coefficients, however, are DMA-written by the
+ * accelerator into ordinary caller memory (here, nist.c's on-stack `sig`
+ * array), which this SoC's D$ won't see (DcacheFlushOnFence/
+ * DcacheInvalidateOnFlush are both 0) -- so output goes through the same
+ * non-cacheable DRAM scratch window + software copy-out convention as
+ * VRF_NTT_HW_SCRATCH_ADDR/VRF_REJ_HW_SCRATCH_ADDR (vrfy.c/shake.c).
+ */
+#define VRF_AXI_BASE_ADDR          0x50000000UL
+#define VRF_DECODE_HW_SCRATCH_ADDR 0x80F0B000UL
+#define VRF_DECODE_HW_SCRATCH_SIZE 2048u   /* n*2, n<=1024 */
+
 /* see inner.h */
 size_t
 Zf(comp_decode)(
 	int16_t *x, unsigned logn,
 	const void *in, size_t max_in_len)
 {
-	const uint8_t *buf;
-	size_t n, u, v;
-	uint32_t acc;
-	unsigned acc_len;
+	uint64_t volatile *decode_in_addr = (uint64_t volatile *)
+	    (VRF_AXI_BASE_ADDR + VRF_DECODE_IN_ADDR_REG_OFFSET);
+	uint64_t volatile *decode_out_addr = (uint64_t volatile *)
+	    (VRF_AXI_BASE_ADDR + VRF_DECODE_OUT_ADDR_REG_OFFSET);
+	uint64_t volatile *decode_params = (uint64_t volatile *)
+	    (VRF_AXI_BASE_ADDR + VRF_DECODE_PARAMS_REG_OFFSET);
+	uint64_t volatile *decode_ctrl = (uint64_t volatile *)
+	    (VRF_AXI_BASE_ADDR + VRF_DECODE_CTRL_REG_OFFSET);
+	int16_t volatile *scratch = (int16_t volatile *)VRF_DECODE_HW_SCRATCH_ADDR;
+	size_t n = (size_t)1 << logn;
+	uint64_t ctrl_val;
+	size_t u, v;
 
-	n = (size_t)1 << logn;
-	buf = in;
-	acc = 0;
-	acc_len = 0;
-	v = 0;
-	for (u = 0; u < n; u ++) {
-		unsigned b, s, m;
+	__asm__ volatile ("fence" ::: "memory");
 
-		/*
-		 * Get next eight bits: sign and low seven bits of the
-		 * absolute value.
-		 */
-		if (v >= max_in_len) {
-			return 0;
-		}
-		acc = (acc << 8) | (uint32_t)buf[v ++];
-		b = acc >> acc_len;
-		s = b & 128;
-		m = b & 127;
+	*decode_in_addr  = (uint64_t)(uintptr_t)in;
+	*decode_out_addr = (uint64_t)VRF_DECODE_HW_SCRATCH_ADDR;
+	*decode_params = ((uint64_t)max_in_len << VRF_DECODE_PARAMS_MAX_LEN_OFFSET)
+	    | ((uint64_t)n << VRF_DECODE_PARAMS_N_OFFSET);
 
-		/*
-		 * Get next bits until a 1 is reached.
-		 */
-		for (;;) {
-			if (acc_len == 0) {
-				if (v >= max_in_len) {
-					return 0;
-				}
-				acc = (acc << 8) | (uint32_t)buf[v ++];
-				acc_len = 8;
-			}
-			acc_len --;
-			if (((acc >> acc_len) & 1) != 0) {
-				break;
-			}
-			m += 128;
-			if (m > 2047) {
-				return 0;
-			}
-		}
+	*decode_ctrl = (uint64_t)1 << VRF_DECODE_CTRL_GO_BIT;
+	while (((*decode_ctrl) & ((uint64_t)1 << VRF_DECODE_CTRL_DONE_BIT)) == 0);
 
-		/*
-		 * "-0" is forbidden.
-		 */
-		if (s && m == 0) {
-			return 0;
-		}
+	ctrl_val = *decode_ctrl;
+	*decode_ctrl = 0;
 
-		x[u] = (int16_t)(s ? -(int)m : (int)m);
-	}
+	__asm__ volatile ("fence" ::: "memory");
 
-	/*
-	 * Unused bits in the last byte must be zero.
-	 */
-	if ((acc & ((1u << acc_len) - 1u)) != 0) {
+	if (ctrl_val & ((uint64_t)1 << VRF_DECODE_CTRL_FAIL_BIT)) {
 		return 0;
 	}
 
+	for (u = 0; u < n; u ++) {
+		x[u] = scratch[u];
+	}
+
+	v = (size_t)((ctrl_val >> VRF_DECODE_CTRL_V_OFFSET) & VRF_DECODE_CTRL_V_MASK);
 	return v;
 }
 

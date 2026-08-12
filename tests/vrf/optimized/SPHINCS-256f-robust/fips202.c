@@ -93,24 +93,59 @@ static void KeccakF1600_StatePermute(uint64_t *state) {
  *              - uint8_t p: domain-separation byte for different
  *                                 Keccak-derived functions
  **************************************************/
+/*
+ * Bulk-absorb full rate blocks via the shared vrf_ip Keccak DMA-absorb
+ * engine (vrf_ip/rtl/keccak_dma_ctrl.sv) instead of the software loop's
+ * one-full-25-word-upload/trigger/poll/download MMIO round trip PER rate
+ * block -- the same autonomous multi-block absorb job Falcon's shake.c
+ * already uses. FRESH zeroes the resident state first; padding/domain
+ * separation stays in software below, unchanged (the hardware's pad10*1
+ * is hardcoded to SHAKE's 0x1F byte, matching every caller of this
+ * function, but keeping the tail in software avoids needing a HW dispatch
+ * at all for inputs under one rate block -- the common case for most
+ * calls, and this only helps when mlen >= r anyway).
+ */
+static void
+keccak_dma_absorb_fresh(const void *m, uint32_t len)
+{
+    uint64_t volatile *job_src_addr = (uint64_t volatile *)
+        (VRF_AXI_BASE_ADDR + VRF_JOB_SRC_ADDR_REG_OFFSET);
+    uint64_t volatile *job_src_len = (uint64_t volatile *)
+        (VRF_AXI_BASE_ADDR + VRF_JOB_SRC_LEN_REG_OFFSET);
+    uint64_t volatile *jobctrl = (uint64_t volatile *)
+        (VRF_AXI_BASE_ADDR + VRF_JOBCTRL_REG_OFFSET);
+
+    __asm__ volatile ("fence" ::: "memory");
+
+    *job_src_addr = (uint64_t)(uintptr_t)m;
+    *job_src_len  = len;
+
+    *jobctrl = ((uint64_t)1 << VRF_JOBCTRL_GO_BIT)
+        | ((uint64_t)1 << VRF_JOBCTRL_FRESH_BIT);
+    while (((*jobctrl) & ((uint64_t)1 << VRF_JOBCTRL_DONE_BIT)) == 0);
+    *jobctrl = 0;
+}
+
 static void keccak_absorb(uint64_t *s, uint32_t r, const uint8_t *m,
                           size_t mlen, uint8_t p) {
+    uint64_t volatile *cryptoState = (uint64_t volatile *)
+        (VRF_AXI_BASE_ADDR + VRF_DATA_0_REG_OFFSET);
     size_t i;
     uint8_t t[200];
+    size_t full_len = mlen - (mlen % r);
 
     /* Zero state */
     for (i = 0; i < 25; ++i) {
         s[i] = 0;
     }
 
-    while (mlen >= r) {
-        for (i = 0; i < r / 8; ++i) {
-            s[i] ^= load64(m + 8 * i);
+    if (full_len > 0) {
+        keccak_dma_absorb_fresh(m, (uint32_t)full_len);
+        for (i = 0; i < 25; ++i) {
+            s[i] = cryptoState[i];
         }
-
-        KeccakF1600_StatePermute(s);
-        mlen -= r;
-        m += r;
+        m += full_len;
+        mlen -= full_len;
     }
 
     for (i = 0; i < r; ++i) {

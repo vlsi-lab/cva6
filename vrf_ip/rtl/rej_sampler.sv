@@ -59,6 +59,19 @@
 // int32_t a[] arrays are naturally 4-byte aligned), so a write never
 // crosses an 8-byte word boundary.
 //
+// An on-chip output-buffering redesign (defer all DRAM writes to an
+// end-of-job flush) was tried and measured WORSE on real RTL for this
+// job's actual workloads (rej-mldsa app-test: 1559 -> 1749 cycles) and was
+// reverted: ML-DSA's rej_uniform and Falcon's hash_to_point_vartime both
+// have high acceptance rates (little squeeze work happens between
+// accepts), so there is little serialized squeeze-vs-write cost to
+// recover, while the deferred design's own buffer round-trip (write on
+// accept, read back on flush) is a flat per-candidate tax with nothing to
+// offset it -- unlike ntt_engine.sv's k1/k2 traffic, which really was the
+// dominant cost. A packed-multi-candidate-per-write version might still
+// win, but was not pursued given the added correctness-risk (partial
+// last-group byte-enable masking) for an unproven return.
+//
 module rej_sampler #(
     parameter int unsigned AXI_ADDR_WIDTH = 64,
     parameter int unsigned AXI_DATA_WIDTH = 64

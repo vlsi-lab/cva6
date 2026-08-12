@@ -318,6 +318,62 @@ extern "C" {
 #define VRF_CHAIN_CTRL_OP_TYPE_FIELD \
   ((bitfield_field32_t) { .mask = VRF_CHAIN_CTRL_OP_TYPE_MASK, .index = VRF_CHAIN_CTRL_OP_TYPE_OFFSET })
 
+// Physical base address of the compressed signature byte stream
+// (Zf(comp_decode)'s 'in' argument)
+#define VRF_DECODE_IN_ADDR_REG_OFFSET 0x1c8
+
+// Physical base address of the int16_t decoded-coefficient output array x[]
+// (Zf(comp_decode)'s 'x' argument)
+#define VRF_DECODE_OUT_ADDR_REG_OFFSET 0x1d0
+
+// Falcon signature decompression job parameters, packed to keep the register
+// count small
+#define VRF_DECODE_PARAMS_REG_OFFSET 0x1d8
+#define VRF_DECODE_PARAMS_MAX_LEN_MASK 0xffff
+#define VRF_DECODE_PARAMS_MAX_LEN_OFFSET 0
+#define VRF_DECODE_PARAMS_MAX_LEN_FIELD \
+  ((bitfield_field32_t) { .mask = VRF_DECODE_PARAMS_MAX_LEN_MASK, .index = VRF_DECODE_PARAMS_MAX_LEN_OFFSET })
+#define VRF_DECODE_PARAMS_N_MASK 0xffff
+#define VRF_DECODE_PARAMS_N_OFFSET 16
+#define VRF_DECODE_PARAMS_N_FIELD \
+  ((bitfield_field32_t) { .mask = VRF_DECODE_PARAMS_N_MASK, .index = VRF_DECODE_PARAMS_N_OFFSET })
+
+// Falcon signature decompression job control and status
+#define VRF_DECODE_CTRL_REG_OFFSET 0x1e0
+#define VRF_DECODE_CTRL_GO_BIT 0
+#define VRF_DECODE_CTRL_DONE_BIT 1
+#define VRF_DECODE_CTRL_FAIL_BIT 2
+#define VRF_DECODE_CTRL_V_MASK 0xffff
+#define VRF_DECODE_CTRL_V_OFFSET 16
+#define VRF_DECODE_CTRL_V_FIELD \
+  ((bitfield_field32_t) { .mask = VRF_DECODE_CTRL_V_MASK, .index = VRF_DECODE_CTRL_V_OFFSET })
+
+// Physical base address of the int16_t s1[] coefficient array
+// (Zf(is_short)'s 's1' argument)
+#define VRF_NORMCHECK_S1_ADDR_REG_OFFSET 0x1e8
+
+// Physical base address of the int16_t s2[] coefficient array
+// (Zf(is_short)'s 's2' argument)
+#define VRF_NORMCHECK_S2_ADDR_REG_OFFSET 0x1f0
+
+// Acceptance bound for the squared l2-norm (software-computed l2bound[logn],
+// common.c)
+#define VRF_NORMCHECK_BOUND_REG_OFFSET 0x1f8
+#define VRF_NORMCHECK_BOUND_NORMCHECK_BOUND_MASK 0xffffffff
+#define VRF_NORMCHECK_BOUND_NORMCHECK_BOUND_OFFSET 0
+#define VRF_NORMCHECK_BOUND_NORMCHECK_BOUND_FIELD \
+  ((bitfield_field32_t) { .mask = VRF_NORMCHECK_BOUND_NORMCHECK_BOUND_MASK, .index = VRF_NORMCHECK_BOUND_NORMCHECK_BOUND_OFFSET })
+
+// Falcon norm/bound-check job control and status
+#define VRF_NORMCHECK_CTRL_REG_OFFSET 0x200
+#define VRF_NORMCHECK_CTRL_GO_BIT 0
+#define VRF_NORMCHECK_CTRL_DONE_BIT 1
+#define VRF_NORMCHECK_CTRL_PASS_BIT 2
+#define VRF_NORMCHECK_CTRL_N_MASK 0xffff
+#define VRF_NORMCHECK_CTRL_N_OFFSET 16
+#define VRF_NORMCHECK_CTRL_N_FIELD \
+  ((bitfield_field32_t) { .mask = VRF_NORMCHECK_CTRL_N_MASK, .index = VRF_NORMCHECK_CTRL_N_OFFSET })
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

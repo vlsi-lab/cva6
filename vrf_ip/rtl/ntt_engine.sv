@@ -38,8 +38,8 @@
 // modes via a small set of mode-muxed formulas (see inner_count/stride/
 // outer below) rather than two separate control paths.
 //
-// ---- Revision 2: batched twiddle reuse (see NTT_ACCEL_DESIGN.md's "#1"
-// section for the burst-DMA attempt this superseded) ----
+// ---- Revision 2: batched twiddle reuse (see IMPLEMENTATION.md's "Reuse
+// decisions" section for the burst-DMA attempt this superseded) ----
 //
 // Revision 1 staged one butterfly's operands as a word-at-a-time
 // read-modify-write into the shared 25x64b Keccak state array, and issued
@@ -65,16 +65,64 @@
 // merit independent of burst DMA: batching up to 16 CONSECUTIVE v's for a
 // SINGLE u (not spanning twiddle groups, unlike revision 1's independent-
 // triple batching) so the (now-shared, once-per-batch) twiddle value is
-// fetched once instead of once per butterfly -- still single-outstanding,
-// single-word DRAM transactions per a[] word, but up to 16x fewer twiddle
-// round trips per stage. Compute operates directly on dedicated
-// k1_batch_q/k2_batch_q registers (results overwrite them in place),
-// eliminating the read-modify-write scatter/gather dance revision 1
-// needed to stage through the shared Keccak array.
+// fetched once instead of once per butterfly.
+//
+// ---- Revision 3: on-chip working buffer for a[] (this revision) ----
+//
+// Revision 2 amortized the twiddle fetch but every k1/k2 butterfly operand
+// was still a single-outstanding DRAM read (load) plus, after computing,
+// a single-outstanding DRAM write (store) -- i.e. revision 2's own
+// "up to 16x fewer twiddle round trips" did nothing for the k1/k2 traffic,
+// which is the actual majority contributor per the 87% figure above.
+//
+// This revision adds a small on-chip working memory (`a_buf`, sized for
+// the largest N in use across all three schemes sharing this engine --
+// Falcon-1024's N=1024, i.e. 1024x32-bit = 4KB) holding the WHOLE
+// coefficient array for the duration of one job. At job start, a[] is
+// copied from DRAM into a_buf once (BULK_LOAD, still N single-outstanding
+// DRAM reads -- burst DMA remains unavailable for the reason above, but
+// this now happens once per job instead of ~4x per butterfly). Every
+// k1/k2 read and write during the NTT/iNTT stage loop then targets a_buf
+// instead of DRAM -- a single-port on-chip memory with a fixed 1-cycle
+// synchronous read latency and same-cycle write completion, not a
+// multi-outstanding-transaction bus device, so no gnt/valid handshake is
+// needed for these accesses. At job end, a_buf is copied back to DRAM
+// once (BULK_STORE). The twiddle table (gm[]) deliberately stays
+// DRAM-sourced exactly as revision 2 left it (already batched 16-per-fetch,
+// a much smaller share of total traffic than k1/k2 was) -- adding a second
+// on-chip buffer for it was judged not worth the extra area for the
+// remaining gain.
+//
+// ---- Revision 4 attempted and reverted: VECMUL/VECSUB job modes ----
+//
+// A revision 4 offloading Falcon's mq_poly_montymul_ntt()/mq_poly_sub()
+// (vrfy.c) was implemented (linear-scan states reusing a_buf and the
+// multiply-reduce datapath) and validated bit-exact on real RTL, but
+// measured a NET REGRESSION on the full falcon512 KAT (198,962 ->
+// 220,736 verify cycles, ~11% worse) and was reverted. Root cause: unlike
+// NTT/iNTT, where a[]/k1/k2 were read/written from DRAM ~logn times
+// before revision 3 (this file's own on-chip buffer eliminating real,
+// multiplicative redundant traffic), VECMUL/VECSUB inherently touches
+// each element exactly once regardless of design -- there is no
+// redundant DRAM traffic for on-chip buffering to remove, only the
+// D-cache-staleness workaround's own overhead to add: software's
+// mandatory scratch-relay copy (writing f[] to a non-cacheable scratch
+// window before dispatch, reading results back after) is pure overhead
+// with nothing to amortize it against here, unlike NTT where the same
+// relay cost was a small price for eliminating a much larger redundant
+// cost. See IMPLEMENTATION.md's "On-chip working-buffer pattern" section
+// for the full writeup -- the same "measure, and revert cleanly if it's a
+// net loss" discipline already applied to rej_sampler.sv's own revision 2
+// attempt.
 //
 module ntt_engine #(
     parameter int unsigned AXI_ADDR_WIDTH = 64,
-    parameter int unsigned AXI_DATA_WIDTH = 64
+    parameter int unsigned AXI_DATA_WIDTH = 64,
+    // Largest N (=2^logn) this engine will ever be dispatched with, across
+    // every scheme sharing it (Falcon-1024 is the current max). Sizes the
+    // on-chip working buffer; keep this at the true maximum in use, not a
+    // round/generous number, per the area-minimization goal.
+    parameter int unsigned MAX_N = 1024
 ) (
     input  logic                        clk_i,
     input  logic                        rst_ni,
@@ -112,21 +160,27 @@ module ntt_engine #(
     output logic                        busy_o
 );
 
-  typedef enum logic [3:0] {
+  localparam int unsigned BufAddrWidth = $clog2(MAX_N);
+
+  typedef enum logic [4:0] {
     IDLE,
+    BULK_LOAD_REQ,
+    BULK_LOAD_WAIT,
     BATCH_INIT,
     LOAD_TWID_REQ,
     LOAD_TWID_WAIT,
-    LOAD_K1_REQ,
-    LOAD_K1_WAIT,
-    LOAD_K2_REQ,
-    LOAD_K2_WAIT,
+    LOAD_K1,
+    LOAD_K1_CAP,
+    LOAD_K2,
+    LOAD_K2_CAP,
     MM_STEP,
-    WB_K1_REQ,
-    WB_K1_WAIT,
-    WB_K2_REQ,
-    WB_K2_WAIT,
+    STORE_K1,
+    STORE_K2,
     BATCH_ADVANCE,
+    BULK_STORE_RD,
+    BULK_STORE_CAP,
+    BULK_STORE_REQ,
+    BULK_STORE_WAIT,
     DONE_HOLD
   } state_e;
 
@@ -157,16 +211,20 @@ module ntt_engine #(
   logic [31:0] stage_bf_left_q, stage_bf_left_d;  // butterflies left in the current stage, as of this batch's start
 
   // batch state -- a batch is up to 16 consecutive v's for the CURRENT u,
-  // sharing a single twiddle fetch. Loads/stores are still single-word,
-  // single-outstanding DRAM transactions (see header comment). Widened to
-  // 64 bits so the same registers can hold a 32-bit NTT modular value
-  // (low half only).
-  logic [31:0] k1_base_q, k1_base_d;   // a[] index of this batch's first k1
+  // sharing a single twiddle fetch.
+  logic [31:0] k1_base_q, k1_base_d;   // a_buf index of this batch's first k1
   logic [31:0] twiddle_q, twiddle_d;   // single twiddle, shared by the whole batch
   logic [4:0]  batch_count_q, batch_count_d; // 1..16, entries this batch actually has
-  logic [3:0]  triple_idx_q, triple_idx_d;   // 0..15, reused as the active index across LOAD/COMPUTE/WB phases
+  logic [3:0]  triple_idx_q, triple_idx_d;   // 0..15, reused as the active index across LOAD/COMPUTE/STORE phases
   logic [63:0] k1_batch_q  [0:15], k1_batch_d  [0:15];
   logic [63:0] k2_batch_q  [0:15], k2_batch_d  [0:15];
+
+  // bulk load/store index (0..n-1), reused by both phases
+  logic [31:0] bulk_idx_q, bulk_idx_d;
+  // stable copy of the word being written back during BULK_STORE, latched
+  // before BULK_STORE_REQ's (possibly multi-cycle) mem_gnt_i wait -- see
+  // BULK_STORE_RD/CAP/REQ below.
+  logic [31:0] store_data_q, store_data_d;
 
   // multiply-reduce pipeline (single shared multiplier, reused 3x per
   // butterfly).
@@ -174,6 +232,27 @@ module ntt_engine #(
   logic [63:0] z_q, z_d;      // Montgomery z
   logic [31:0] w_q, w_d;      // Montgomery w
   logic [63:0] sum_q, sum_d;  // Montgomery sum
+
+  // ---- on-chip working buffer for a[] (see header comment, revision 3) --
+  // Single read-port/single write-port memory: fixed 1-cycle synchronous
+  // read latency, same-cycle write completion -- standard FPGA BRAM/ASIC
+  // SRAM macro inference, not a wide multi-port register file. Both the
+  // bulk load/store phases and the per-butterfly k1/k2 accesses share
+  // these same two ports sequentially, exactly as k1/k2 shared the single
+  // DRAM port before.
+  logic [31:0]              a_buf [0:MAX_N-1];
+  logic [BufAddrWidth-1:0]  buf_raddr;
+  logic [31:0]              buf_rdata_q;
+  logic                     buf_we;
+  logic [BufAddrWidth-1:0]  buf_waddr;
+  logic [31:0]              buf_wdata;
+
+  always_ff @(posedge clk_i) begin
+    buf_rdata_q <= a_buf[buf_raddr];
+    if (buf_we) begin
+      a_buf[buf_waddr] <= buf_wdata;
+    end
+  end
 
   logic job_go_rise;
   assign job_go_rise = job_go_i & ~job_go_old_q;
@@ -236,19 +315,13 @@ module ntt_engine #(
   logic [31:0] mont_result;
   assign mont_result = cond_addback(sum_q[63:32] - p_q, p_q);
 
-  // ---- DRAM byte addresses for this batch. a[]/gm[] are uint32_t arrays
-  // (<<2) ------------------------------------------------------------------
+  // ---- DRAM byte addresses: gm[] twiddle fetches (still DRAM-sourced)
+  // and the bulk load/store of a[] at job boundaries -----------------------
   logic [AXI_ADDR_WIDTH-1:0] twid_addr;
   assign twid_addr = gm_addr_q + (AXI_ADDR_WIDTH'(twiddle_idx) << 2);
 
-  logic [AXI_ADDR_WIDTH-1:0] k1_base_byte_addr, k2_base_byte_addr;
-  assign k1_base_byte_addr = a_addr_q + (AXI_ADDR_WIDTH'(k1_base_q) << 2);
-  assign k2_base_byte_addr = a_addr_q + (AXI_ADDR_WIDTH'(k2_base)   << 2);
-
-  // per-triple word address, used for both LOAD and WB loops
-  logic [AXI_ADDR_WIDTH-1:0] k1_word_addr, k2_word_addr;
-  assign k1_word_addr = k1_base_byte_addr + (AXI_ADDR_WIDTH'(triple_idx_q) << 2);
-  assign k2_word_addr = k2_base_byte_addr + (AXI_ADDR_WIDTH'(triple_idx_q) << 2);
+  logic [AXI_ADDR_WIDTH-1:0] bulk_addr;
+  assign bulk_addr = a_addr_q + (AXI_ADDR_WIDTH'(bulk_idx_q) << 2);
 
   always_comb begin
     // defaults
@@ -274,6 +347,8 @@ module ntt_engine #(
     triple_idx_d    = triple_idx_q;
     k1_batch_d      = k1_batch_q;
     k2_batch_d      = k2_batch_q;
+    bulk_idx_d      = bulk_idx_q;
+    store_data_d    = store_data_q;
     mm_cyc_d        = mm_cyc_q;
     z_d             = z_q;
     w_d             = w_q;
@@ -285,6 +360,11 @@ module ntt_engine #(
     mem_we_o    = 1'b0;
     mem_wdata_o = '0;
     mem_be_o    = '0;
+
+    buf_raddr = '0;
+    buf_we    = 1'b0;
+    buf_waddr = '0;
+    buf_wdata = '0;
 
     unique case (state_q)
       IDLE: begin
@@ -302,27 +382,59 @@ module ntt_engine #(
             // mp_NTT/mp_iNTT are no-ops for logn==0
             state_d = DONE_HOLD;
           end else begin
+            bulk_idx_d = 32'd0;
+            state_d    = BULK_LOAD_REQ;
+          end
+        end
+      end
+
+      // Bulk-copy a[] from DRAM into the on-chip working buffer, once per
+      // job (see revision 3 header comment) -- still single-outstanding
+      // DRAM reads (burst unavailable, see header comment), but n of them
+      // total instead of ~4 per butterfly.
+      BULK_LOAD_REQ: begin
+        mem_req_o  = 1'b1;
+        mem_we_o   = 1'b0;
+        mem_addr_o = bulk_addr;
+        mem_be_o   = bulk_addr[2] ? 8'hF0 : 8'h0F;
+        if (mem_gnt_i) begin
+          state_d = BULK_LOAD_WAIT;
+        end
+      end
+
+      BULK_LOAD_WAIT: begin
+        if (mem_valid_i) begin
+          buf_we    = 1'b1;
+          buf_waddr = BufAddrWidth'(bulk_idx_q);
+          buf_wdata = bulk_addr[2] ? mem_rdata_i[63:32] : mem_rdata_i[31:0];
+
+          if (bulk_idx_q + 32'd1 == n_q) begin
+            // Bulk load complete -- now do the same NTT-loop
+            // initialization the old BATCH_INIT-entry path did.
             lm_d = 5'd0;
-            if (job_mode_i) begin
+            if (mode_q) begin
               t_d     = 32'd1;
-              outer_d = (32'd1 << job_logn_i) >> 1;  // iNTT: hm starts at n/2
+              outer_d = n_q >> 1;   // iNTT: hm starts at n/2
             end else begin
-              t_d     = 32'd1 << job_logn_i;
-              outer_d = 32'd1;                       // NTT: m starts at 1
+              t_d     = n_q;
+              outer_d = 32'd1;      // NTT: m starts at 1
             end
             v0_d            = 32'd0;
             u_d             = 32'd0;
             v_d             = 32'd0;
-            stage_bf_left_d = (32'd1 << job_logn_i) >> 1;
+            stage_bf_left_d = n_q >> 1;
             state_d         = BATCH_INIT;
+          end else begin
+            bulk_idx_d = bulk_idx_q + 32'd1;
+            state_d    = BULK_LOAD_REQ;
           end
         end
       end
 
       // One cycle after any point where v0_q/v_q/u_q/t_q/outer_q were
-      // updated (IDLE's job start, or BATCH_ADVANCE's same-stage-continue
-      // or next-stage transition) -- deferred by exactly one cycle so
-      // `inner_count` here reflects the just-latched t_q, not a stale
+      // updated (BULK_LOAD_WAIT's job start, or BATCH_ADVANCE's same-stage-
+      // continue or next-stage transition) -- deferred by exactly one cycle
+      // so `inner_count` here reflects the just-latched t_q, not a stale
       // value from before the transition.
       BATCH_INIT: begin
         logic [31:0] remaining;
@@ -350,54 +462,43 @@ module ntt_engine #(
       LOAD_TWID_WAIT: begin
         if (mem_valid_i) begin
           twiddle_d = twid_addr[2] ? mem_rdata_i[63:32] : mem_rdata_i[31:0];
-          state_d   = LOAD_K1_REQ;
+          state_d   = LOAD_K1;
         end
       end
 
-      LOAD_K1_REQ: begin
-        mem_req_o  = 1'b1;
-        mem_we_o   = 1'b0;
-        mem_addr_o = k1_word_addr;
-        mem_be_o   = k1_word_addr[2] ? 8'hF0 : 8'h0F;
-        if (mem_gnt_i) begin
-          state_d = LOAD_K1_WAIT;
+      // On-chip reads for the batch's k1/k2 operands -- fixed 1-cycle
+      // latency (buf_rdata_q registers a_buf[buf_raddr]), no gnt/valid
+      // handshake needed (see revision 3 header comment).
+      LOAD_K1: begin
+        buf_raddr = BufAddrWidth'(k1_base_q + {28'b0, triple_idx_q});
+        state_d   = LOAD_K1_CAP;
+      end
+
+      LOAD_K1_CAP: begin
+        k1_batch_d[triple_idx_q][31:0] = buf_rdata_q;
+        if (5'(triple_idx_q) + 5'd1 == batch_count_q) begin
+          triple_idx_d = 4'd0;
+          state_d      = LOAD_K2;
+        end else begin
+          triple_idx_d = triple_idx_q + 4'd1;
+          state_d      = LOAD_K1;
         end
       end
 
-      LOAD_K1_WAIT: begin
-        if (mem_valid_i) begin
-          k1_batch_d[triple_idx_q][31:0] = k1_word_addr[2] ? mem_rdata_i[63:32] : mem_rdata_i[31:0];
-          if (5'(triple_idx_q) + 5'd1 == batch_count_q) begin
-            triple_idx_d = 4'd0;
-            state_d      = LOAD_K2_REQ;
-          end else begin
-            triple_idx_d = triple_idx_q + 4'd1;
-            state_d      = LOAD_K1_REQ;
-          end
-        end
+      LOAD_K2: begin
+        buf_raddr = BufAddrWidth'(k2_base + {28'b0, triple_idx_q});
+        state_d   = LOAD_K2_CAP;
       end
 
-      LOAD_K2_REQ: begin
-        mem_req_o  = 1'b1;
-        mem_we_o   = 1'b0;
-        mem_addr_o = k2_word_addr;
-        mem_be_o   = k2_word_addr[2] ? 8'hF0 : 8'h0F;
-        if (mem_gnt_i) begin
-          state_d = LOAD_K2_WAIT;
-        end
-      end
-
-      LOAD_K2_WAIT: begin
-        if (mem_valid_i) begin
-          k2_batch_d[triple_idx_q][31:0] = k2_word_addr[2] ? mem_rdata_i[63:32] : mem_rdata_i[31:0];
-          if (5'(triple_idx_q) + 5'd1 == batch_count_q) begin
-            triple_idx_d = 4'd0;
-            mm_cyc_d     = 2'd0;
-            state_d      = MM_STEP;
-          end else begin
-            triple_idx_d = triple_idx_q + 4'd1;
-            state_d      = LOAD_K2_REQ;
-          end
+      LOAD_K2_CAP: begin
+        k2_batch_d[triple_idx_q][31:0] = buf_rdata_q;
+        if (5'(triple_idx_q) + 5'd1 == batch_count_q) begin
+          triple_idx_d = 4'd0;
+          mm_cyc_d     = 2'd0;
+          state_d      = MM_STEP;
+        end else begin
+          triple_idx_d = triple_idx_q + 4'd1;
+          state_d      = LOAD_K2;
         end
       end
 
@@ -434,7 +535,7 @@ module ntt_engine #(
 
             if (5'(triple_idx_q) + 5'd1 == batch_count_q) begin
               triple_idx_d = 4'd0;
-              state_d      = WB_K1_REQ;
+              state_d      = STORE_K1;
             end else begin
               triple_idx_d = triple_idx_q + 4'd1;
               mm_cyc_d     = 2'd0;
@@ -444,49 +545,30 @@ module ntt_engine #(
         endcase
       end
 
-      WB_K1_REQ: begin
-        mem_req_o   = 1'b1;
-        mem_we_o    = 1'b1;
-        mem_addr_o  = k1_word_addr;
-        mem_wdata_o = k1_word_addr[2] ? {k1_batch_q[triple_idx_q][31:0], 32'h0} : {32'h0, k1_batch_q[triple_idx_q][31:0]};
-        mem_be_o    = k1_word_addr[2] ? 8'hF0 : 8'h0F;
-        if (mem_gnt_i) begin
-          state_d = WB_K1_WAIT;
+      // On-chip writes -- same-cycle completion, no wait state needed.
+      STORE_K1: begin
+        buf_we    = 1'b1;
+        buf_waddr = BufAddrWidth'(k1_base_q + {28'b0, triple_idx_q});
+        buf_wdata = k1_batch_q[triple_idx_q][31:0];
+        if (5'(triple_idx_q) + 5'd1 == batch_count_q) begin
+          triple_idx_d = 4'd0;
+          state_d      = STORE_K2;
+        end else begin
+          triple_idx_d = triple_idx_q + 4'd1;
+          state_d      = STORE_K1;
         end
       end
 
-      WB_K1_WAIT: begin
-        if (mem_valid_i) begin
-          if (5'(triple_idx_q) + 5'd1 == batch_count_q) begin
-            triple_idx_d = 4'd0;
-            state_d      = WB_K2_REQ;
-          end else begin
-            triple_idx_d = triple_idx_q + 4'd1;
-            state_d      = WB_K1_REQ;
-          end
-        end
-      end
-
-      WB_K2_REQ: begin
-        mem_req_o   = 1'b1;
-        mem_we_o    = 1'b1;
-        mem_addr_o  = k2_word_addr;
-        mem_wdata_o = k2_word_addr[2] ? {k2_batch_q[triple_idx_q][31:0], 32'h0} : {32'h0, k2_batch_q[triple_idx_q][31:0]};
-        mem_be_o    = k2_word_addr[2] ? 8'hF0 : 8'h0F;
-        if (mem_gnt_i) begin
-          state_d = WB_K2_WAIT;
-        end
-      end
-
-      WB_K2_WAIT: begin
-        if (mem_valid_i) begin
-          if (5'(triple_idx_q) + 5'd1 == batch_count_q) begin
-            triple_idx_d = 4'd0;
-            state_d      = BATCH_ADVANCE;
-          end else begin
-            triple_idx_d = triple_idx_q + 4'd1;
-            state_d      = WB_K2_REQ;
-          end
+      STORE_K2: begin
+        buf_we    = 1'b1;
+        buf_waddr = BufAddrWidth'(k2_base + {28'b0, triple_idx_q});
+        buf_wdata = k2_batch_q[triple_idx_q][31:0];
+        if (5'(triple_idx_q) + 5'd1 == batch_count_q) begin
+          triple_idx_d = 4'd0;
+          state_d      = BATCH_ADVANCE;
+        end else begin
+          triple_idx_d = triple_idx_q + 4'd1;
+          state_d      = STORE_K2;
         end
       end
 
@@ -500,7 +582,9 @@ module ntt_engine #(
 
         if (stage_left_after == 32'd0) begin
           if (new_lm == logn_q) begin
-            state_d = DONE_HOLD;
+            // All stages done -- flush the on-chip buffer back to DRAM.
+            bulk_idx_d = 32'd0;
+            state_d    = BULK_STORE_RD;
           end else begin
             if (mode_q) begin
               t_d     = t_q << 1;
@@ -526,6 +610,48 @@ module ntt_engine #(
             v_d = v_next;
           end
           state_d = BATCH_INIT;
+        end
+      end
+
+      // Bulk-copy the on-chip working buffer back to DRAM, once per job.
+      // BULK_STORE_RD/CAP latch the read word into store_data_q BEFORE
+      // entering BULK_STORE_REQ, which may have to wait multiple cycles
+      // for mem_gnt_i (real AXI arbitration latency, unlike a_buf's own
+      // fixed 1-cycle access) -- reading buf_rdata_q directly from within
+      // BULK_STORE_REQ would be wrong, since buf_raddr (and therefore
+      // buf_rdata_q, driven every cycle regardless of state) reverts to
+      // its default of 0 on any cycle that doesn't explicitly hold it,
+      // silently overwriting the intended word with a_buf[0] while still
+      // waiting for grant.
+      BULK_STORE_RD: begin
+        buf_raddr = BufAddrWidth'(bulk_idx_q);
+        state_d   = BULK_STORE_CAP;
+      end
+
+      BULK_STORE_CAP: begin
+        store_data_d = buf_rdata_q;
+        state_d      = BULK_STORE_REQ;
+      end
+
+      BULK_STORE_REQ: begin
+        mem_req_o   = 1'b1;
+        mem_we_o    = 1'b1;
+        mem_addr_o  = bulk_addr;
+        mem_wdata_o = bulk_addr[2] ? {store_data_q, 32'h0} : {32'h0, store_data_q};
+        mem_be_o    = bulk_addr[2] ? 8'hF0 : 8'h0F;
+        if (mem_gnt_i) begin
+          state_d = BULK_STORE_WAIT;
+        end
+      end
+
+      BULK_STORE_WAIT: begin
+        if (mem_valid_i) begin
+          if (bulk_idx_q + 32'd1 == n_q) begin
+            state_d = DONE_HOLD;
+          end else begin
+            bulk_idx_d = bulk_idx_q + 32'd1;
+            state_d    = BULK_STORE_RD;
+          end
         end
       end
 
@@ -563,6 +689,8 @@ module ntt_engine #(
       twiddle_q       <= '0;
       batch_count_q   <= '0;
       triple_idx_q    <= '0;
+      bulk_idx_q      <= '0;
+      store_data_q    <= '0;
       mm_cyc_q        <= '0;
       z_q             <= '0;
       w_q             <= '0;
@@ -593,6 +721,8 @@ module ntt_engine #(
       twiddle_q       <= twiddle_d;
       batch_count_q   <= batch_count_d;
       triple_idx_q    <= triple_idx_d;
+      bulk_idx_q      <= bulk_idx_d;
+      store_data_q    <= store_data_d;
       mm_cyc_q        <= mm_cyc_d;
       z_q             <= z_d;
       w_q             <= w_d;

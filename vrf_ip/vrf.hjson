@@ -334,6 +334,109 @@
           hwaccess: "hro"
         }
       ]
+    },
+    {
+      name: "DECODE_IN_ADDR",
+      desc: "Physical base address of the compressed signature byte stream (Zf(comp_decode)'s 'in' argument)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "63:0" } ]
+    },
+    {
+      name: "DECODE_OUT_ADDR",
+      desc: "Physical base address of the int16_t decoded-coefficient output array x[] (Zf(comp_decode)'s 'x' argument)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "63:0" } ]
+    },
+    {
+      name: "DECODE_PARAMS",
+      desc: "Falcon signature decompression job parameters, packed to keep the register count small",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [
+        { bits: "15:0", name: "MAX_LEN", desc: "Max bytes available in the input stream (Zf(comp_decode)'s max_in_len)" },
+        { bits: "31:16", name: "N", desc: "Number of coefficients to decode (n = 1 << logn)" }
+      ]
+    },
+    {
+      name: "DECODE_CTRL",
+      desc: "Falcon signature decompression job control and status",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "0",
+          name: "GO",
+          desc: "Start the decompression job",
+          hwaccess: "hro"
+        },
+        {
+          bits: "1",
+          name: "DONE",
+          desc: "Asserted if the job is done"
+        },
+        {
+          bits: "2",
+          name: "FAIL",
+          desc: "Malformed input detected (unary run >2047, forbidden -0, input stream exhausted early, or nonzero trailing bits) -- mirrors Zf(comp_decode)'s 'return 0' cases"
+        },
+        {
+          bits: "31:16",
+          name: "V",
+          desc: "Bytes consumed from the input stream, valid once DONE=1 and FAIL=0 -- mirrors Zf(comp_decode)'s non-zero return value"
+        }
+      ]
+    },
+    {
+      name: "NORMCHECK_S1_ADDR",
+      desc: "Physical base address of the int16_t s1[] coefficient array (Zf(is_short)'s 's1' argument)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "63:0" } ]
+    },
+    {
+      name: "NORMCHECK_S2_ADDR",
+      desc: "Physical base address of the int16_t s2[] coefficient array (Zf(is_short)'s 's2' argument)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "63:0" } ]
+    },
+    {
+      name: "NORMCHECK_BOUND",
+      desc: "Acceptance bound for the squared l2-norm (software-computed l2bound[logn], common.c)",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [ { bits: "31:0" } ]
+    },
+    {
+      name: "NORMCHECK_CTRL",
+      desc: "Falcon norm/bound-check job control and status",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        {
+          bits: "0",
+          name: "GO",
+          desc: "Start the norm-check job",
+          hwaccess: "hro"
+        },
+        {
+          bits: "1",
+          name: "DONE",
+          desc: "Asserted if the job is done"
+        },
+        {
+          bits: "2",
+          name: "PASS",
+          desc: "Asserted if the squared l2-norm of (s1,s2) is within NORMCHECK_BOUND -- mirrors Zf(is_short)'s return value"
+        },
+        {
+          bits: "31:16",
+          name: "N",
+          desc: "Number of coefficients per array (n = 1 << logn)"
+        }
+      ]
     }
   ]
 }

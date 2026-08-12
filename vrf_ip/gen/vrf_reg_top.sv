@@ -10,7 +10,7 @@
 module vrf_reg_top #(
     parameter type reg_req_t = logic,
     parameter type reg_rsp_t = logic,
-    parameter int AW = 9
+    parameter int AW = 10
 ) (
   input clk_i,
   input rst_ni,
@@ -302,6 +302,51 @@ module vrf_reg_top #(
   logic [1:0] chain_ctrl_op_type_qs;
   logic [1:0] chain_ctrl_op_type_wd;
   logic chain_ctrl_op_type_we;
+  logic [63:0] decode_in_addr_qs;
+  logic [63:0] decode_in_addr_wd;
+  logic decode_in_addr_we;
+  logic [63:0] decode_out_addr_qs;
+  logic [63:0] decode_out_addr_wd;
+  logic decode_out_addr_we;
+  logic [15:0] decode_params_max_len_qs;
+  logic [15:0] decode_params_max_len_wd;
+  logic decode_params_max_len_we;
+  logic [15:0] decode_params_n_qs;
+  logic [15:0] decode_params_n_wd;
+  logic decode_params_n_we;
+  logic decode_ctrl_go_qs;
+  logic decode_ctrl_go_wd;
+  logic decode_ctrl_go_we;
+  logic decode_ctrl_done_qs;
+  logic decode_ctrl_done_wd;
+  logic decode_ctrl_done_we;
+  logic decode_ctrl_fail_qs;
+  logic decode_ctrl_fail_wd;
+  logic decode_ctrl_fail_we;
+  logic [15:0] decode_ctrl_v_qs;
+  logic [15:0] decode_ctrl_v_wd;
+  logic decode_ctrl_v_we;
+  logic [63:0] normcheck_s1_addr_qs;
+  logic [63:0] normcheck_s1_addr_wd;
+  logic normcheck_s1_addr_we;
+  logic [63:0] normcheck_s2_addr_qs;
+  logic [63:0] normcheck_s2_addr_wd;
+  logic normcheck_s2_addr_we;
+  logic [31:0] normcheck_bound_qs;
+  logic [31:0] normcheck_bound_wd;
+  logic normcheck_bound_we;
+  logic normcheck_ctrl_go_qs;
+  logic normcheck_ctrl_go_wd;
+  logic normcheck_ctrl_go_we;
+  logic normcheck_ctrl_done_qs;
+  logic normcheck_ctrl_done_wd;
+  logic normcheck_ctrl_done_we;
+  logic normcheck_ctrl_pass_qs;
+  logic normcheck_ctrl_pass_wd;
+  logic normcheck_ctrl_pass_we;
+  logic [15:0] normcheck_ctrl_n_qs;
+  logic [15:0] normcheck_ctrl_n_wd;
+  logic normcheck_ctrl_n_we;
 
   // Register instances
 
@@ -2405,9 +2450,410 @@ module vrf_reg_top #(
   );
 
 
+  // R[decode_in_addr]: V(False)
+
+  prim_subreg #(
+    .DW      (64),
+    .SWACCESS("RW"),
+    .RESVAL  (64'h0)
+  ) u_decode_in_addr (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (decode_in_addr_we),
+    .wd     (decode_in_addr_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.decode_in_addr.q ),
+
+    // to register interface (read)
+    .qs     (decode_in_addr_qs)
+  );
 
 
-  logic [56:0] addr_hit;
+  // R[decode_out_addr]: V(False)
+
+  prim_subreg #(
+    .DW      (64),
+    .SWACCESS("RW"),
+    .RESVAL  (64'h0)
+  ) u_decode_out_addr (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (decode_out_addr_we),
+    .wd     (decode_out_addr_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.decode_out_addr.q ),
+
+    // to register interface (read)
+    .qs     (decode_out_addr_qs)
+  );
+
+
+  // R[decode_params]: V(False)
+
+  //   F[max_len]: 15:0
+  prim_subreg #(
+    .DW      (16),
+    .SWACCESS("RW"),
+    .RESVAL  (16'h0)
+  ) u_decode_params_max_len (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (decode_params_max_len_we),
+    .wd     (decode_params_max_len_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.decode_params.max_len.q ),
+
+    // to register interface (read)
+    .qs     (decode_params_max_len_qs)
+  );
+
+
+  //   F[n]: 31:16
+  prim_subreg #(
+    .DW      (16),
+    .SWACCESS("RW"),
+    .RESVAL  (16'h0)
+  ) u_decode_params_n (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (decode_params_n_we),
+    .wd     (decode_params_n_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.decode_params.n.q ),
+
+    // to register interface (read)
+    .qs     (decode_params_n_qs)
+  );
+
+
+  // R[decode_ctrl]: V(False)
+
+  //   F[go]: 0:0
+  prim_subreg #(
+    .DW      (1),
+    .SWACCESS("RW"),
+    .RESVAL  (1'h0)
+  ) u_decode_ctrl_go (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (decode_ctrl_go_we),
+    .wd     (decode_ctrl_go_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.decode_ctrl.go.q ),
+
+    // to register interface (read)
+    .qs     (decode_ctrl_go_qs)
+  );
+
+
+  //   F[done]: 1:1
+  prim_subreg #(
+    .DW      (1),
+    .SWACCESS("RW"),
+    .RESVAL  (1'h0)
+  ) u_decode_ctrl_done (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (decode_ctrl_done_we),
+    .wd     (decode_ctrl_done_wd),
+
+    // from internal hardware
+    .de     (hw2reg.decode_ctrl.done.de),
+    .d      (hw2reg.decode_ctrl.done.d ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.decode_ctrl.done.q ),
+
+    // to register interface (read)
+    .qs     (decode_ctrl_done_qs)
+  );
+
+
+  //   F[fail]: 2:2
+  prim_subreg #(
+    .DW      (1),
+    .SWACCESS("RW"),
+    .RESVAL  (1'h0)
+  ) u_decode_ctrl_fail (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (decode_ctrl_fail_we),
+    .wd     (decode_ctrl_fail_wd),
+
+    // from internal hardware
+    .de     (hw2reg.decode_ctrl.fail.de),
+    .d      (hw2reg.decode_ctrl.fail.d ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.decode_ctrl.fail.q ),
+
+    // to register interface (read)
+    .qs     (decode_ctrl_fail_qs)
+  );
+
+
+  //   F[v]: 31:16
+  prim_subreg #(
+    .DW      (16),
+    .SWACCESS("RW"),
+    .RESVAL  (16'h0)
+  ) u_decode_ctrl_v (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (decode_ctrl_v_we),
+    .wd     (decode_ctrl_v_wd),
+
+    // from internal hardware
+    .de     (hw2reg.decode_ctrl.v.de),
+    .d      (hw2reg.decode_ctrl.v.d ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.decode_ctrl.v.q ),
+
+    // to register interface (read)
+    .qs     (decode_ctrl_v_qs)
+  );
+
+
+  // R[normcheck_s1_addr]: V(False)
+
+  prim_subreg #(
+    .DW      (64),
+    .SWACCESS("RW"),
+    .RESVAL  (64'h0)
+  ) u_normcheck_s1_addr (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (normcheck_s1_addr_we),
+    .wd     (normcheck_s1_addr_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.normcheck_s1_addr.q ),
+
+    // to register interface (read)
+    .qs     (normcheck_s1_addr_qs)
+  );
+
+
+  // R[normcheck_s2_addr]: V(False)
+
+  prim_subreg #(
+    .DW      (64),
+    .SWACCESS("RW"),
+    .RESVAL  (64'h0)
+  ) u_normcheck_s2_addr (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (normcheck_s2_addr_we),
+    .wd     (normcheck_s2_addr_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.normcheck_s2_addr.q ),
+
+    // to register interface (read)
+    .qs     (normcheck_s2_addr_qs)
+  );
+
+
+  // R[normcheck_bound]: V(False)
+
+  prim_subreg #(
+    .DW      (32),
+    .SWACCESS("RW"),
+    .RESVAL  (32'h0)
+  ) u_normcheck_bound (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (normcheck_bound_we),
+    .wd     (normcheck_bound_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.normcheck_bound.q ),
+
+    // to register interface (read)
+    .qs     (normcheck_bound_qs)
+  );
+
+
+  // R[normcheck_ctrl]: V(False)
+
+  //   F[go]: 0:0
+  prim_subreg #(
+    .DW      (1),
+    .SWACCESS("RW"),
+    .RESVAL  (1'h0)
+  ) u_normcheck_ctrl_go (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (normcheck_ctrl_go_we),
+    .wd     (normcheck_ctrl_go_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0  ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.normcheck_ctrl.go.q ),
+
+    // to register interface (read)
+    .qs     (normcheck_ctrl_go_qs)
+  );
+
+
+  //   F[done]: 1:1
+  prim_subreg #(
+    .DW      (1),
+    .SWACCESS("RW"),
+    .RESVAL  (1'h0)
+  ) u_normcheck_ctrl_done (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (normcheck_ctrl_done_we),
+    .wd     (normcheck_ctrl_done_wd),
+
+    // from internal hardware
+    .de     (hw2reg.normcheck_ctrl.done.de),
+    .d      (hw2reg.normcheck_ctrl.done.d ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.normcheck_ctrl.done.q ),
+
+    // to register interface (read)
+    .qs     (normcheck_ctrl_done_qs)
+  );
+
+
+  //   F[pass]: 2:2
+  prim_subreg #(
+    .DW      (1),
+    .SWACCESS("RW"),
+    .RESVAL  (1'h0)
+  ) u_normcheck_ctrl_pass (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (normcheck_ctrl_pass_we),
+    .wd     (normcheck_ctrl_pass_wd),
+
+    // from internal hardware
+    .de     (hw2reg.normcheck_ctrl.pass.de),
+    .d      (hw2reg.normcheck_ctrl.pass.d ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.normcheck_ctrl.pass.q ),
+
+    // to register interface (read)
+    .qs     (normcheck_ctrl_pass_qs)
+  );
+
+
+  //   F[n]: 31:16
+  prim_subreg #(
+    .DW      (16),
+    .SWACCESS("RW"),
+    .RESVAL  (16'h0)
+  ) u_normcheck_ctrl_n (
+    .clk_i   (clk_i    ),
+    .rst_ni  (rst_ni  ),
+
+    // from register interface
+    .we     (normcheck_ctrl_n_we),
+    .wd     (normcheck_ctrl_n_wd),
+
+    // from internal hardware
+    .de     (hw2reg.normcheck_ctrl.n.de),
+    .d      (hw2reg.normcheck_ctrl.n.d ),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.normcheck_ctrl.n.q ),
+
+    // to register interface (read)
+    .qs     (normcheck_ctrl_n_qs)
+  );
+
+
+
+
+  logic [64:0] addr_hit;
   always_comb begin
     addr_hit = '0;
     addr_hit[ 0] = (reg_addr == VRF_DATA_0_OFFSET);
@@ -2467,6 +2913,14 @@ module vrf_reg_top #(
     addr_hit[54] = (reg_addr == VRF_CHAIN_IO_2_OFFSET);
     addr_hit[55] = (reg_addr == VRF_CHAIN_IO_3_OFFSET);
     addr_hit[56] = (reg_addr == VRF_CHAIN_CTRL_OFFSET);
+    addr_hit[57] = (reg_addr == VRF_DECODE_IN_ADDR_OFFSET);
+    addr_hit[58] = (reg_addr == VRF_DECODE_OUT_ADDR_OFFSET);
+    addr_hit[59] = (reg_addr == VRF_DECODE_PARAMS_OFFSET);
+    addr_hit[60] = (reg_addr == VRF_DECODE_CTRL_OFFSET);
+    addr_hit[61] = (reg_addr == VRF_NORMCHECK_S1_ADDR_OFFSET);
+    addr_hit[62] = (reg_addr == VRF_NORMCHECK_S2_ADDR_OFFSET);
+    addr_hit[63] = (reg_addr == VRF_NORMCHECK_BOUND_OFFSET);
+    addr_hit[64] = (reg_addr == VRF_NORMCHECK_CTRL_OFFSET);
   end
 
   assign addrmiss = (reg_re || reg_we) ? ~|addr_hit : 1'b0 ;
@@ -2530,7 +2984,15 @@ module vrf_reg_top #(
                (addr_hit[53] & (|(VRF_PERMIT[53] & ~reg_be))) |
                (addr_hit[54] & (|(VRF_PERMIT[54] & ~reg_be))) |
                (addr_hit[55] & (|(VRF_PERMIT[55] & ~reg_be))) |
-               (addr_hit[56] & (|(VRF_PERMIT[56] & ~reg_be)))));
+               (addr_hit[56] & (|(VRF_PERMIT[56] & ~reg_be))) |
+               (addr_hit[57] & (|(VRF_PERMIT[57] & ~reg_be))) |
+               (addr_hit[58] & (|(VRF_PERMIT[58] & ~reg_be))) |
+               (addr_hit[59] & (|(VRF_PERMIT[59] & ~reg_be))) |
+               (addr_hit[60] & (|(VRF_PERMIT[60] & ~reg_be))) |
+               (addr_hit[61] & (|(VRF_PERMIT[61] & ~reg_be))) |
+               (addr_hit[62] & (|(VRF_PERMIT[62] & ~reg_be))) |
+               (addr_hit[63] & (|(VRF_PERMIT[63] & ~reg_be))) |
+               (addr_hit[64] & (|(VRF_PERMIT[64] & ~reg_be)))));
   end
 
   assign data_0_we = addr_hit[0] & reg_we & !reg_error;
@@ -2766,6 +3228,51 @@ module vrf_reg_top #(
 
   assign chain_ctrl_op_type_we = addr_hit[56] & reg_we & !reg_error;
   assign chain_ctrl_op_type_wd = reg_wdata[28:27];
+
+  assign decode_in_addr_we = addr_hit[57] & reg_we & !reg_error;
+  assign decode_in_addr_wd = reg_wdata[63:0];
+
+  assign decode_out_addr_we = addr_hit[58] & reg_we & !reg_error;
+  assign decode_out_addr_wd = reg_wdata[63:0];
+
+  assign decode_params_max_len_we = addr_hit[59] & reg_we & !reg_error;
+  assign decode_params_max_len_wd = reg_wdata[15:0];
+
+  assign decode_params_n_we = addr_hit[59] & reg_we & !reg_error;
+  assign decode_params_n_wd = reg_wdata[31:16];
+
+  assign decode_ctrl_go_we = addr_hit[60] & reg_we & !reg_error;
+  assign decode_ctrl_go_wd = reg_wdata[0];
+
+  assign decode_ctrl_done_we = addr_hit[60] & reg_we & !reg_error;
+  assign decode_ctrl_done_wd = reg_wdata[1];
+
+  assign decode_ctrl_fail_we = addr_hit[60] & reg_we & !reg_error;
+  assign decode_ctrl_fail_wd = reg_wdata[2];
+
+  assign decode_ctrl_v_we = addr_hit[60] & reg_we & !reg_error;
+  assign decode_ctrl_v_wd = reg_wdata[31:16];
+
+  assign normcheck_s1_addr_we = addr_hit[61] & reg_we & !reg_error;
+  assign normcheck_s1_addr_wd = reg_wdata[63:0];
+
+  assign normcheck_s2_addr_we = addr_hit[62] & reg_we & !reg_error;
+  assign normcheck_s2_addr_wd = reg_wdata[63:0];
+
+  assign normcheck_bound_we = addr_hit[63] & reg_we & !reg_error;
+  assign normcheck_bound_wd = reg_wdata[31:0];
+
+  assign normcheck_ctrl_go_we = addr_hit[64] & reg_we & !reg_error;
+  assign normcheck_ctrl_go_wd = reg_wdata[0];
+
+  assign normcheck_ctrl_done_we = addr_hit[64] & reg_we & !reg_error;
+  assign normcheck_ctrl_done_wd = reg_wdata[1];
+
+  assign normcheck_ctrl_pass_we = addr_hit[64] & reg_we & !reg_error;
+  assign normcheck_ctrl_pass_wd = reg_wdata[2];
+
+  assign normcheck_ctrl_n_we = addr_hit[64] & reg_we & !reg_error;
+  assign normcheck_ctrl_n_wd = reg_wdata[31:16];
 
   // Read data return
   always_comb begin
@@ -3018,6 +3525,45 @@ module vrf_reg_top #(
         reg_rdata_next[18:11] = chain_ctrl_steps_qs;
         reg_rdata_next[26:19] = chain_ctrl_step_start_qs;
         reg_rdata_next[28:27] = chain_ctrl_op_type_qs;
+      end
+
+      addr_hit[57]: begin
+        reg_rdata_next[63:0] = decode_in_addr_qs;
+      end
+
+      addr_hit[58]: begin
+        reg_rdata_next[63:0] = decode_out_addr_qs;
+      end
+
+      addr_hit[59]: begin
+        reg_rdata_next[15:0] = decode_params_max_len_qs;
+        reg_rdata_next[31:16] = decode_params_n_qs;
+      end
+
+      addr_hit[60]: begin
+        reg_rdata_next[0] = decode_ctrl_go_qs;
+        reg_rdata_next[1] = decode_ctrl_done_qs;
+        reg_rdata_next[2] = decode_ctrl_fail_qs;
+        reg_rdata_next[31:16] = decode_ctrl_v_qs;
+      end
+
+      addr_hit[61]: begin
+        reg_rdata_next[63:0] = normcheck_s1_addr_qs;
+      end
+
+      addr_hit[62]: begin
+        reg_rdata_next[63:0] = normcheck_s2_addr_qs;
+      end
+
+      addr_hit[63]: begin
+        reg_rdata_next[31:0] = normcheck_bound_qs;
+      end
+
+      addr_hit[64]: begin
+        reg_rdata_next[0] = normcheck_ctrl_go_qs;
+        reg_rdata_next[1] = normcheck_ctrl_done_qs;
+        reg_rdata_next[2] = normcheck_ctrl_pass_qs;
+        reg_rdata_next[31:16] = normcheck_ctrl_n_qs;
       end
 
       default: begin

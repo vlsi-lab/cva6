@@ -16,8 +16,9 @@
  * permutation local to each power-of-two stage block. Both derived from
  * ntt_engine.sv's address-generator RTL (twiddle_idx = outer_q + u_q) and
  * verified bit-exact against ntt()/invntt_tomont() on real RTL simulation
- * (tests/app-tests/ntt-mldsa, see result.md's Phase 3 notes) before being
- * used here -- not assumed from the primitive-level round trip alone.
+ * (tests/app-tests/ntt-mldsa/main.c's own header comment has the full
+ * derivation) before being used here -- not assumed from the
+ * primitive-level round trip alone.
  */
 
 static const int32_t zetas[N] = {

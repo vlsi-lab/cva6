@@ -7,7 +7,7 @@
 package vrf_reg_pkg;
 
   // Address widths within the block
-  parameter int BlockAw = 9;
+  parameter int BlockAw = 10;
 
   ////////////////////////////
   // Typedefs for registers //
@@ -173,6 +173,65 @@ package vrf_reg_pkg;
   } vrf_reg2hw_chain_ctrl_reg_t;
 
   typedef struct packed {
+    logic [63:0] q;
+  } vrf_reg2hw_decode_in_addr_reg_t;
+
+  typedef struct packed {
+    logic [63:0] q;
+  } vrf_reg2hw_decode_out_addr_reg_t;
+
+  typedef struct packed {
+    struct packed {
+      logic [15:0] q;
+    } max_len;
+    struct packed {
+      logic [15:0] q;
+    } n;
+  } vrf_reg2hw_decode_params_reg_t;
+
+  typedef struct packed {
+    struct packed {
+      logic        q;
+    } go;
+    struct packed {
+      logic        q;
+    } done;
+    struct packed {
+      logic        q;
+    } fail;
+    struct packed {
+      logic [15:0] q;
+    } v;
+  } vrf_reg2hw_decode_ctrl_reg_t;
+
+  typedef struct packed {
+    logic [63:0] q;
+  } vrf_reg2hw_normcheck_s1_addr_reg_t;
+
+  typedef struct packed {
+    logic [63:0] q;
+  } vrf_reg2hw_normcheck_s2_addr_reg_t;
+
+  typedef struct packed {
+    logic [31:0] q;
+  } vrf_reg2hw_normcheck_bound_reg_t;
+
+  typedef struct packed {
+    struct packed {
+      logic        q;
+    } go;
+    struct packed {
+      logic        q;
+    } done;
+    struct packed {
+      logic        q;
+    } pass;
+    struct packed {
+      logic [15:0] q;
+    } n;
+  } vrf_reg2hw_normcheck_ctrl_reg_t;
+
+  typedef struct packed {
     logic [63:0] d;
     logic        de;
   } vrf_hw2reg_data_mreg_t;
@@ -245,100 +304,148 @@ package vrf_reg_pkg;
     } done;
   } vrf_hw2reg_chain_ctrl_reg_t;
 
+  typedef struct packed {
+    struct packed {
+      logic        d;
+      logic        de;
+    } done;
+    struct packed {
+      logic        d;
+      logic        de;
+    } fail;
+    struct packed {
+      logic [15:0] d;
+      logic        de;
+    } v;
+  } vrf_hw2reg_decode_ctrl_reg_t;
+
+  typedef struct packed {
+    struct packed {
+      logic        d;
+      logic        de;
+    } done;
+    struct packed {
+      logic        d;
+      logic        de;
+    } pass;
+    struct packed {
+      logic [15:0] d;
+      logic        de;
+    } n;
+  } vrf_hw2reg_normcheck_ctrl_reg_t;
+
   // Register -> HW type
   typedef struct packed {
-    vrf_reg2hw_data_mreg_t [24:0] data; // [3193:1594]
-    vrf_reg2hw_csreg_reg_t csreg; // [1593:1592]
-    vrf_reg2hw_job_src_addr_reg_t job_src_addr; // [1591:1528]
-    vrf_reg2hw_job_src_len_reg_t job_src_len; // [1527:1496]
-    vrf_reg2hw_job_dst_addr_reg_t job_dst_addr; // [1495:1432]
-    vrf_reg2hw_job_dst_len_reg_t job_dst_len; // [1431:1400]
-    vrf_reg2hw_jobctrl_reg_t jobctrl; // [1399:1387]
-    vrf_reg2hw_ntt_a_addr_reg_t ntt_a_addr; // [1386:1323]
-    vrf_reg2hw_ntt_gm_addr_reg_t ntt_gm_addr; // [1322:1259]
-    vrf_reg2hw_ntt_logn_reg_t ntt_logn; // [1258:1254]
-    vrf_reg2hw_ntt_p_val_reg_t ntt_p_val; // [1253:1222]
-    vrf_reg2hw_ntt_p0i_val_reg_t ntt_p0i_val; // [1221:1190]
-    vrf_reg2hw_ntt_ctrl_reg_t ntt_ctrl; // [1189:1186]
-    vrf_reg2hw_rej_x_addr_reg_t rej_x_addr; // [1185:1122]
-    vrf_reg2hw_rej_params_reg_t rej_params; // [1121:1058]
-    vrf_reg2hw_rej_ctrl_reg_t rej_ctrl; // [1057:1053]
-    vrf_reg2hw_chain_seed_mreg_t [3:0] chain_seed; // [1052:797]
-    vrf_reg2hw_chain_adrs_mreg_t [3:0] chain_adrs; // [796:541]
-    vrf_reg2hw_chain_in2_mreg_t [3:0] chain_in2; // [540:285]
-    vrf_reg2hw_chain_io_mreg_t [3:0] chain_io; // [284:29]
-    vrf_reg2hw_chain_ctrl_reg_t chain_ctrl; // [28:0]
+    vrf_reg2hw_data_mreg_t [24:0] data; // [3551:1952]
+    vrf_reg2hw_csreg_reg_t csreg; // [1951:1950]
+    vrf_reg2hw_job_src_addr_reg_t job_src_addr; // [1949:1886]
+    vrf_reg2hw_job_src_len_reg_t job_src_len; // [1885:1854]
+    vrf_reg2hw_job_dst_addr_reg_t job_dst_addr; // [1853:1790]
+    vrf_reg2hw_job_dst_len_reg_t job_dst_len; // [1789:1758]
+    vrf_reg2hw_jobctrl_reg_t jobctrl; // [1757:1745]
+    vrf_reg2hw_ntt_a_addr_reg_t ntt_a_addr; // [1744:1681]
+    vrf_reg2hw_ntt_gm_addr_reg_t ntt_gm_addr; // [1680:1617]
+    vrf_reg2hw_ntt_logn_reg_t ntt_logn; // [1616:1612]
+    vrf_reg2hw_ntt_p_val_reg_t ntt_p_val; // [1611:1580]
+    vrf_reg2hw_ntt_p0i_val_reg_t ntt_p0i_val; // [1579:1548]
+    vrf_reg2hw_ntt_ctrl_reg_t ntt_ctrl; // [1547:1544]
+    vrf_reg2hw_rej_x_addr_reg_t rej_x_addr; // [1543:1480]
+    vrf_reg2hw_rej_params_reg_t rej_params; // [1479:1416]
+    vrf_reg2hw_rej_ctrl_reg_t rej_ctrl; // [1415:1411]
+    vrf_reg2hw_chain_seed_mreg_t [3:0] chain_seed; // [1410:1155]
+    vrf_reg2hw_chain_adrs_mreg_t [3:0] chain_adrs; // [1154:899]
+    vrf_reg2hw_chain_in2_mreg_t [3:0] chain_in2; // [898:643]
+    vrf_reg2hw_chain_io_mreg_t [3:0] chain_io; // [642:387]
+    vrf_reg2hw_chain_ctrl_reg_t chain_ctrl; // [386:358]
+    vrf_reg2hw_decode_in_addr_reg_t decode_in_addr; // [357:294]
+    vrf_reg2hw_decode_out_addr_reg_t decode_out_addr; // [293:230]
+    vrf_reg2hw_decode_params_reg_t decode_params; // [229:198]
+    vrf_reg2hw_decode_ctrl_reg_t decode_ctrl; // [197:179]
+    vrf_reg2hw_normcheck_s1_addr_reg_t normcheck_s1_addr; // [178:115]
+    vrf_reg2hw_normcheck_s2_addr_reg_t normcheck_s2_addr; // [114:51]
+    vrf_reg2hw_normcheck_bound_reg_t normcheck_bound; // [50:19]
+    vrf_reg2hw_normcheck_ctrl_reg_t normcheck_ctrl; // [18:0]
   } vrf_reg2hw_t;
 
   // HW -> register type
   typedef struct packed {
-    vrf_hw2reg_data_mreg_t [24:0] data; // [1915:291]
-    vrf_hw2reg_csreg_reg_t csreg; // [290:287]
-    vrf_hw2reg_jobctrl_reg_t jobctrl; // [286:268]
-    vrf_hw2reg_ntt_ctrl_reg_t ntt_ctrl; // [267:266]
-    vrf_hw2reg_rej_ctrl_reg_t rej_ctrl; // [265:262]
-    vrf_hw2reg_chain_io_mreg_t [3:0] chain_io; // [261:2]
-    vrf_hw2reg_chain_ctrl_reg_t chain_ctrl; // [1:0]
+    vrf_hw2reg_data_mreg_t [24:0] data; // [1957:333]
+    vrf_hw2reg_csreg_reg_t csreg; // [332:329]
+    vrf_hw2reg_jobctrl_reg_t jobctrl; // [328:310]
+    vrf_hw2reg_ntt_ctrl_reg_t ntt_ctrl; // [309:308]
+    vrf_hw2reg_rej_ctrl_reg_t rej_ctrl; // [307:304]
+    vrf_hw2reg_chain_io_mreg_t [3:0] chain_io; // [303:44]
+    vrf_hw2reg_chain_ctrl_reg_t chain_ctrl; // [43:42]
+    vrf_hw2reg_decode_ctrl_reg_t decode_ctrl; // [41:21]
+    vrf_hw2reg_normcheck_ctrl_reg_t normcheck_ctrl; // [20:0]
   } vrf_hw2reg_t;
 
   // Register offsets
-  parameter logic [BlockAw-1:0] VRF_DATA_0_OFFSET = 9'h 0;
-  parameter logic [BlockAw-1:0] VRF_DATA_1_OFFSET = 9'h 8;
-  parameter logic [BlockAw-1:0] VRF_DATA_2_OFFSET = 9'h 10;
-  parameter logic [BlockAw-1:0] VRF_DATA_3_OFFSET = 9'h 18;
-  parameter logic [BlockAw-1:0] VRF_DATA_4_OFFSET = 9'h 20;
-  parameter logic [BlockAw-1:0] VRF_DATA_5_OFFSET = 9'h 28;
-  parameter logic [BlockAw-1:0] VRF_DATA_6_OFFSET = 9'h 30;
-  parameter logic [BlockAw-1:0] VRF_DATA_7_OFFSET = 9'h 38;
-  parameter logic [BlockAw-1:0] VRF_DATA_8_OFFSET = 9'h 40;
-  parameter logic [BlockAw-1:0] VRF_DATA_9_OFFSET = 9'h 48;
-  parameter logic [BlockAw-1:0] VRF_DATA_10_OFFSET = 9'h 50;
-  parameter logic [BlockAw-1:0] VRF_DATA_11_OFFSET = 9'h 58;
-  parameter logic [BlockAw-1:0] VRF_DATA_12_OFFSET = 9'h 60;
-  parameter logic [BlockAw-1:0] VRF_DATA_13_OFFSET = 9'h 68;
-  parameter logic [BlockAw-1:0] VRF_DATA_14_OFFSET = 9'h 70;
-  parameter logic [BlockAw-1:0] VRF_DATA_15_OFFSET = 9'h 78;
-  parameter logic [BlockAw-1:0] VRF_DATA_16_OFFSET = 9'h 80;
-  parameter logic [BlockAw-1:0] VRF_DATA_17_OFFSET = 9'h 88;
-  parameter logic [BlockAw-1:0] VRF_DATA_18_OFFSET = 9'h 90;
-  parameter logic [BlockAw-1:0] VRF_DATA_19_OFFSET = 9'h 98;
-  parameter logic [BlockAw-1:0] VRF_DATA_20_OFFSET = 9'h a0;
-  parameter logic [BlockAw-1:0] VRF_DATA_21_OFFSET = 9'h a8;
-  parameter logic [BlockAw-1:0] VRF_DATA_22_OFFSET = 9'h b0;
-  parameter logic [BlockAw-1:0] VRF_DATA_23_OFFSET = 9'h b8;
-  parameter logic [BlockAw-1:0] VRF_DATA_24_OFFSET = 9'h c0;
-  parameter logic [BlockAw-1:0] VRF_CSREG_OFFSET = 9'h c8;
-  parameter logic [BlockAw-1:0] VRF_JOB_SRC_ADDR_OFFSET = 9'h d0;
-  parameter logic [BlockAw-1:0] VRF_JOB_SRC_LEN_OFFSET = 9'h d8;
-  parameter logic [BlockAw-1:0] VRF_JOB_DST_ADDR_OFFSET = 9'h e0;
-  parameter logic [BlockAw-1:0] VRF_JOB_DST_LEN_OFFSET = 9'h e8;
-  parameter logic [BlockAw-1:0] VRF_JOBCTRL_OFFSET = 9'h f0;
-  parameter logic [BlockAw-1:0] VRF_NTT_A_ADDR_OFFSET = 9'h f8;
-  parameter logic [BlockAw-1:0] VRF_NTT_GM_ADDR_OFFSET = 9'h 100;
-  parameter logic [BlockAw-1:0] VRF_NTT_LOGN_OFFSET = 9'h 108;
-  parameter logic [BlockAw-1:0] VRF_NTT_P_VAL_OFFSET = 9'h 110;
-  parameter logic [BlockAw-1:0] VRF_NTT_P0I_VAL_OFFSET = 9'h 118;
-  parameter logic [BlockAw-1:0] VRF_NTT_CTRL_OFFSET = 9'h 120;
-  parameter logic [BlockAw-1:0] VRF_REJ_X_ADDR_OFFSET = 9'h 128;
-  parameter logic [BlockAw-1:0] VRF_REJ_PARAMS_OFFSET = 9'h 130;
-  parameter logic [BlockAw-1:0] VRF_REJ_CTRL_OFFSET = 9'h 138;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_SEED_0_OFFSET = 9'h 140;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_SEED_1_OFFSET = 9'h 148;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_SEED_2_OFFSET = 9'h 150;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_SEED_3_OFFSET = 9'h 158;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_ADRS_0_OFFSET = 9'h 160;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_ADRS_1_OFFSET = 9'h 168;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_ADRS_2_OFFSET = 9'h 170;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_ADRS_3_OFFSET = 9'h 178;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_IN2_0_OFFSET = 9'h 180;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_IN2_1_OFFSET = 9'h 188;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_IN2_2_OFFSET = 9'h 190;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_IN2_3_OFFSET = 9'h 198;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_IO_0_OFFSET = 9'h 1a0;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_IO_1_OFFSET = 9'h 1a8;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_IO_2_OFFSET = 9'h 1b0;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_IO_3_OFFSET = 9'h 1b8;
-  parameter logic [BlockAw-1:0] VRF_CHAIN_CTRL_OFFSET = 9'h 1c0;
+  parameter logic [BlockAw-1:0] VRF_DATA_0_OFFSET = 10'h 0;
+  parameter logic [BlockAw-1:0] VRF_DATA_1_OFFSET = 10'h 8;
+  parameter logic [BlockAw-1:0] VRF_DATA_2_OFFSET = 10'h 10;
+  parameter logic [BlockAw-1:0] VRF_DATA_3_OFFSET = 10'h 18;
+  parameter logic [BlockAw-1:0] VRF_DATA_4_OFFSET = 10'h 20;
+  parameter logic [BlockAw-1:0] VRF_DATA_5_OFFSET = 10'h 28;
+  parameter logic [BlockAw-1:0] VRF_DATA_6_OFFSET = 10'h 30;
+  parameter logic [BlockAw-1:0] VRF_DATA_7_OFFSET = 10'h 38;
+  parameter logic [BlockAw-1:0] VRF_DATA_8_OFFSET = 10'h 40;
+  parameter logic [BlockAw-1:0] VRF_DATA_9_OFFSET = 10'h 48;
+  parameter logic [BlockAw-1:0] VRF_DATA_10_OFFSET = 10'h 50;
+  parameter logic [BlockAw-1:0] VRF_DATA_11_OFFSET = 10'h 58;
+  parameter logic [BlockAw-1:0] VRF_DATA_12_OFFSET = 10'h 60;
+  parameter logic [BlockAw-1:0] VRF_DATA_13_OFFSET = 10'h 68;
+  parameter logic [BlockAw-1:0] VRF_DATA_14_OFFSET = 10'h 70;
+  parameter logic [BlockAw-1:0] VRF_DATA_15_OFFSET = 10'h 78;
+  parameter logic [BlockAw-1:0] VRF_DATA_16_OFFSET = 10'h 80;
+  parameter logic [BlockAw-1:0] VRF_DATA_17_OFFSET = 10'h 88;
+  parameter logic [BlockAw-1:0] VRF_DATA_18_OFFSET = 10'h 90;
+  parameter logic [BlockAw-1:0] VRF_DATA_19_OFFSET = 10'h 98;
+  parameter logic [BlockAw-1:0] VRF_DATA_20_OFFSET = 10'h a0;
+  parameter logic [BlockAw-1:0] VRF_DATA_21_OFFSET = 10'h a8;
+  parameter logic [BlockAw-1:0] VRF_DATA_22_OFFSET = 10'h b0;
+  parameter logic [BlockAw-1:0] VRF_DATA_23_OFFSET = 10'h b8;
+  parameter logic [BlockAw-1:0] VRF_DATA_24_OFFSET = 10'h c0;
+  parameter logic [BlockAw-1:0] VRF_CSREG_OFFSET = 10'h c8;
+  parameter logic [BlockAw-1:0] VRF_JOB_SRC_ADDR_OFFSET = 10'h d0;
+  parameter logic [BlockAw-1:0] VRF_JOB_SRC_LEN_OFFSET = 10'h d8;
+  parameter logic [BlockAw-1:0] VRF_JOB_DST_ADDR_OFFSET = 10'h e0;
+  parameter logic [BlockAw-1:0] VRF_JOB_DST_LEN_OFFSET = 10'h e8;
+  parameter logic [BlockAw-1:0] VRF_JOBCTRL_OFFSET = 10'h f0;
+  parameter logic [BlockAw-1:0] VRF_NTT_A_ADDR_OFFSET = 10'h f8;
+  parameter logic [BlockAw-1:0] VRF_NTT_GM_ADDR_OFFSET = 10'h 100;
+  parameter logic [BlockAw-1:0] VRF_NTT_LOGN_OFFSET = 10'h 108;
+  parameter logic [BlockAw-1:0] VRF_NTT_P_VAL_OFFSET = 10'h 110;
+  parameter logic [BlockAw-1:0] VRF_NTT_P0I_VAL_OFFSET = 10'h 118;
+  parameter logic [BlockAw-1:0] VRF_NTT_CTRL_OFFSET = 10'h 120;
+  parameter logic [BlockAw-1:0] VRF_REJ_X_ADDR_OFFSET = 10'h 128;
+  parameter logic [BlockAw-1:0] VRF_REJ_PARAMS_OFFSET = 10'h 130;
+  parameter logic [BlockAw-1:0] VRF_REJ_CTRL_OFFSET = 10'h 138;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_SEED_0_OFFSET = 10'h 140;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_SEED_1_OFFSET = 10'h 148;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_SEED_2_OFFSET = 10'h 150;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_SEED_3_OFFSET = 10'h 158;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_ADRS_0_OFFSET = 10'h 160;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_ADRS_1_OFFSET = 10'h 168;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_ADRS_2_OFFSET = 10'h 170;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_ADRS_3_OFFSET = 10'h 178;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_IN2_0_OFFSET = 10'h 180;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_IN2_1_OFFSET = 10'h 188;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_IN2_2_OFFSET = 10'h 190;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_IN2_3_OFFSET = 10'h 198;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_IO_0_OFFSET = 10'h 1a0;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_IO_1_OFFSET = 10'h 1a8;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_IO_2_OFFSET = 10'h 1b0;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_IO_3_OFFSET = 10'h 1b8;
+  parameter logic [BlockAw-1:0] VRF_CHAIN_CTRL_OFFSET = 10'h 1c0;
+  parameter logic [BlockAw-1:0] VRF_DECODE_IN_ADDR_OFFSET = 10'h 1c8;
+  parameter logic [BlockAw-1:0] VRF_DECODE_OUT_ADDR_OFFSET = 10'h 1d0;
+  parameter logic [BlockAw-1:0] VRF_DECODE_PARAMS_OFFSET = 10'h 1d8;
+  parameter logic [BlockAw-1:0] VRF_DECODE_CTRL_OFFSET = 10'h 1e0;
+  parameter logic [BlockAw-1:0] VRF_NORMCHECK_S1_ADDR_OFFSET = 10'h 1e8;
+  parameter logic [BlockAw-1:0] VRF_NORMCHECK_S2_ADDR_OFFSET = 10'h 1f0;
+  parameter logic [BlockAw-1:0] VRF_NORMCHECK_BOUND_OFFSET = 10'h 1f8;
+  parameter logic [BlockAw-1:0] VRF_NORMCHECK_CTRL_OFFSET = 10'h 200;
 
   // Register index
   typedef enum int {
@@ -398,11 +505,19 @@ package vrf_reg_pkg;
     VRF_CHAIN_IO_1,
     VRF_CHAIN_IO_2,
     VRF_CHAIN_IO_3,
-    VRF_CHAIN_CTRL
+    VRF_CHAIN_CTRL,
+    VRF_DECODE_IN_ADDR,
+    VRF_DECODE_OUT_ADDR,
+    VRF_DECODE_PARAMS,
+    VRF_DECODE_CTRL,
+    VRF_NORMCHECK_S1_ADDR,
+    VRF_NORMCHECK_S2_ADDR,
+    VRF_NORMCHECK_BOUND,
+    VRF_NORMCHECK_CTRL
   } vrf_id_e;
 
   // Register width information to check illegal writes
-  parameter logic [3:0] VRF_PERMIT [57] = '{
+  parameter logic [3:0] VRF_PERMIT [65] = '{
     4'b 1111, // index[ 0] VRF_DATA_0
     4'b 1111, // index[ 1] VRF_DATA_1
     4'b 1111, // index[ 2] VRF_DATA_2
@@ -459,7 +574,15 @@ package vrf_reg_pkg;
     4'b 1111, // index[53] VRF_CHAIN_IO_1
     4'b 1111, // index[54] VRF_CHAIN_IO_2
     4'b 1111, // index[55] VRF_CHAIN_IO_3
-    4'b 1111  // index[56] VRF_CHAIN_CTRL
+    4'b 1111, // index[56] VRF_CHAIN_CTRL
+    4'b 1111, // index[57] VRF_DECODE_IN_ADDR
+    4'b 1111, // index[58] VRF_DECODE_OUT_ADDR
+    4'b 1111, // index[59] VRF_DECODE_PARAMS
+    4'b 1111, // index[60] VRF_DECODE_CTRL
+    4'b 1111, // index[61] VRF_NORMCHECK_S1_ADDR
+    4'b 1111, // index[62] VRF_NORMCHECK_S2_ADDR
+    4'b 1111, // index[63] VRF_NORMCHECK_BOUND
+    4'b 1111  // index[64] VRF_NORMCHECK_CTRL
   };
 
 endpackage
